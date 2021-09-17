@@ -1,6 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const {getSearch,saveUserComment} = require("../controller/commentController")
+const {getSearch,saveUserComment,getUserComments,getParam} = require("../controller/commentController")
+
+function setStatusCode(res,data) {
+  if(data.code === 200) {
+    res.statusCode = 200
+  }else {
+    res.statusCode = 404
+  }
+}
 
 /* 评论相关的路由处理. */
 /**
@@ -17,12 +25,20 @@ router.post('/search', async (req, res, next) => {
 router.post('/comment',async (req,res,next) => {
   let commentData = req.body;
   let data = await saveUserComment(commentData);
-  if(data.code === 200) {
-    res.statusCode = 200
-  }else {
-    res.statusCode = 404
-  }
+  setStatusCode(res,data)
   res.json(data)
 })
 
+router.get('/allComment',async (req,res,next) => {
+  let commentData = req.query
+  let data = await getUserComments(commentData)
+  setStatusCode(res,data)
+  res.json(data)
+})
+
+router.get('/commentParam',async (req,res,next) => {
+  let data = await getParam()
+  setStatusCode(res,data)
+  res.json(data)
+})
 module.exports = router;

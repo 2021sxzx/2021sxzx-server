@@ -32,7 +32,61 @@ async function saveComment(commentData) {
   }
 }
 
+async function getAllUserComment(pageNum) {
+  console.log(pageNum);
+  try {
+    let res = await comment.find().skip((pageNum-1)*10).limit(pageNum*10)
+    return res;
+  } catch (e) {
+    throw new Error(e.message)
+  }
+}
+
+async function getCommentParam() {
+  try {
+    let res = await comment.aggregate([
+      {
+        $group: {
+          _id: '$score',
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $sort:{
+          _id:1
+        }
+      }
+    ])
+    let res2 = []
+    let avgScore = 0
+    res.map(item => {
+      let obj = {}
+      obj.score = item['_id']
+      obj.count = item['count']
+      avgScore += item['_id'] * item['count']
+      res2.push(obj)
+    })
+    let count = await getCommentTotal()
+    avgScore /= count
+    let res3 = {totalNum:count,avgScore:avgScore,scoreInfo:res2}
+    return res3
+  } catch (e) {
+    throw new Error(e.message)
+  }
+}
+
+async function getCommentTotal() {
+  try {
+    return await comment.find().count()
+  } catch (e) {
+    throw new Error(e.message)
+  }
+}
 module.exports = {
   searchComment,
-  saveComment
+  saveComment,
+  getAllUserComment,
+  getCommentParam
 }

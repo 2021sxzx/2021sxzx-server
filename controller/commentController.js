@@ -1,4 +1,4 @@
-const {searchComment,saveComment} = require("../service/commentService")
+const {searchComment,saveComment,getAllUserComment,getCommentParam} = require("../service/commentService")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 /**
  * 搜索评论
@@ -36,7 +36,31 @@ async function saveUserComment(commentData) {
   }
 }
 
+async function getUserComments(commentData) {
+  try {
+    let {pageNum} = commentData
+    if(!pageNum) {
+      pageNum = 1
+    }
+    let data = await getAllUserComment(pageNum)
+    return new SuccessModel({msg: '获取评论成功', data:data});
+  } catch (e) {
+    return new ErrorModel({msg:e.message})
+  }
+}
+
+async function getParam() {
+  try {
+    let data = await getCommentParam();
+    return new SuccessModel({msg: '获取评论参数成功', data:data});
+  } catch (e) {
+    return new ErrorModel({msg:e.message})
+  }
+}
+
 module.exports = {
   getSearch,
-  saveUserComment
+  saveUserComment,
+  getUserComments,
+  getParam
 }

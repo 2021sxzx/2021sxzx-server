@@ -16,7 +16,7 @@ const commentSchema = new mongoose.Schema({
   },
   content:{        // 评价内容
     type:String,
-    required:true
+    default:"",
   },
   idc_type:{       // 证件类型
     type:String,
