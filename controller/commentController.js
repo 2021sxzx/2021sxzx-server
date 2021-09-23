@@ -38,11 +38,14 @@ async function saveUserComment(commentData) {
 
 async function getUserComments(commentData) {
   try {
-    let {pageNum} = commentData
+    let {pageNum , score} = commentData
     if(!pageNum) {
-      pageNum = 1
+      pageNum = 0
     }
-    let data = await getAllUserComment(pageNum)
+    if(!score) {
+      score = 0
+    }
+    let data = await getAllUserComment({pageNum , score})
     return new SuccessModel({msg: '获取评论成功', data:data});
   } catch (e) {
     return new ErrorModel({msg:e.message})

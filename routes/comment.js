@@ -29,6 +29,9 @@ router.post('/comment',async (req,res,next) => {
   res.json(data)
 })
 
+/**
+ * 用户评论数据的获取
+ */
 router.get('/allComment',async (req,res,next) => {
   let commentData = req.query
   let data = await getUserComments(commentData)

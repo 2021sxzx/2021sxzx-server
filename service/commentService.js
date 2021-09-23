@@ -32,14 +32,46 @@ async function saveComment(commentData) {
   }
 }
 
-async function getAllUserComment(pageNum) {
-  console.log(pageNum);
-  try {
-    let res = await comment.find().skip((pageNum-1)*10).limit(pageNum*10)
-    return res;
-  } catch (e) {
-    throw new Error(e.message)
+async function getAllUserComment({pageNum , score}) {
+  if(pageNum === 0){
+    if(score !== 0) {
+      try {
+        let res = await comment.find({score:{$eq:score}})
+        return res;
+      } catch (e) {
+        throw new Error(e.message)
+      }
+    } else {
+      try {
+        let res = await comment.find()
+        return res;
+      } catch (e) {
+        throw new Error(e.message)
+      }
+    }
+  } else {
+    if(score !== 0) {
+      try {
+        let res = await comment.find({score:{$eq:score}}).skip((pageNum-1)*10).limit(pageNum*10)
+        return res;
+      } catch (e) {
+        throw new Error(e.message)
+      }
+    } else {
+      try {
+        let res = await comment.find().skip((pageNum-1)*10).limit(pageNum*10)
+        return res;
+      } catch (e) {
+        throw new Error(e.message)
+      }
+    }
   }
+  // try {
+  //   let res = await comment.find().skip((pageNum-1)*10).limit(pageNum*10)
+  //   return res;
+  // } catch (e) {
+  //   throw new Error(e.message)
+  // }
 }
 
 async function getCommentParam() {
