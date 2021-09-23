@@ -66,12 +66,6 @@ async function getAllUserComment({pageNum , score}) {
       }
     }
   }
-  // try {
-  //   let res = await comment.find().skip((pageNum-1)*10).limit(pageNum*10)
-  //   return res;
-  // } catch (e) {
-  //   throw new Error(e.message)
-  // }
 }
 
 async function getCommentParam() {
