@@ -1,9 +1,9 @@
 
 const mongoose = require("mongoose")
 
-// comment表的定义
+// rule表的定义
 const ruleSchema = new mongoose.Schema({
-  rule_id:{
+  rule_id:{      // 规则项id
     type:String,
     required:true
   },
@@ -17,5 +17,5 @@ const ruleSchema = new mongoose.Schema({
   }
 })
 
-const rule = mongoose.model('itemRule',ruleSchema)
+const rule = mongoose.model('rule',ruleSchema)
 module.exports = rule

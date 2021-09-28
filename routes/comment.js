@@ -19,6 +19,7 @@ router.post('/search', async (req, res, next) => {
   let data = await getSearch(condition);
   console.log(data);
 });
+
 /**
  * 用户评价接口
  */
@@ -39,6 +40,9 @@ router.get('/allComment',async (req,res,next) => {
   res.json(data)
 })
 
+/**
+ * 用户评价的参数获取
+ */
 router.get('/commentParam',async (req,res,next) => {
   let data = await getParam()
   setStatusCode(res,data)

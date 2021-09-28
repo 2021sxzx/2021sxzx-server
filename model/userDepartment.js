@@ -20,5 +20,5 @@ const userDepartmentSchema = new mongoose.Schema({
   }
 })
 
-const userDepartment = mongoose.model('userDepartment',userDepartmentSchema)
+const userDepartment = mongoose.model('user_department',userDepartmentSchema)
 module.exports = userDepartment

@@ -28,5 +28,5 @@ const checkLogSchema = new mongoose.Schema({
   }
 })
 
-const checkLog = mongoose.model('checkLog',checkLogSchema)
+const checkLog = mongoose.model('check_log',checkLogSchema)
 module.exports = checkLog

@@ -16,5 +16,5 @@ const systemLogSchema = new mongoose.Schema({
   }
 })
 
-const systemLog = mongoose.model('systemLog',systemLogSchema)
+const systemLog = mongoose.model('system_log',systemLogSchema)
 module.exports = systemLog

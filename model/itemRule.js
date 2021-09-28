@@ -16,5 +16,5 @@ const itemRuleSchema = new mongoose.Schema({
   },
 })
 
-const itemRule = mongoose.model('itemRule',itemRuleSchema)
+const itemRule = mongoose.model('item_rule',itemRuleSchema)
 module.exports = itemRule

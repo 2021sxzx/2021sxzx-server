@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-// comment表的定义
+// 系统故障表的定义
 const systemFailureSchema = new mongoose.Schema({
   failure_picture:{
     type:String,
@@ -23,5 +23,5 @@ const systemFailureSchema = new mongoose.Schema({
   }
 })
 
-const systemFailure = mongoose.model('systemFailure',systemFailureSchema)
+const systemFailure = mongoose.model('system_failure',systemFailureSchema)
 module.exports = systemFailure
