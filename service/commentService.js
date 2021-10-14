@@ -47,6 +47,8 @@ async function saveComment(commentData) {
  * @returns {Promise<*>}
  */
 async function getAllUserComment({pageNum , score}) {
+  let res = await comment.find().limit(10).lean()
+  return res;
   if(pageNum == 0){
     if(score !== 0) {
       try {
@@ -64,7 +66,7 @@ async function getAllUserComment({pageNum , score}) {
       }
     }
   } else {
-    if(score !== 0) {
+    if(score !== 0) {1
       try {
         let res = await comment.find({score:{$eq:score}}).skip((pageNum-1)*10).limit(pageNum*10).lean()
         return res;

@@ -50,7 +50,6 @@ async function getUserComments(commentData) {
     if(!score) {
       score = 0
     }
-    console.log(pageNum, score);
     let data = await getCommentDetail({pageNum , score})
     return new SuccessModel({msg: '获取评论成功', data:data});
   } catch (e) {
