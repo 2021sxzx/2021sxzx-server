@@ -47,40 +47,39 @@ async function saveComment(commentData) {
  * @returns {Promise<*>}
  */
 async function getAllUserComment({pageNum , score}) {
-  let res = await comment.find().limit(10).lean()
-  return res;
-  if(pageNum == 0){
-    if(score !== 0) {
-      try {
+  try {
+    if(pageNum == 0){
+      if(score !== 0) {
         let res = await comment.find({score:{$eq:score}}).lean()
         return res;
-      } catch (e) {
-        throw new Error(e.message)
-      }
-    } else {
-      try {
+      } else {
         let res = await comment.find().lean()
         return res;
-      } catch (e) {
-        throw new Error(e.message)
-      }
-    }
-  } else {
-    if(score !== 0) {1
-      try {
-        let res = await comment.find({score:{$eq:score}}).skip((pageNum-1)*10).limit(pageNum*10).lean()
-        return res;
-      } catch (e) {
-        throw new Error(e.message)
       }
     } else {
-      try {
+      if(score !== 0) {
+        let res = await comment.find({score:{$eq:score}}).skip((pageNum-1)*10).limit(pageNum*10).lean()
+        return res;
+      } else {
         let res = await comment.find().skip((pageNum-1)*10).limit(pageNum*10).lean()
         return res;
-      } catch (e) {
-        throw new Error(e.message)
       }
     }
+  } catch (e) {
+    return e.message;
+  }
+}
+
+/**
+ * 专门为解决bug写的返回全部评论数据的接口
+ * @returns {Promise<*|*>}
+ */
+async function getAllUserComment2() {
+  try {
+    let res = await comment.find();
+    return res;
+  } catch (e) {
+    return e.message;
   }
 }
 
@@ -248,5 +247,6 @@ module.exports = {
   searchComment,
   saveComment,
   getCommentParam,
-  getCommentDetail
+  getCommentDetail,
+  getAllUserComment2
 }

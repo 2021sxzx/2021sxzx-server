@@ -2,6 +2,10 @@ const mongoose = require("mongoose")
 
 // comment表的定义
 const commentSchema = new mongoose.Schema({
+  create_time:{
+    type:String,
+    default: Date.now()
+  },
   idc:{            // 证件号
     type:String,
     required:true

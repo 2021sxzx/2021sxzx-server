@@ -1,4 +1,4 @@
-const {searchComment,saveComment,getCommentDetail,getCommentParam} = require("../service/commentService")
+const {searchComment,saveComment,getCommentDetail,getCommentParam,getAllUserComment2} = require("../service/commentService")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 /**
  * 搜索评论
@@ -57,6 +57,14 @@ async function getUserComments(commentData) {
   }
 }
 
+async function getUserComments2() {
+  try {
+    let data = await getAllUserComment2();
+    return new SuccessModel({msg: '获取评论成功', data:data});
+  } catch (e) {
+    return new ErrorModel({msg:e.message})
+  }
+}
 /**
  * 获取评论的平均数和总数
  * @returns {Promise<ErrorModel|SuccessModel>}
@@ -74,5 +82,6 @@ module.exports = {
   getSearch,
   saveUserComment,
   getUserComments,
-  getParam
+  getParam,
+  getUserComments2
 }

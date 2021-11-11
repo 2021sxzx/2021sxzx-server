@@ -1,6 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const {getSearch,saveUserComment,getUserComments,getParam} = require("../controller/commentController")
+const {
+  getSearch,
+  saveUserComment,
+  getUserComments,
+  getParam,
+  getUserComments2
+} = require("../controller/commentController")
 
 function setStatusCode(res,data) {
   if(data.code === 200) {
@@ -36,6 +42,12 @@ router.post('/comment',async (req,res,next) => {
 router.get('/allComment',async (req,res,next) => {
   let commentData = req.query
   let data = await getUserComments(commentData)
+  setStatusCode(res,data)
+  res.json(data)
+})
+
+router.get('/allComment2', async (req,res,next) => {
+  let data = await getUserComments2()
   setStatusCode(res,data)
   res.json(data)
 })
