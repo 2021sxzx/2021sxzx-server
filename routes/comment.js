@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getSearch,
   saveUserComment,
   getUserComments,
   getParam,
-  getUserComments2
+  getUserComments2,
+  getSearchComment
 } = require("../controller/commentController")
 
 function setStatusCode(res,data) {
@@ -17,20 +17,13 @@ function setStatusCode(res,data) {
 }
 
 /* 评论相关的路由处理. */
-/**
- * 评论搜索的模块
- */
-router.post('/search', async (req, res, next) => {
-  const condition = req.body;
-  let data = await getSearch(condition);
-  console.log(data);
-});
 
 /**
  * 用户评价接口
  */
 router.post('/comment',async (req,res,next) => {
   let commentData = req.body;
+  commentData.create_time = Date.now()
   let data = await saveUserComment(commentData);
   setStatusCode(res,data)
   res.json(data)
@@ -48,6 +41,16 @@ router.get('/allComment',async (req,res,next) => {
 
 router.get('/allComment2', async (req,res,next) => {
   let data = await getUserComments2()
+  setStatusCode(res,data)
+  res.json(data)
+})
+
+/**
+ * 搜索功能
+ */
+router.post('/searchComment',async (req,res,next) => {
+  let searchData = req.body
+  let data = await getSearchComment(searchData)
   setStatusCode(res,data)
   res.json(data)
 })

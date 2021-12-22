@@ -3,28 +3,6 @@ const item = require("../model/item")
 const itemRule = require("../model/itemRule")
 const itemGuide = require("../model/itemGuide")
 const rule = require("../model/rule")
-/**
- *
- * @param condition 搜索的条件
- * @returns {*|Promise<any>}
- */
-async function searchComment({idc,itemName,itemId,startTime,endTime}) {
-  console.log(idc, itemName, itemId, startTime, endTime);
-  if(startTime) {
-    if(endTime) {
-
-    }
-  }
-
-  let res = await comment.find({
-    idc,
-    itemName,
-    itemId,
-    startTime: {$gte: startTime},
-    endTime: {$lte: endTime}
-  })
-  return res
-}
 
 /**
  * 保存用户的评论数据
@@ -243,10 +221,71 @@ async function getCommentDetail({pageNum,score}) {
   }
 }
 
+/**
+ * 根据条件筛选评论数据
+ * @param startTime
+ * @param endTime
+ * @param score
+ * @param type
+ * @param typeData
+ * @returns {Promise<*>}
+ */
+async function searchByCondition({startTime,endTime,score,type,typeData}) {
+  try {
+    let condition = {}
+    condition.pageNum = 0
+    condition.score = score
+    let commentData = await getCommentDetail(condition)
+    let newCommentData = []
+    if(endTime == 0) {
+      newCommentData = commentData.filter((currentItem, currentIndex) => {
+        return parseInt(currentItem.create_time) >= parseInt(startTime)
+      })
+    } else {
+      newCommentData = commentData.filter((currentItem, currentIndex) => {
+        return (parseInt(currentItem.create_time) >= parseInt(startTime) && parseInt(currentItem.create_time) <= parseInt(endTime))
+      })
+    }
+    if(typeData === "") {
+      return newCommentData
+    }
+    type = parseInt(type)
+    console.log(type);
+    switch (type) {
+      case 0:
+        break
+      case 1:
+        newCommentData = newCommentData.filter((currentItem, currentIndex) => {
+          return currentItem.idc.indexOf(typeData) !== -1
+        })
+        break
+      case 2:
+        newCommentData = newCommentData.filter((currentItem, currentIndex) => {
+          return currentItem.item_guide.item_guide_name.indexOf(typeData) !== -1
+        })
+        break
+      case 3:
+        newCommentData = newCommentData.filter((currentItem, currentIndex) => {
+          return currentItem.item_guide.item_guide_id.indexOf(typeData) !== -1
+        })
+        break
+      case 4:
+        newCommentData = newCommentData.filter((currentItem, currentIndex) => {
+          return currentItem.rule.rule_name.indexOf(typeData) !== -1
+        })
+        break
+    }
+    return newCommentData
+  } catch (e) {
+    return e.message
+  }
+}
+
+
 module.exports = {
-  searchComment,
   saveComment,
   getCommentParam,
   getCommentDetail,
-  getAllUserComment2
+  getAllUserComment2,
+  searchByCondition
 }

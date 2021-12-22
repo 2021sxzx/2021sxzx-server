@@ -1,26 +1,11 @@
-const {searchComment,saveComment,getCommentDetail,getCommentParam,getAllUserComment2} = require("../service/commentService")
+const {
+  saveComment,
+  getCommentDetail,
+  getCommentParam,
+  getAllUserComment2,
+  searchByCondition
+} = require("../service/commentService")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
-/**
- * 搜索评论
- * @param condition 搜索的条件
- * @returns {Promise<*>}
- */
-async function getSearch(condition) {
-  let idc = condition.idc || ""
-  let itemName = condition.itemName || ""
-  let itemId = condition.itemId || ""
-  let startTime = condition.startTime || ""
-  let endTime = condition.endTime || ""
-  let conditionData = {
-    idc,
-    itemName,
-    itemId,
-    startTime,
-    endTime
-  }
-  let data = await searchComment(conditionData);
-  return data;
-}
 
 /**
  * 保存用户的评论
@@ -78,10 +63,40 @@ async function getParam() {
   }
 }
 
+/**
+ * 根据条件搜索评价
+ * @param searchData
+ * @returns {Promise<ErrorModel|SuccessModel>}
+ */
+async function getSearchComment(searchData) {
+  let {startTime,endTime,score,type,typeData} = searchData
+  if(!startTime) {
+    startTime = 0
+  }
+  if(!endTime) {
+    endTime = 0
+  }
+  if(!score) {
+    score = 0
+  }
+  if(!type) {
+    type = 0
+  }
+  if(!typeData) {
+    typeData = ""
+  }
+  try {
+    let data = await searchByCondition({startTime,endTime,score,type,typeData})
+    return new SuccessModel({msg: '查询成功', data:data});
+  } catch (e) {
+    return new ErrorModel({msg:e.message})
+  }
+}
+
 module.exports = {
-  getSearch,
   saveUserComment,
   getUserComments,
   getParam,
-  getUserComments2
+  getUserComments2,
+  getSearchComment
 }

@@ -4,7 +4,6 @@ const mongoose = require("mongoose")
 const commentSchema = new mongoose.Schema({
   create_time:{
     type:String,
-    default: Date.now()
   },
   idc:{            // 证件号
     type:String,
