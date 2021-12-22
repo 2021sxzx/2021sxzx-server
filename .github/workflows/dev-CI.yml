@@ -1,4 +1,5 @@
 name: CI/CD
+
 on:
   push:
     branches: [ dev ]
@@ -14,8 +15,8 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script: |
-          cd /www/wwwroot/sxzx
+        script: |
+          cd /www/wwwroot/sxzx
           git pull
           export NODE_HOME=/www/server/nvm/versions/node/v12.19.1
           export PATH=$PATH:$NODE_HOME/bin
