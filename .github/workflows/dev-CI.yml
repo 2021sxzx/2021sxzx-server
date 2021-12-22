@@ -1,16 +1,16 @@
-name: CI/CD
-
+name: Publish And Deploy Demo
 on:
   push:
-    branches: [ dev ]
+    branches: [ dev ]
+    
 jobs:
   build:
-    name: Build
+    name: Build
     runs-on: ubuntu-latest
-    steps:
+    steps:
     - name: Deploy
       uses: appleboy/ssh-action@master
-      with:
+    with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
