@@ -6,9 +6,9 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    steps:
-    - name: Deploy
-      uses: appleboy/ssh-action@master
+    steps:
+    - name: Deploy
+      uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNANE }}
