@@ -1,14 +1,15 @@
 name: dev deploy
 on:
     push:
-        branches: [ dev ]
+        branches:
+            -
 
 jobs:
     build:
         runs-on: ubuntu-lastest
         steps:
         - name: Deploy
-          uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@master
         with:
             host: ${{ secrets.HOST }}
             username: ${{ secrets.USERNAME }}
