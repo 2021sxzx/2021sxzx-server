@@ -1,8 +1,7 @@
 name: dev deploy
 on:
     push:
-        branches:
-            -
+        branches: [ dev ]
 
 jobs:
     build:
@@ -11,7 +10,7 @@ jobs:
         - name: Deploy
         uses: appleboy/ssh-action@master
         with:
-            host: ${{ secrets.HOST }}
+            host: ${{ secrets.HOST }}
             username: ${{ secrets.USERNAME }}
             password: ${{ secrets.PASSWORD }}
             port: ${{ secrets.PORT }}
