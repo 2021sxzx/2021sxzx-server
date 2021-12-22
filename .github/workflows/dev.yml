@@ -1,24 +1,23 @@
-name: Publish And Deploy Demo
+name: dev deploy
 on:
-  push:
-    branches: [ dev ]
-    
+    push:
+        branches: [ dev ]
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Deploy
-      uses: appleboy/ssh-action@master
-    with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.PORT }}
-        script: |
-          cd /www/wwwroot/sxzx
-          git pull
-          export NODE_HOME=/www/server/nvm/versions/node/v12.19.1
-          export PATH=$PATH:$NODE_HOME/bin
-          npm install
-          npm run prod
-​
+    build:
+        runs-on: ubuntu-lastest
+        steps:
+        - name: Deploy
+          uses: appleboy/ssh-action@master
+        with:
+            host: ${{ secrets.HOST }}
+            username: ${{ secrets.USERNAME }}
+            password: ${{ secrets.PASSWORD }}
+            port: ${{ secrets.PORT }}
+            script: |
+              cd /www/wwwroot/sxzx
+              git pull
+              export NODE_HOME=/www/server/nvm/versions/node/v12.19.1
+              export PATH=$PATH:$NODE_HOME/bin
+              npm install
+              npm run prod
