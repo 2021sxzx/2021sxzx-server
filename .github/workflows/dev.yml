@@ -20,4 +20,4 @@ jobs:
           export NODE_HOME=/www/server/nvm/versions/node/v12.19.1
           export PATH=$PATH:$NODE_HOME/bin
           npm install
-          npm run prod
+          pm2 start npm --name sxzx -- run pro
