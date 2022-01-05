@@ -18,13 +18,11 @@ const itemSchema = new mongoose.Schema({
     type:String,
     default:Date.now()
   },
-  item_guide_id:{ // 事项指南编码
+  task_code:{ // 事项指南编码
     type:String,
-    ref:"item_guide"
   },
   item_rule_id:{  // 事项规则id
     type:String,
-    ref:"item_rule"
   }
 })
 

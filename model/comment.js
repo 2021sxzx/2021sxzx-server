@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-// comment表的定义
+// 评论表的定义
 const commentSchema = new mongoose.Schema({
   create_time:{
     type:String,
@@ -9,7 +9,7 @@ const commentSchema = new mongoose.Schema({
     type:String,
     required:true
   },
-  show_status:{    // 显示状态
+  show_status:{    // 评论显示状态
     type:Boolean,
     default:true
   },

@@ -6,7 +6,11 @@ const itemRuleSchema = new mongoose.Schema({
     type:String,
     default:Date.now()
   },
-  content:{      // 事项规则内容
+  item_rule_content:{   // 事项规则内容
+    type:String,
+    required:true
+  },
+  item_rule_id: {  // 事项规则编码
     type:String,
     required:true
   },
