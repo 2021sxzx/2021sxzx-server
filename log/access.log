@@ -262,3 +262,4 @@
 ::ffff:127.0.0.1 - - [05/Jan/2022:06:31:16 +0000] "POST /api/searchComment HTTP/1.1" 200 43 "-" "PostmanRuntime/7.28.4"
 ::ffff:127.0.0.1 - - [05/Jan/2022:06:31:21 +0000] "POST /api/searchComment HTTP/1.1" 200 3595 "-" "PostmanRuntime/7.28.4"
 ::ffff:127.0.0.1 - - [05/Jan/2022:06:31:49 +0000] "GET /api/commentParam HTTP/1.1" 200 118 "-" "PostmanRuntime/7.28.4"
+::ffff:127.0.0.1 - - [05/Jan/2022:06:48:26 +0000] "POST /api/v1/comment HTTP/1.1" 200 295 "-" "PostmanRuntime/7.28.4"
