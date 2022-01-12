@@ -10,7 +10,7 @@ if(process.env.NODE_ENV === 'dev'){
    url       : 'mongodb://127.0.0.1:27017/sxzx'
   }
 }else if(process.env.NODE_ENV === 'pro'){
-  REDIS_CONFIG ={
+  REDIS_CONFIG = {
     host     : '8.134.73.52',
     port     : '6379',
   }

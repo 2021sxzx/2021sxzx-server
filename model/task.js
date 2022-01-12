@@ -60,5 +60,9 @@ const taskSchema = new mongoose.Schema({
   }
 })
 
+taskSchema.statics.findByTaskCode = function (task_code,callback)  {
+  this.find({task_code:task_code},callback)
+}
+
 const task = mongoose.model('task',taskSchema)
 module.exports = task

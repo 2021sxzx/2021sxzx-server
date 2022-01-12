@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const usersRouter = require('./routes/users');
 const commentRouter = require("./routes/comment")
+const taskRouter = require("./routes/taskRoutes")
 const {MONGO_CONFIG} = require("./config/db") //数据库的配置信息
 const mongoose = require("mongoose")
 // const rule = require("./model/rule")
@@ -14,36 +15,6 @@ const item = require("./model/item")
 const itemGuide = require("./model/task")
 mongoose.connect(MONGO_CONFIG.url);
 const app = express();
-
-// ------------------测试rule的添加-----------------------
-// rule.create({
-//   rule_id:"1",
-//   rule_name:"个人业务/社会保险/社保卡遗失补办"
-// })
-// itemRule.create({
-//   content:"个人业务办理请前往scut",
-//   rule_id:"1"
-// })
-// item.create({
-//   item_id:"430425200107050375X51564654",
-//   item_guide_id:"1",
-//   item_rule_id:"1632799167009"
-// })
-// itemGuide.create({
-//   item_guide_id:"11440117007517547R4442111820008",
-//   item_guide_name:"高校毕业生到基层就业补贴",
-//   item_guide_content:"每人3000元给予一次补贴",
-//   item_id:"430425200107050375X51564654"
-// })
-
-//------------------------------------------------------
-
-
-
-
-
-
-
 
 // 动态网页的模板设置
 app.set('views', path.join(__dirname, 'views'));
@@ -67,6 +38,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 处理路由
 app.use('/api', usersRouter);
 app.use('/api',commentRouter);
+app.use('/api',taskRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
