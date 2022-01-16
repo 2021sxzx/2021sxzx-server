@@ -16,7 +16,6 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           cd /www/wwwroot/sxzx
-          git checkout -b dev
           git pull
           export NODE_HOME=/www/server/nvm/versions/node/v16.13.0
           export PATH=$PATH:$NODE_HOME/bin
