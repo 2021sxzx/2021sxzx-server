@@ -10,7 +10,15 @@ const region = require('../model/region')
  */
 async function getRuleTree() {
     try {
-        var res = await rule.find().ne('rule_name', 'null').projection({ _id: 0 })
+        var rules = await rule.find().ne('rule_name', 'null')
+        var res = []
+        for (let i = 0; i < rules.length; i++) {
+            res.push({
+                rule_id: rules[i].rule_id,
+                rule_name: rules[i].rule_name,
+                parentId: rules[i].parentId
+            })
+        }
         return res
     } catch (err) {
         throw new Error(err.message)
@@ -71,6 +79,19 @@ async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
         if (rule_id) query.rule_id = rule_id
         if (region_id) query.region_id = region_id
         var res = await itemRule.find(query).projection({ _id: 0 })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function getRule({ rule_id, rule_name, parentId }) {
+    try {
+        var query = {}
+        if (rule_id) query.rule_id = rule_id
+        if (rule_name) query.rule_name = rule_name
+        if (parentId) query.parentId = parentId
+        var res = await rule.find(query).projection({ _id: 0 })
         return res
     } catch (err) {
         throw new Error(err.message)
@@ -138,5 +159,6 @@ module.exports = {
     createRule,
     updateItemRule,
     updateRule,
-    getRegionTree
+    getRegionTree,
+    getRule
 }
