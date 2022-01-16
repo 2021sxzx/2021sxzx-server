@@ -67,14 +67,14 @@ async function searchByCondition({ myself, today, thisWeek }) {
       return systemLogData
       // return [{idc:"001"}]
   //     TimeZone time = TimeZone.getTimeZone("Etc/GMT-8");  //转换为中国时区
- 
+
   // TimeZone.setDefault(time);
   //     var d = new Date();
   //     return d;
   //     newSystemLogData = systemLogData.filter((currentItem) => {
   //       return currentItem.create_time.substring(0, 10) == d.toJSON().substring(0,10);
   //     });
-    } 
+    }
     // else {
     //   return (newSystemLogData = systemLogData.filter((currentItem) => {
     //     return currentItem.user_name === "张毅";

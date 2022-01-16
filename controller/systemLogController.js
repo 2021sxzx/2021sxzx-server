@@ -2,9 +2,9 @@ const {
     getSystemLogDetail,
     getAllSystemLog2,
     searchByCondition
-  } = require("../service/SystemLogService")
+  } = require("../service/systemLogService")
   const {SuccessModel, ErrorModel} = require('../utils/resultModel');
-    
+
   /**
    * 获取系统日志(不包括操作人)
    * @returns {Promise<ErrorModel|SuccessModel>}
@@ -54,9 +54,8 @@ const {
       return new ErrorModel({msg:e.message})
     }
   }
-  
+
   module.exports = {
     getSearchSystemLog,
     getAllSystemLogDetail
   }
-  
