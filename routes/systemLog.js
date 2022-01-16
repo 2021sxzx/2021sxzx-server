@@ -4,7 +4,7 @@ const {
     getAllSystemLogDetail,
     getSearchSystemLog
   } = require("../controller/systemLogController")
-  
+
 function setStatusCode(res,data) {
   if(data.code === 200) {
     res.statusCode = 200
