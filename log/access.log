@@ -53,3 +53,4 @@
 ::ffff:127.0.0.1 - - [17/Jan/2022:11:27:44 +0000] "GET /api/v1/getUserList HTTP/1.1" 200 390 "-" "PostmanRuntime/7.28.4"
 ::ffff:127.0.0.1 - - [17/Jan/2022:11:34:29 +0000] "GET /api/v1/getUserList HTTP/1.1" 200 390 "-" "PostmanRuntime/7.28.4"
 ::ffff:127.0.0.1 - - [17/Jan/2022:14:06:08 +0000] "PATCH /api/v1/updateUser?user_name=%E6%9E%97%E5%87%AF%E8%BF%AA HTTP/1.1" 200 380 "-" "PostmanRuntime/7.28.4"
+::ffff:127.0.0.1 - - [17/Jan/2022:14:35:22 +0000] "PATCH /api/v1/user?user_name=%E6%9E%97%E5%87%AF%E8%BF%AA&password=123456 HTTP/1.1" 200 376 "-" "PostmanRuntime/7.28.4"
