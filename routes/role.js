@@ -5,13 +5,9 @@ const {
     deleteRole,
     updateRole,
     getRole,
-    searchRole
-} = require("../controller/roleController")
-
-const {
-    getPermissions,
+    searchRole,
     updatePermissions
-} = require("../controller/permissionsController")
+} = require("../controller/roleController")
 
 function setStatusCode(res, data) {
     if (data.code === 200) {
@@ -64,15 +60,16 @@ router.post('/v1/searchRole', async (req, res, next) => {
     res.json(data)
 })
 
-/**
- * 获取角色权限
- */
-router.get('/v1/rolePermissions', async (req, res, next) => {
-    let roleData = req.query
-    let data = await getPermissions(roleData)
-    setStatusCode(res, data)
-    res.json(data)
-})
+// XXX（钟卓江）: 可能不需要，可以删掉
+// /**
+//  * 获取角色权限
+//  */
+// router.get('/v1/rolePermissions', async (req, res, next) => {
+//     let roleData = req.query
+//     let data = await getPermissions(roleData)
+//     setStatusCode(res, data)
+//     res.json(data)
+// })
 
 /**
  * 更新角色权限
