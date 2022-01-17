@@ -6,7 +6,7 @@ const region = require('../model/region')
 
 /**
  * 获取规则树
- * @returns 数组
+ * @returns 
  */
 async function getRuleTree() {
     try {
@@ -25,15 +25,38 @@ async function getRuleTree() {
     }
 }
 
+/**
+ * 获取区划树
+ * @returns 
+ */
 async function getRegionTree() {
     try {
-        var res = await region.find().projection({ _id: 0 })
+        var regions = await region.find()
+        var res = []
+        for (let i = 0; i < regions.length; i++) {
+            res.push({
+                region_id: regions[i].region_id,
+                region_name: regions[i].region_name,
+                region_level: regions[i].region_level,
+                parentId: regions[i].parentId
+            })
+        }
         return res
     } catch (err) {
         throw new Error(err.message)
     }
 }
 
+/**
+ * 获取满足指定条件的事项
+ * @param {String} item_id
+ * @param {String} release_time
+ * @param {Number} item_status
+ * @param {String} create_time
+ * @param {String} task_code
+ * @param {String} item_rule_id
+ * @returns 
+ */
 async function getItems({ item_id, release_time, item_status, create_time, task_code, item_rule_id }) {
     try {
         var query = {}
@@ -43,34 +66,64 @@ async function getItems({ item_id, release_time, item_status, create_time, task_
         if (create_time) query.create_time = create_time
         if (task_code) query.task_code = task_code
         if (item_rule_id) query.item_rule_id = item_rule_id
-        var res = await item.find(query).projection({ _id: 0 })
+        var items = await item.find(query)
+        var res = []
+        for (let i = 0; i < items.length; i++) {
+            res.push({
+                item_id: items[i].item_id,
+                release_time: items[i].release_time,
+                item_status: items[i].item_status,
+                create_time: items[i].create_time,
+                task_code: items[i].task_code,
+                item_rule_id: items[i].item_rule_id
+            })
+        }
         return res
     } catch (err) {
         throw new Error(err.message)
     }
 }
 
+/**
+ * 通过事项的item_id获取事项指南详情
+ * @param {String} item_id 
+ * @returns 
+ */
 async function getItemTask({ item_id }) {
     try {
-        var res = await item.where('item_id').equals(item_id).projection({ _id: 0 })
+        var res = await task.find({ item_id: item_id })
         return res
     } catch (err) {
         throw new Error(err.message)
     }
 }
 
+/**
+ * 通过事项指南的task_code或者task_name获取事项指南详情
+ * @param {String} task_code
+ * @param {String} task_name
+ * @returns 
+ */
 async function getTasks({ task_code, task_name }) {
     try {
         var query = {}
         if (task_code) query.task_code = task_code
         if (task_name) query.task_name = task_name
-        var res = await task.find(query).projection({ _id: 0 })
+        var res = await task.find(query)
         return res
     } catch (err) {
         throw new Error(err.message)
     }
 }
 
+/**
+ * 获取事项规则
+ * @param {String} create_time
+ * @param {String} item_rule_id
+ * @param {String} rule_id
+ * @param {String} region_id
+ * @returns 
+ */
 async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
     try {
         var query = {}
@@ -78,26 +131,55 @@ async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
         if (item_rule_id) query.item_rule_id = item_rule_id
         if (rule_id) query.rule_id = rule_id
         if (region_id) query.region_id = region_id
-        var res = await itemRule.find(query).projection({ _id: 0 })
+        var itemrules = await itemRule.find(query)
+        var res = []
+        for (let i = 0; i < itemrules.length; i++) {
+            res.push({
+                create_time: itemrules[i].create_time,
+                item_rule_id: itemrules[i].item_rule_id,
+                rule_id: itemrules[i].rule_id,
+                region_id: itemrules[i].region_id
+            })
+        }
         return res
     } catch (err) {
         throw new Error(err.message)
     }
 }
 
+/**
+ * 获取规则
+ * @param {String} rule_id
+ * @param {String} rule_name
+ * @param {String} parentId
+ * @returns 
+ */
 async function getRule({ rule_id, rule_name, parentId }) {
     try {
         var query = {}
         if (rule_id) query.rule_id = rule_id
         if (rule_name) query.rule_name = rule_name
         if (parentId) query.parentId = parentId
-        var res = await rule.find(query).projection({ _id: 0 })
+        var rules = await rule.find(query)
+        var res = []
+        for (let i = 0; i < rules.length; i++) {
+            res.push({
+                rule_id: rules[i].rule_id,
+                rule_name: rules[i].rule_name,
+                parentId: rules[i].parentId
+            })
+        }
         return res
     } catch (err) {
         throw new Error(err.message)
     }
 }
 
+/**
+ * 创建事项规则
+ * @param {*} param0 
+ * @returns 
+ */
 async function createItemRule({ create_time, item_rule_id, rule_id, region_id }) {
     try {
         var res = await itemRule.create({
@@ -112,6 +194,11 @@ async function createItemRule({ create_time, item_rule_id, rule_id, region_id })
     }
 }
 
+/**
+ * 创建规则
+ * @param {*} param0 
+ * @returns 
+ */
 async function createRule({ rule_id, rule_name, parentId }) {
     try {
         var res = await rule.create({
@@ -125,6 +212,14 @@ async function createRule({ rule_id, rule_name, parentId }) {
     }
 }
 
+/**
+ * 更新事项规则
+ * @param {String} create_time 
+ * @param {String} item_rule_id 
+ * @param {String} rule_id 
+ * @param {String} region_id
+ * @returns 
+ */
 async function updateItemRule({ create_time, item_rule_id, rule_id, region_id }) {
     try {
         var newData = {}
@@ -138,6 +233,13 @@ async function updateItemRule({ create_time, item_rule_id, rule_id, region_id })
     }
 }
 
+/**
+ * 更新规则
+ * @param {String} rule_id
+ * @param {String} rule_name
+ * @param {String} parentId
+ * @returns 
+ */
 async function updateRule({ rule_id, rule_name, parentId }) {
     try {
         var newData = {}
