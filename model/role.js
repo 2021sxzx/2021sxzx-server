@@ -91,7 +91,8 @@ const roleSchema = new mongoose.Schema({
         type: Boolean,
         default: false
       },
-      user_manage_permission: { // 用户权限管理
+      // 权限不能创建，只能开闭
+      user_manage_permission: { // 权限管理
         type: Boolean,
         default: false
       }
