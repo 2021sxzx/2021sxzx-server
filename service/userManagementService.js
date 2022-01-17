@@ -20,7 +20,7 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    let res = await users.findOne({}, {activation_status: 0, idc: 0})
+    let res = await users.find({}, {activation_status: 0, idc: 0})
     return res
   } catch (e) {
     throw new Error(e.message) 
