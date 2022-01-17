@@ -7,7 +7,7 @@ const users = require('../model/users')
  */
 async function addUser (userInfo) {
   try {
-    let res = await users.create(userinfo)
+    let res = await users.create(userInfo)
     return res
   } catch (e) {
     throw new Error(e.message)
@@ -20,13 +20,24 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    let res = await users.find({}, {
-      idc: 0,
-      profile_picture: 0,
-      user_name: 1,
-      role_name: 1,
-      account: 1,
-      activation_status: 1
+    let res = await users.findOne({}, {activation_status: 0, idc: 0})
+    return res
+  } catch (e) {
+    throw new Error(e.message) 
+  }
+}
+
+/**
+ * 更新用户数据
+ * @param user_name
+ * @param password
+ * @return {Promise<>}
+ */
+async function updateUser (user_name, password) {
+  try {
+    let res = await users.updateOne({
+      user_name: user_name,
+      password: password
     })
     return res
   } catch (e) {
@@ -34,7 +45,51 @@ async function getUserList () {
   }
 }
 
+async function deleteUser (account) {
+  try {
+    let res = await users.deleteOne({
+      account: account
+    })
+    return res
+  } catch (e) {
+    throw new Error(e.message)
+  } 
+}
+
+async function searchUser (searchValue) {
+  const reg = new RegExp(searchValue, 'i')
+  try {
+    let res = await users.find({
+      $or: [
+        {
+          user_name: { $regex : reg }
+        },{
+          account: { $regex : reg }
+        },{
+          password: { $regex : reg }
+        }
+      ]
+    })
+    return res
+  } catch (e) {
+    throw new Error(e.message)
+  }
+}
+
+async function searchUserRole (RoleArr) {
+  try {
+    let res = await users.findOne({
+      role_name: RoleArr
+    })
+  } catch (e) {
+    throw new Error(e.message)
+  }
+}
+
 module.exports = {
   addUser,
-  getUserList
+  getUserList,
+  updateUser,
+  deleteUser,
+  searchUser
 }
