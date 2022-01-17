@@ -72,7 +72,7 @@ async function getRole(roleData) {// XXX(钟卓江)：这个roleData应该可以
  * @param searchData
  * @returns {Promise<ErrorModel|SuccessModel>}
  */
- async function serchRole(searchData) {
+ async function searchRole(searchData) {
     try {
         const data = await searchRole_(searchData.roleName)
         return new SuccessModel({ msg: '搜索角色成功', data: data });
@@ -82,5 +82,9 @@ async function getRole(roleData) {// XXX(钟卓江)：这个roleData应该可以
 }
 
 module.exports = {
-
+    addRole,
+    deleteRole,
+    updateRole,
+    getRole,
+    searchRole
 }
