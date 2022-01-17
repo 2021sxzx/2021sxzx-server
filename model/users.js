@@ -2,7 +2,7 @@ const mongoose = require("mongoose")
 
 // comment表的定义
 const usersSchema = new mongoose.Schema({
-  idc:{   //证件号码
+  idc:{   //证件号码, XXX(钟卓江)：这个idc可能是多余的，如果最后都没用上就可以考虑删掉
     type:String,
     required:true
   },
