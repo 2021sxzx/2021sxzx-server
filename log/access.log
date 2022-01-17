@@ -51,3 +51,5 @@
 ::ffff:127.0.0.1 - - [17/Jan/2022:11:13:45 +0000] "GET /api/v1/getUserList HTTP/1.1" 404 1525 "-" "PostmanRuntime/7.28.4"
 ::ffff:127.0.0.1 - - [17/Jan/2022:11:17:40 +0000] "GET /api/v1/getUserList HTTP/1.1" 200 390 "-" "PostmanRuntime/7.28.4"
 ::ffff:127.0.0.1 - - [17/Jan/2022:11:27:44 +0000] "GET /api/v1/getUserList HTTP/1.1" 200 390 "-" "PostmanRuntime/7.28.4"
+::ffff:127.0.0.1 - - [17/Jan/2022:11:34:29 +0000] "GET /api/v1/getUserList HTTP/1.1" 200 390 "-" "PostmanRuntime/7.28.4"
+::ffff:127.0.0.1 - - [17/Jan/2022:14:06:08 +0000] "PATCH /api/v1/updateUser?user_name=%E6%9E%97%E5%87%AF%E8%BF%AA HTTP/1.1" 200 380 "-" "PostmanRuntime/7.28.4"
