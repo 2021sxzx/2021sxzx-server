@@ -10,7 +10,7 @@ async function addUser (userInfo) {
     let res = await users.create(userInfo)
     return res
   } catch (e) {
-    throw new Error(e.message)
+    throw e.message
   }
 }
 
@@ -21,9 +21,10 @@ async function addUser (userInfo) {
 async function getUserList () {
   try {
     let res = await users.find({}, {activation_status: 0, idc: 0})
+    console.log(res)
     return res
   } catch (e) {
-    throw new Error(e.message) 
+    throw e.message 
   }
 }
 
@@ -41,7 +42,7 @@ async function updateUser (user_name, password) {
     })
     return res
   } catch (e) {
-    throw new Error(e.message)
+    throw e.message
   }
 }
 
@@ -52,7 +53,7 @@ async function deleteUser (account) {
     })
     return res
   } catch (e) {
-    throw new Error(e.message)
+    throw e.message
   } 
 }
 
@@ -72,7 +73,7 @@ async function searchUser (searchValue) {
     })
     return res
   } catch (e) {
-    throw new Error(e.message)
+    throw e.message
   }
 }
 
@@ -82,7 +83,7 @@ async function searchUserRole (RoleArr) {
       role_name: RoleArr
     })
   } catch (e) {
-    throw new Error(e.message)
+    throw e.message
   }
 }
 

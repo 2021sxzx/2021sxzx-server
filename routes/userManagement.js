@@ -3,16 +3,19 @@ const router = express.Router();
 const usersModel = require('../model/users')
 
 const {
-  addUser,
-  getUserList
-} = require('../service/userManagementService')
+  addUserAndReturnList,
+  returnUserList,
+  updateUserAndReturnList,
+  deleteUserAndReturnList,
+  searchUserAndReturnList
+} = require('../controller/userManagementController')
 
 router.get('/v1/getUserList', async (req, res, next) => {
 
-  let data = await getUserList();
-  console.log("data", data)
-
-  res.send({va: 1})
+  const data = await returnUserList();
+  res.json(data)
 })
+
+// router.get('/v1/')
 
 module.exports = router;

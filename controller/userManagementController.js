@@ -20,10 +20,13 @@ async function addUserAndReturnList (userInfo) {
   }
 }
 
-async function returnList () {
+async function returnUserList () {
   try {
-    const res = await getUserList()
-    return res
+    let res = await getUserList()
+    return new SuccessModel({
+      msg: '获取列表成功',
+      data: res
+    })
   } catch (e) {
     return new ErrorModel({msg: e.message})
   }
@@ -61,7 +64,7 @@ async function searchUserAndReturnList (searchValue) {
 
 module.exports = {
   addUserAndReturnList,
-  returnList,
+  returnUserList,
   updateUserAndReturnList,
   deleteUserAndReturnList,
   searchUserAndReturnList
