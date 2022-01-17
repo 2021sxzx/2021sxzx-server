@@ -34,7 +34,7 @@ async function getUserList () {
  * @param password
  * @return {Promise<>}
  */
-async function updateUser (user_name, password) {
+async function updateUser (user_name, password, account) {
   try {
     let res = await users.updateOne({
       user_name: user_name,
