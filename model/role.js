@@ -4,6 +4,7 @@ const mongoose = require("mongoose")
 const roleSchema = new mongoose.Schema({
   role_name: {   // 角色名称
     type: String,
+    unique:[true,'角色名称不能重复'],
     required: [true,'请传入角色名称，角色名不能为空'],
     maxlength:[50,'角色名长度不能超过50个字符']
   },
