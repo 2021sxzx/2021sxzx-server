@@ -5,8 +5,8 @@ const role = require('../model/role')
  * @param role_describe
  * @param permissions
  */
-async function addRole () {
-
+async function addRole (role_name, role_describe, permissions) {
+  
 }
 /**
  * 
