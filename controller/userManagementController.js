@@ -48,12 +48,13 @@ async function returnUserList () {
  * 用于返回一个用户经过更新之后的全体用户列表
  * @param user_name 用户名
  * @param password  密码
+ * @param role_name 角色名
  * @param account   用户账户
  * @return {Promise<SuccessModel | ErrorModel>}
  */
-async function updateUserAndReturnList (user_name, password, account) {
+async function updateUserAndReturnList (user_name, password, role_name, account) {
   try {
-    await updateUser(user_name, password, account)
+    await updateUser(user_name, password, role_name, account)
     const res = await getUserList()
     return new SuccessModel({
       msg: '修改成功',

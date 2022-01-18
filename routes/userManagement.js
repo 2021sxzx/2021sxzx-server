@@ -27,8 +27,8 @@ router.post('/v1/user', async (req, res, next) => {
 
 // 修改用户
 router.patch('/v1/user', async (req, res, next) => {
-  const { user_name, password } = req.query
-  const data = await updateUserAndReturnList(user_name, password)
+  const { user_name, password, role_name, account } = req.query
+  const data = await updateUserAndReturnList(user_name, password, role_name, account)
   res.json(data)
 })
 
