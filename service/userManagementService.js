@@ -29,16 +29,21 @@ async function getUserList () {
 }
 
 /**
- * 更新用户数据
+ * 更新用户数据，也包含更新角色
  * @param user_name
  * @param password
+ * @param role_name
+ * @param account
  * @return {Promise<>}
  */
-async function updateUser (user_name, password, account) {
+async function updateUser (user_name, password, role_name, account) {
   try {
     let res = await users.updateOne({
+      account: account
+    }, {
       user_name: user_name,
-      password: password
+      password: password,
+      role_name: role_name
     })
     return res
   } catch (e) {
@@ -77,15 +82,6 @@ async function searchUser (searchValue) {
   }
 }
 
-async function searchUserRole (RoleArr) {
-  try {
-    let res = await users.findOne({
-      role_name: RoleArr
-    })
-  } catch (e) {
-    throw e.message
-  }
-}
 
 module.exports = {
   addUser,
