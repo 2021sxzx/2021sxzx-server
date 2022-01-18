@@ -1,6 +1,10 @@
 const itemService = require('../service/itemService')
 const { ErrorModel, SuccessModel } = require('../utils/resultModel')
 
+/**
+ * 获取规则树
+ * @returns 
+ */
 async function getRuleTree() {
     try {
         var res = await itemService.getRuleTree()
@@ -10,6 +14,10 @@ async function getRuleTree() {
     }
 }
 
+/**
+ * 获取区划树
+ * @returns 
+ */
 async function getRegionTree() {
     try {
         var res = await itemService.getRegionTree()
@@ -19,6 +27,11 @@ async function getRegionTree() {
     }
 }
 
+/**
+ * 根据唯一id获取事项
+ * @param {object} requestBody 
+ * @returns 
+ */
 async function getItemByUniId(requestBody) {
     try {
         if (requestBody.item_id) {
@@ -35,6 +48,11 @@ async function getItemByUniId(requestBody) {
     }
 }
 
+/**
+ * 获取事项
+ * @param {object} requestBody 
+ * @returns 
+ */
 async function getItems(requestBody) {
     try {
         var res = await itemService.getItems({
@@ -49,6 +67,11 @@ async function getItems(requestBody) {
     }
 }
 
+/**
+ * 根据规则id获取事项
+ * @param {object} requestBody 
+ * @returns 
+ */
 async function getItemsByRuleId(requestBody) {
     try {
         if (requestBody.rule_id) {
@@ -77,6 +100,11 @@ async function getItemsByRuleId(requestBody) {
     }
 }
 
+/**
+ * 根据区划id获取事项
+ * @param {object} requestBody 
+ * @returns 
+ */
 async function getItemsByRegionId(requestBody) {
     try {
         if (requestBody.region_id) {
