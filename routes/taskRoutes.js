@@ -13,6 +13,11 @@ router.get('/v1/taskResult/:task_code',async (req,res,next) => {
   try {
     let task_code = req.params.task_code
     let data = await taskModel.find({task_code: task_code})
+    if(data) {
+      data.code = 200
+    } else {
+      data.code = 404
+    }
     setStatusCode(res, data)
     res.json(data)
   } catch (e) {
