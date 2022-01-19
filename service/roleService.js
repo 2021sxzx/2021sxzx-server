@@ -9,7 +9,7 @@ const permission = require('../model/permission')
  * @param role_name
  * @param role_describe
  * @param permission_identifier_array [Array]
- * 得要是一个数组，就不太好了
+ * 得要是一个数组，就不太好了。因为不好携带
  */
 async function addRole (role_name, role_describe, permission_identifier_array) {
   try {
@@ -25,6 +25,7 @@ async function addRole (role_name, role_describe, permission_identifier_array) {
         permission_identifier: item
       })
     })
+
     // 添加角色
     await role.create({
       role_name: role_name,
