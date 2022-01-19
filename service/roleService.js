@@ -2,18 +2,24 @@ const role = require('../model/role')
 const roleMapPermission = require('../model/roleMapPermission')
 const promission = require('../model/permission')
 const users = require('../model/users')
+const permission = require('../model/permission')
 
 /**
+ * 添加角色【肯定也要随之添加权限】
  * @param role_name
  * @param role_describe
- * @param permissions
+ * @param permission_identifier_array [Array]
+ * 得要是一个数组，就不太好了
  */
 async function addRole (role_name, role_describe, permission_identifier_array) {
   try {
-    const MapToCollectPermissionIdentifier = []
+    // 控制保证必须有输入权限
+    if (Set(permission_identifier_array).length <= 1) {
+      throw new Error(e.message)
+    }
+
     // 往权限角色关联表里面添加关联
     permission_identifier_array.map(async (item) => {
-      MapToCollectPermissionIdentifier.push(item)
       await roleMapPermission.create({
         role_name: role_name,
         permission_identifier: item
@@ -25,6 +31,9 @@ async function addRole (role_name, role_describe, permission_identifier_array) {
       role_describe: role_describe
     })
 
+    return {
+      isAdd: true
+    }
   } catch (e) {
     throw new Error(e.message)
   }  
@@ -95,6 +104,11 @@ async function deleteRole (role_name) {
   }
 }
 
+/**
+ * 返回搜索值
+ * @param searchValue
+ * @return {Promise<Array[]>} 
+ **/ 
 async function SearchRole (searchValue) {
   const reg = new RegExp(searchValue, 'i')
   try {
@@ -116,20 +130,46 @@ async function SearchRole (searchValue) {
 /**
  * 用于计算本角色对应的权限，返回一个本角色对应的权限列表[字符数组]
  * @param role_name
- * @return {Promise<Array[]>}
+ * @return {Array[]}
  */
 async function calcaulatePermission (role_name) {
   try {
-    const permissionFindArr = await roleMapPermission.find({
+    // 获取角色权限索引值列表
+    const permissionFindArrPrv = await roleMapPermission.find({
       role_name: role_name
-    }, {
-      permission_identifier: 0
     })
+
+    // 获取角色名称
+    const permissionFindArr = await Promise.all(
+      permissionFindArrPrv.map(async (item) => {
+        const permission_identifier = item.permission_identifier
+  
+        let Item = await permission.findOne({
+          permission_identifier: permission_identifier
+        })
+        return Item.permission
+      })
+    )
+
     return permissionFindArr
+
   } catch (e) {
     throw new Error(e.message)
   }
-} 
+}
+
+/**
+ * 列出权限列表
+ * @return {Promise<Array[]>}
+ */ 
+async function getPermissionList () {
+  try {
+    const res = permission.find({})
+    return res
+  } catch (e) {
+    throw new Error(e.message)
+  }
+}
 
 module.exports = {
   addRole,
@@ -137,5 +177,6 @@ module.exports = {
   updateRole,
   deleteRole,
   SearchRole,
-  calcaulatePermission
+  calcaulatePermission,
+  getPermissionList
 }
