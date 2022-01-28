@@ -66,6 +66,7 @@ async function getItems({ item_id, release_time, item_status, create_time, task_
         if (create_time) query.create_time = create_time
         if (task_code) query.task_code = task_code
         if (item_rule_id) query.item_rule_id = item_rule_id
+        console.log(query)
         var items = await item.find(query)
         var res = []
         for (let i = 0; i < items.length; i++) {
@@ -252,6 +253,15 @@ async function updateRule({ rule_id, rule_name, parentId }) {
     }
 }
 
+async function deleteRule({ rule_id }) {
+    try {
+        var res = await rule.deleteOne({ rule_id: rule_id })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
 module.exports = {
     getRuleTree,
     getItems,
@@ -262,5 +272,6 @@ module.exports = {
     updateItemRule,
     updateRule,
     getRegionTree,
-    getRule
+    getRule,
+    deleteRule
 }
