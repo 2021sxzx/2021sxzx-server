@@ -10,6 +10,10 @@ const regionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    region_level: {
+        type: Number,
+        required: true
+    },
     parentId: {
         type: String,
         default: ''
