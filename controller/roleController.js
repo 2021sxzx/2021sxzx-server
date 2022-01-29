@@ -1,90 +1,166 @@
-/**
- * 角色-权限管理
- */
 const {
-    addRole_,
-    deleteRole_,
-    updateRole_,
-    getRole_,
-    searchRole_,
-    updatePermissions_// XXX（钟卓江）：能不能把权限和非权限的更新写到一起？
-} = require("../service/roleService")
-const { SuccessModel, ErrorModel } = require('../utils/resultModel');
+  addRole,
+  getRoleList,
+  updateRole,
+  deleteRole,
+  SearchRole,
+  calcaulatePermission,
+  getPermissionList,
+} = require('../service/roleService')
+const { SuccessModel, ErrorModel } = require('../utils/resultModel')
 
 /**
- * 增加角色
- * @param {*} roleData 
- * @returns 
+ * 添加一个角色，并且返回一个角色供前端渲染
+ * @param {*} role_name
+ * @param {*} role_describe
+ * @param  {...any} permission_identifier_array
  */
-async function addRole(roleData) {
-    try {
-        const data = await addRole_(roleData.roleName,roleData.roleDescribe,roleData.permissions)
-        return new SuccessModel({ msg: '增加角色成功', data: data });
-    } catch (e) {
-        return new ErrorModel({ msg: e.message })
+async function addRoleAndReturnObject (
+  role_name,
+  role_describe,
+  ...permission_identifier_array
+) {
+  try {
+    await addRole(role_name, role_describe, ...permission_identifier_array)
+    const res = await getRoleList()
+
+    return new SuccessModel({
+      msg: '添加角色列表成功',
+      data: res,
+    })
+  } catch (e) {
+    throw new ErrorModel({
+      msg: '添加角色列表失败',
+      data: e.message,
+    })
+  }
+}
+
+/**
+ * 更新一个角色，并返回一个角色供前端渲染
+ * @param {*} role_name
+ * @param {*} role_describe
+ */
+async function updateRoleAndReturnObject (role_name, role_describe) {
+  try {
+    const res = await updateRole(role_name, role_describe)
+    return new SuccessModel({
+      msg: '更新用户角色成功',
+      data: res
+    })
+  } catch (e) {
+    throw new ErrorModel({
+      msg: '更新角色列表失败',
+      data: e.message,
+    })
+  }
+}
+
+/**
+ * 返回一个角色权限列表
+ * @returns {Promise<Array[]>}
+ */
+async function returnRoleList () {
+  try {
+    const roleList = await getRoleList()
+    const permissionList = await Promise.all(
+      await roleList.map(async (item) => {
+        const permissions = await calcaulatePermission(item.role_name)
+        return permissions
+      })
+    )
+  
+    let res = []
+  
+    for (let i = 0; i < roleList.length; i++) {
+      res.push({
+        role_name: roleList[i].role_name,
+        role_describe: roleList[i].role_describe,
+        permission: permissionList[i]
+      })
     }
+  
+    return new SuccessModel({
+      msg: '返回角色权限列表成功',
+      data: res
+    })
+
+  } catch (error) {
+    throw new ErrorModel({
+      msg: error.message
+    })
+  }
 }
 
 /**
  * 删除角色
- * @param {*} roleData 
- * @returns 
+ * @param {*} role_name 
+ * @returns {Promise<*>} 
  */
- async function deleteRole(roleData) {
-    try {
-        const data = await deleteRole_(roleData.roleName)
-        return new SuccessModel({ msg: '删除角色成功', data: data });
-    } catch (e) {
-        return new ErrorModel({ msg: e.message })
-    }
+async function deleteRoleAndReturnObject (role_name) {
+  try {
+    const res = await deleteRole(role_name)
+    return new SuccessModel({
+      msg: '删除成功',
+      data: res
+    })
+  } catch (error) {
+    throw new ErrorModel({
+      msg: error.message
+    })
+  }
 }
 
 /**
- * 更新角色信息
- * @param {*} roleData 
- * @returns {Promise<ErrorModel|SuccessModel>}
+ * 返回一个权限列表
  */
-async function updateRole(roleData) {
-    try {
-        const data = await updateRole_(roleData.roleName,roleData.roleDescribe,roleData.permissions);// 权限为空
-        return new SuccessModel({ msg: '更新角色信息成功', data: data });
-    } catch (e) {
-        return new ErrorModel({ msg: e.message })
-    }
-}
-
-/**
- * 获取角色信息
- * @param {*} roleData 
- * @returns {Promise<ErrorModel|SuccessModel>}
- */
-async function getRole(roleData) {// XXX(钟卓江)：这个roleData应该可以删掉
-    try {
-        const data = await getRole_()
-        return new SuccessModel({ msg: '获取角色信息成功', data: data });
-    } catch (e) {
-        return new ErrorModel({ msg: e.message })
-    }
+async function getPermissionListAndReturnObject () {
+  try {
+    const res = await getPermissionList()
+    return new SuccessModel({
+      msg: '返回权限成功',
+      data: res
+    })
+  } catch (error) {
+    throw new ErrorModel({
+      msg: error.message
+    })    
+  }
 }
 
 /**
  * 搜索角色
- * @param searchData
- * @returns {Promise<ErrorModel|SuccessModel>}
+ * @param {*} searchValue 
+ * @returns {Promise<Array[]>}
  */
- async function searchRole(searchData) {
-    try {
-        const data = await searchRole_(searchData.roleName)
-        return new SuccessModel({ msg: '搜索角色成功', data: data });
-    } catch (e) {
-        return new ErrorModel({ msg: e.message })
-    }
+async function searchRoleAndReturnObject (searchValue) {
+  try {
+    const Role = await SearchRole(searchValue)
+    const Permission = await calcaulatePermission(Role.role_name)
+
+    const res = [{
+      role_name: Role.role_name,
+      role_describe: Role.role_describe,
+      permission: Permission
+    }]
+
+    return new SuccessModel({
+      msg: '搜索成功',
+      data: res
+    })
+
+  } catch (error) {
+    throw new ErrorModel({
+      msg: error.message
+    })
+  }
 }
 
 module.exports = {
-    addRole,
-    deleteRole,
-    updateRole,
-    getRole,
-    searchRole
+  addRoleAndReturnObject,
+  updateRoleAndReturnObject,
+  returnRoleList,
+  deleteRoleAndReturnObject,
+  getPermissionListAndReturnObject,
+  searchRoleAndReturnObject
 }
