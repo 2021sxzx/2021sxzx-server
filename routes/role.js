@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const {
-    addRole,
-    deleteRole,
-    updateRole,
-    getRole,
-    searchRole,
-    updatePermissions// HACK(钟卓江)：感觉可以和其他非权限信息更新合在一起
+  addRoleAndReturnObject,
+  updateRoleAndReturnObject,
+  returnRoleList,
+  deleteRoleAndReturnObject,
+  getPermissionListAndReturnObject,
+  searchRoleAndReturnObject
 } = require("../controller/roleController")
 
 function setStatusCode(res, data) {
@@ -17,77 +17,75 @@ function setStatusCode(res, data) {
     }
 }
 
-/* 角色和权限相关的路由处理. */
-
 /**
- * 增加角色
+ * 添加角色
  */
- router.get('/v1/role', async (req, res, next) => {
-    let roleData = req.query
-    let data = await addRole(roleData)
-    setStatusCode(res, data)
-    res.json(data)
+router.post('/v1/role', async (req, res, next) => {
+  let role = req.body
+  let data = await addRoleAndReturnObject(
+    role.role_name,
+    role.role_describe,
+    role.permission_identifier_array
+  )
+  setStatusCode(res, data)
+  res.json(data)
 })
 
 /**
  * 删除角色
  */
- router.delete('/v1/role', async (req, res, next) => {
-    let roleData = req.query
-    let data = await deleteRole(roleData)
-    setStatusCode(res, data)
-    res.json(data)
+router.delete('/v1/role', async (req, res, next) => {
+  let role = req.query
+  let data = await deleteRoleAndReturnObject(role.role_name)
+  setStatusCode(res, data)
+  res.json(data)
 })
 
 /**
  * 更新角色非权限相关的信息
  */
-router.post('/v1/role', async (req, res, next) => {
-    let roleData = req.body;
-    let data = await updateRole(roleData);
-    setStatusCode(res, data)
-    res.json(data)
+router.patch('/v1/role', async (req, res, next) => {
+  let role = req.body
+  let data = await updateRoleAndReturnObject(role.role_name, role.role_describe)
+  setStatusCode(res, data)
+  res.json(data)
 })
 
 /**
- * 获取角色信息
+ * 获取角色列表
  */
 router.get('/v1/role', async (req, res, next) => {
-    let roleData = req.query
-    let data = await getRole(roleData)
-    setStatusCode(res, data)
-    res.json(data)
+  let data = await returnRoleList()
+  setStatusCode(res, data)
+  res.json(data)
 })
 
 /**
  * 搜索角色
  */
-router.post('/v1/searchRole', async (req, res, next) => {
-    let searchData = req.body
-    let data = await searchRole(searchData)
-    setStatusCode(res, data)
-    res.json(data)
+router.get('/v1/searchRole', async (req, res, next) => {
+  let role = req.query
+  let data = await searchRoleAndReturnObject(role.searchValue)
+  setStatusCode(res, data)
+  res.json(data)
 })
 
-// HACK（钟卓江）: 可能不需要，可以删掉
-// /**
-//  * 获取角色权限
-//  */
-// router.get('/v1/rolePermissions', async (req, res, next) => {
-//     let roleData = req.query
-//     let data = await getPermissions(roleData)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
-// 
-// /**
-//  * 更新角色权限
-//  */
-//  router.post('/v1/rolePermissions', async (req, res, next) => {
-//     let roleData = req.query
-//     let data = await updatePermissions(roleData)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
+/**
+ * 修改用户权限
+ */
+router.patch('/v1/permission', async (req, res, next) => {
+  let role = req.body
+  // let data = await 
+})
+
+/**
+ * 列出权限列表
+ */
+router.get('/v1/permissionList', async (req, res, next) => {
+  let data = await getPermissionListAndReturnObject()
+  setStatusCode(res, data)
+  res.json(data)
+})
+
 
 module.exports = router;

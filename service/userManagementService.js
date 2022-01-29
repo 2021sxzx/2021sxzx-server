@@ -1,4 +1,5 @@
 const users = require('../model/users')
+const roleMapPermission = require('../model/roleMapPermission')
 
 /**
  * 添加后台用户
@@ -21,7 +22,6 @@ async function addUser (userInfo) {
 async function getUserList () {
   try {
     let res = await users.find({}, {activation_status: 0, idc: 0})
-    console.log(res)
     return res
   } catch (e) {
     throw e.message 
@@ -51,6 +51,11 @@ async function updateUser (user_name, password, role_name, account) {
   }
 }
 
+/**
+ * 删除角色
+ * @param {*} account 
+ * @returns 
+ */
 async function deleteUser (account) {
   try {
     let res = await users.deleteOne({
@@ -62,6 +67,11 @@ async function deleteUser (account) {
   } 
 }
 
+/**
+ * 修改角色
+ * @param {*} searchValue 
+ * @returns 
+ */
 async function searchUser (searchValue) {
   const reg = new RegExp(searchValue, 'i')
   try {
