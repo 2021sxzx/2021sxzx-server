@@ -262,6 +262,15 @@ async function deleteRule({ rule_id }) {
     }
 }
 
+async function deleteItemRule({ item_rule_id }) {
+    try {
+        var res = await itemRule.deleteOne({ item_rule_id: item_rule_id })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
 module.exports = {
     getRuleTree,
     getItems,
@@ -273,5 +282,6 @@ module.exports = {
     updateRule,
     getRegionTree,
     getRule,
-    deleteRule
+    deleteRule,
+    deleteItemRule
 }

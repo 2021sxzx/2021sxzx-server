@@ -30,3 +30,5 @@
 ::ffff:127.0.0.1 - - [18/Jan/2022:10:32:17 +0000] "GET /api/v1/getItems HTTP/1.1" 200 43 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [18/Jan/2022:10:34:25 +0000] "GET /api/v1/getItemsByUniId HTTP/1.1" 404 1316 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [18/Jan/2022:10:35:35 +0000] "GET /api/v1/getItemByUniId HTTP/1.1" 200 189 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [30/Jan/2022:09:13:46 +0000] "GET /api/v1/getItemRules HTTP/1.1" 404 1316 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [30/Jan/2022:09:15:31 +0000] "GET /api/v1/getItemRules HTTP/1.1" 200 7220 "-" "PostmanRuntime/7.29.0"

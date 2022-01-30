@@ -58,4 +58,10 @@ router.post('/v1/deleteRules', async (req, res, next) => {
     res.json(data)
 })
 
+router.get('/v1/getItemRules', async (req, res, next) => {
+    let data = await itemController.getItemRules(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 module.exports = router
