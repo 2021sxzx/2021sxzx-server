@@ -179,10 +179,15 @@ async function createRules(requestBody) {
             if (requestBody.rules.length <= 0) {
                 throw new Error('数组长度小于等于0')
             }
-            var stake = itemService.getRule({ rule_name: 'null' })
+            var stakes = await itemService.getRule({ rule_name: 'null' })
+            if (stakes.length !== 1) {
+                await createRuleStake()
+                stakes = await itemService.getRule({ rule_name: 'null' })
+            }
+            var stake = stakes[0]
             var maxRuleId = parseInt(stake.rule_id)
             await itemService.deleteRule({ rule_id: stake.rule_id })
-            var dict = []
+            var dict = new Array()
             for (let i = 0; i < requestBody.rules.length; i++) {
                 requestBody.rules[i].rule_id = maxRuleId.toString()
                 dict[requestBody.rules[i].temp_id] = requestBody.rules[i]
@@ -220,22 +225,31 @@ async function createRules(requestBody) {
 
 async function createRuleStake() {
     try {
-        var stake = await itemService.getRule({ rule_name: 'null' })
-        if (!stake || stake.length <= 0) {
-            var maxRuleId = 0
-            var rules = itemService.getRule({})
-            for (let i = 0; i < rules.length; i++) {
-                let ruleId = parseInt(rules[i].rule_id)
-                if (maxRuleId < ruleId) {
-                    maxRuleId = ruleId
+        var maxRuleId = 0
+        var rules = await itemService.getRule({})
+        for (let i = 0; i < rules.length; i++) {
+            let ruleId = parseInt(rules[i].rule_id)
+            if (maxRuleId < ruleId && rules[i].rule_name !== 'null') {
+                maxRuleId = ruleId
+            }
+        }
+        maxRuleId = maxRuleId + 1
+        await itemService.createRule({
+            rule_id: maxRuleId.toString(),
+            rule_name: 'null',
+            parentId: ''
+        })
+        var stakes = await itemService.getRule({ rule_name: 'null' })
+        if (stakes.length > 1) {
+            let maxStakeId = 0
+            for (let i = 0; i < stakes.length; i++) {
+                if (parseInt(stakes[i].rule_id) <= maxStakeId) {
+                    await itemService.deleteRule({ rule_id: stakes[i].rule_id })
+                }
+                else {
+                    maxStakeId = parseInt(stakes[i].rule_id)
                 }
             }
-            maxRuleId = maxRuleId + 1
-            await itemService.createRule({
-                rule_id: maxRuleId.toString(),
-                rule_name: 'null',
-                parentId: ''
-            })
         }
     } catch (err) {
         throw new Error('联系管理员检查数据库的rule表，确保rule_name为null的桩存在且rule_id是最大值')
@@ -254,6 +268,15 @@ async function deleteRules(requestBody) {
                 throw new Error('数组长度小于等于0')
             }
             for (let i = 0; i < requestBody.rules.length; i++) {
+                let rule = await itemService.getRule({ rule_id: requestBody.rules[i].rule_id })
+                if (rule.length <= 0) {
+                    throw new Error('rule_id不存在: ' + requestBody.rules[i].rule_id)
+                }
+                else {
+                    if (rule[0].rule_name === 'null') {
+                        throw new Error('rule_id违法: ' + requestBody.rules[i].rule_id)
+                    }
+                }
                 await itemService.deleteRule({ rule_id: requestBody.rules[i].rule_id })
             }
             return new SuccessModel({ msg: '删除规则成功' })
@@ -275,31 +298,29 @@ async function createItemRules(requestBody) {
             if (requestBody.itemRules.length <= 0) {
                 throw new Error('数组长度小于等于0')
             }
-            var stake = itemService.getItemRule({ rule_id: 'null', region_id: 'null' })
-            var maxItemRuleId = parseInt(stake.item_rule_id)
-            await itemService.deleteItemRule({ item_rule_id: stake.item_rule_id })
-            var dict = []
-            for (let i = 0; i < requestBody.itemRules.length; i++) {
-                requestBody.itemRules[i].item_rule_id = maxItemRuleId.toString()
-                dict[requestBody.itemRules[i].temp_id] = requestBody.itemRules[i]
-                maxItemRuleId = maxItemRuleId + 1
+            var stakes = await itemService.getItemRule({ rule_id: 'null', region_id: 'null' })
+            if (stakes.length !== 1) {
+                await createItemRuleStake()
+                stakes = await itemService.getItemRule({ rule_id: 'null', region_id: 'null' })
             }
+            var stake = stakes[0]
+            var maxRuleId = parseInt(stake.item_rule_id)
+            await itemService.deleteItemRule({ item_rule_id: stake.item_rule_id })
             for (let i = 0; i < requestBody.itemRules.length; i++) {
-                if (dict[requestBody.itemRules[i].parentId]) {
-                    requestBody.itemRules[i].parentId = dict[requestBody.itemRules[i].parentId].item_rule_id
-                }
+                requestBody.itemRules[i].item_rule_id = maxRuleId.toString()
+                maxRuleId = maxRuleId + 1
             }
             for (let i = 0; i < requestBody.itemRules.length; i++) {
                 await itemService.createItemRule({
                     create_time: Date.now(),
                     item_rule_id: requestBody.itemRules[i].item_rule_id,
-                    rule_id: requestBody.itemRules[i].rule_id,
-                    region_id: requestBody.itemRules[i].region_id
+                    rule_id: requestBody.itemRules[i].rule_id ? requestBody.itemRules[i].rule_id : '',
+                    region_id: requestBody.itemRules[i].region_id ? requestBody.itemRules[i].region_id : ''
                 })
             }
             await itemService.createItemRule({
                 create_time: Date.now(),
-                item_rule_id: maxItemRuleId.toString(),
+                item_rule_id: maxRuleId.toString(),
                 rule_id: 'null',
                 region_id: 'null'
             })
@@ -318,26 +339,66 @@ async function createItemRules(requestBody) {
 
 async function createItemRuleStake() {
     try {
-        var stake = await itemService.getItemRule({ rule_id: 'null', region_id: 'null' })
-        if (!stake || stake.length <= 0) {
-            var maxRuleId = 0
-            var itemRules = itemService.getItemRule({})
-            for (let i = 0; i < itemRules.length; i++) {
-                let itemRuleId = parseInt(itemRules[i].item_rule_id)
-                if (maxRuleId < itemRuleId) {
-                    maxRuleId = itemRuleId
+        var maxRuleId = 0
+        var itemRules = await itemService.getItemRule({})
+        for (let i = 0; i < itemRules.length; i++) {
+            let ruleId = parseInt(itemRules[i].item_rule_id)
+            if (maxRuleId < ruleId && itemRules[i].rule_id !== 'null' && itemRules[i].region_id !== 'null') {
+                maxRuleId = ruleId
+            }
+        }
+        maxRuleId = maxRuleId + 1
+        await itemService.createItemRule({
+            create_time: Date.now(),
+            item_rule_id: maxRuleId.toString(),
+            rule_id: 'null',
+            region_id: 'null'
+        })
+        var stakes = await itemService.getItemRule({ rule_id: 'null', region_id: 'null' })
+        if (stakes.length > 1) {
+            let maxStakeId = 0
+            for (let i = 0; i < stakes.length; i++) {
+                if (parseInt(stakes[i].item_rule_id) <= maxStakeId) {
+                    await itemService.deleteItemRule({ item_rule_id: stakes[i].item_rule_id })
+                }
+                else {
+                    maxStakeId = parseInt(stakes[i].item_rule_id)
                 }
             }
-            maxRuleId = maxRuleId + 1
-            await itemService.createItemRule({
-                create_time: Date.now(),
-                item_rule_id: maxRuleId.toString(),
-                rule_id: 'null',
-                region_id: 'null'
-            })
         }
     } catch (err) {
-        throw new Error('联系管理员检查数据库的item_rule表，确保rule_id为null和region_id为null的桩存在且item_rule_id是最大值')
+        throw new Error('联系管理员检查数据库的item_rule表，确保rule_id和region_id为null的桩存在且item_rule_id是最大值')
+    }
+}
+
+/**
+ * 删除事项规则
+ * @param {object} requestBody 
+ * @returns 
+ */
+async function deleteItemRules(requestBody) {
+    try {
+        if (requestBody.itemRules) {
+            if (requestBody.itemRules.length <= 0) {
+                throw new Error('数组长度小于等于0')
+            }
+            for (let i = 0; i < requestBody.itemRules.length; i++) {
+                let rule = await itemService.getItemRule({ item_rule_id: requestBody.itemRules[i].item_rule_id })
+                if (rule.length <= 0) {
+                    throw new Error('item_rule_id不存在: ' + requestBody.itemRules[i].item_rule_id)
+                }
+                else {
+                    if (rule[0].rule_name === 'null') {
+                        throw new Error('item_rule_id违法: ' + requestBody.itemRules[i].item_rule_id)
+                    }
+                }
+                await itemService.deleteItemRule({ item_rule_id: requestBody.itemRules[i].item_rule_id })
+            }
+            return new SuccessModel({ msg: '删除事项规则成功' })
+        }
+        throw new Error('请求体中需要一个itemRules属性，且该属性是一个数组')
+    } catch (err) {
+        return new ErrorModel({ msg: '删除事项规则失败', data: err.message })
     }
 }
 
@@ -351,5 +412,6 @@ module.exports = {
     createRules,
     deleteRules,
     getItemRules,
-    createItemRules
+    createItemRules,
+    deleteItemRules
 }

@@ -64,4 +64,16 @@ router.get('/v1/getItemRules', async (req, res, next) => {
     res.json(data)
 })
 
+router.get('/v1/createItemRules', async (req, res, next) => {
+    let data = await itemController.createItemRules(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/deleteItemRules', async (req, res, next) => {
+    let data = await itemController.deleteItemRules(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 module.exports = router
