@@ -135,10 +135,16 @@ async function getPermissionListAndReturnObject () {
  */
 async function searchRoleAndReturnObject (searchValue) {
   try {
-    const Role = await SearchRole(searchValue)
+    // 获取来自前端的输入数据，数据名称为 roleNameOrDescribe
+    let {roleNameOrDescribe} = searchValue
+    if(!roleNameOrDescribe){
+      roleNameOrDescribe = ''
+    }
+    const Role = await SearchRole(roleNameOrDescribe)
     const Permission = await calcaulatePermission(Role.role_name)
 
-    const res = [{
+    // XXX（钟卓江 => 林凯迪）：如果搜索结果 有多个怎么办？是不是 bug
+    const data = [{
       role_name: Role.role_name,
       role_describe: Role.role_describe,
       permission: Permission
@@ -146,7 +152,7 @@ async function searchRoleAndReturnObject (searchValue) {
 
     return new SuccessModel({
       msg: '搜索成功',
-      data: res
+      data: data
     })
 
   } catch (error) {

@@ -5,19 +5,25 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
+// 导入路由模块
 const usersRouter = require('./routes/users');
 const commentRouter = require("./routes/comment")
 const systemLogRouter=require("./routes/systemLog")
 const taskRouter = require("./routes/taskRoutes")
 const itemRouter = require('./routes/item')
 const userManagementRouter = require('./routes/userManagement')
+const roleRouter = require('./routes/role')
 
-const {MONGO_CONFIG} = require("./config/db") //数据库的配置信息
+// 数据库
+const {MONGO_CONFIG} = require("./config/db.js") //数据库的配置信息
+
 const mongoose = require("mongoose")
 // const rule = require("./model/rule")
 const itemRule = require("./model/itemRule")
 const item = require("./model/item")
-const itemGuide = require("./model/task")
+const itemGuide = require("./model/task");
+const role = require('./model/role');
+
 mongoose.connect(MONGO_CONFIG.url);
 const app = express();
 
@@ -47,6 +53,7 @@ app.use('/api',taskRouter)
 app.use('/api',systemLogRouter)
 app.use('/api', itemRouter)
 app.use('/api', userManagementRouter)
+app.use('/api',roleRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

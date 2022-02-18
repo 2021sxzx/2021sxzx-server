@@ -35,7 +35,7 @@ router.post('/v1/role', async (req, res, next) => {
  * 删除角色
  */
 router.delete('/v1/role', async (req, res, next) => {
-  let role = req.query
+  let role = req.body.data
   let data = await deleteRoleAndReturnObject(role.role_name)
   setStatusCode(res, data)
   res.json(data)
@@ -45,7 +45,7 @@ router.delete('/v1/role', async (req, res, next) => {
  * 更新角色非权限相关的信息
  */
 router.patch('/v1/role', async (req, res, next) => {
-  let role = req.body
+  let role = req.body.data
   let data = await updateRoleAndReturnObject(role.role_name, role.role_describe)
   setStatusCode(res, data)
   res.json(data)
@@ -63,9 +63,9 @@ router.get('/v1/role', async (req, res, next) => {
 /**
  * 搜索角色
  */
-router.get('/v1/searchRole', async (req, res, next) => {
-  let role = req.query
-  let data = await searchRoleAndReturnObject(role.searchValue)
+router.post('/v1/searchRole', async (req, res, next) => {
+  let searchData = req.body
+  let data = await searchRoleAndReturnObject(searchData)
   setStatusCode(res, data)
   res.json(data)
 })
