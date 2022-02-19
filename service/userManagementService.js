@@ -21,7 +21,7 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    let res = await users.find({}, {activation_status: 0, idc: 0})
+    let res = await users.find({})
     return res
   } catch (e) {
     throw e.message 
@@ -72,6 +72,7 @@ async function deleteUser (account) {
  * @param {*} searchValue 
  * @returns 
  */
+// TODO (钟卓江=>林凯迪):原型上是对每个属性值分别查，不是混在一起查
 async function searchUser (searchValue) {
   const reg = new RegExp(searchValue, 'i')
   try {

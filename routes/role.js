@@ -45,7 +45,7 @@ router.delete('/v1/role', async (req, res, next) => {
  * 更新角色非权限相关的信息
  */
 router.patch('/v1/role', async (req, res, next) => {
-  let role = req.body.data
+  let role = req.body
   let data = await updateRoleAndReturnObject(role.role_name, role.role_describe)
   setStatusCode(res, data)
   res.json(data)

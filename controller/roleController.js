@@ -143,7 +143,7 @@ async function searchRoleAndReturnObject (searchValue) {
     const Role = await SearchRole(roleNameOrDescribe)
     const Permission = await calcaulatePermission(Role.role_name)
 
-    // XXX（钟卓江 => 林凯迪）：如果搜索结果 有多个怎么办？是不是 bug
+    // TODO（钟卓江 => 林凯迪）：如果搜索结果 有多个怎么办？是不是 bug
     const data = [{
       role_name: Role.role_name,
       role_describe: Role.role_describe,
