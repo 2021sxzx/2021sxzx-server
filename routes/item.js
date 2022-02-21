@@ -76,4 +76,34 @@ router.get('/v1/deleteItemRules', async (req, res, next) => {
     res.json(data)
 })
 
+router.get('/v1/getRulePath', async (req, res, next) => {
+    let data = await itemController.getRulePath(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/getItemRulePath', async (req, res, next) => {
+    let data = await itemController.getItemRulePath(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/getRules', async (req, res, next) => {
+    let data = await itemController.getRules(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/getChildRules', async (req, res, next) => {
+    let data = await itemController.getChildRules(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/getAllItemsByRegionId', async (req, res, next) => {
+    let data = await itemController.getAllItemsByRegionId(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 module.exports = router

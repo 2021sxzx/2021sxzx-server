@@ -61,3 +61,7 @@
 ::ffff:127.0.0.1 - - [30/Jan/2022:12:09:44 +0000] "POST /api/v1/deleteRules HTTP/1.1" 200 49 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [30/Jan/2022:12:18:38 +0000] "POST /api/v1/createRules HTTP/1.1" 200 49 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [30/Jan/2022:12:19:29 +0000] "POST /api/v1/deleteRules HTTP/1.1" 200 49 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [21/Feb/2022:06:49:36 +0000] "POST /api/v1/getItems HTTP/1.1" 404 1316 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [21/Feb/2022:06:50:01 +0000] "GET /api/v1/getItems HTTP/1.1" 200 13551 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [21/Feb/2022:06:53:48 +0000] "GET /api/v1/getRuleTree HTTP/1.1" 200 14125 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [21/Feb/2022:07:27:44 +0000] "GET /api/v1/getRegionTree HTTP/1.1" - - "-" "PostmanRuntime/7.29.0"

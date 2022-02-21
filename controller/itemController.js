@@ -128,13 +128,13 @@ async function getItemsByRegionId(requestBody) {
     try {
         if (requestBody.region_id) {
             var itemrules = await itemService.getItemRule({ region_id: requestBody.region_id })
-            var itemruleids = []
+            var itemruleids = new Array()
             for (let i = 0; i < itemrules.length; i++) {
                 if (!itemruleids.includes(itemrules[i])) {
                     itemruleids.push(itemrules[i].item_rule_id)
                 }
             }
-            var res = []
+            var res = new Array()
             for (let i = 0; i < itemruleids.length; i++) {
                 let r = await itemService.getItems({
                     item_rule_id: itemruleids[i],
@@ -157,10 +157,34 @@ async function getItemsByRegionId(requestBody) {
  * @param {object} requestBody 
  * @returns 
  */
-async function getItemsIncludeChildRegions(requestBody) {
+async function getAllItemsByRegionId(requestBody) {
     try {
         if (requestBody.region_id) {
-
+            var flag = true
+            var regions = new Array()
+            let root = await itemService.getRegion({ region_id: requestBody.region_id })
+            regions.push(root)
+            while (flag) {
+                let lastLen = regions.length
+                for (let i = 0; i < lastLen; i++) {
+                    let r = await itemService.getRegion({ parentId: regions[i].region_id })
+                    regions.push(r)
+                }
+                if (regions.length === lastLen) {
+                    flag = false
+                }
+            }
+            var itemrules = new Array()
+            for (let i = 0; i < regions.length; i++) {
+                let r = await itemService.getItemRule({ region_id: regions[i].region_id })
+                itemrules.push(r)
+            }
+            var items = new Array()
+            for (let i = 0; i < itemrules.length; i++) {
+                let r = await itemService.getItems({ item_rule_id: itemrules[i].item_rule_id })
+                items.push(r)
+            }
+            return new SuccessModel({ msg: '查询成功', data: items })
         }
         throw new Error('至少需要region_id')
     } catch (err) {
@@ -402,6 +426,106 @@ async function deleteItemRules(requestBody) {
     }
 }
 
+/**
+ * 通过rule_id获取对应的规则路径
+ * @param {object} requestBody 
+ * @returns 
+ */
+async function getRulePath(requestBody) {
+    try {
+        if (requestBody.ruleIds) {
+            if (requestBody.ruleIds.length <= 0) {
+                throw new Error('数组长度小于等于0')
+            }
+            var res = new Array()
+            for (let i = 0; i < requestBody.ruleIds.length; i++) {
+                let rulePath = await itemService.getRulePath({ rule_id: requestBody.ruleIds[i] })
+                res.push(rulePath)
+            }
+            return new SuccessModel({ msg: '获取规则路径成功', data: res })
+        }
+        throw new Error('请求体中需要一个ruleIds属性，且该属性是一个数组')
+    } catch (err) {
+        return new ErrorModel({ msg: '获取规则路径失败', data: err.message })
+    }
+}
+
+/**
+ * 通过item_rule_id获取对应的规则路径
+ * @param {object} requestBody 
+ * @returns 
+ */
+async function getItemRulePath(requestBody) {
+    try {
+        if (requestBody.itemRuleIds) {
+            if (requestBody.itemRuleIds.length <= 0) {
+                throw new Error('数组长度小于等于0')
+            }
+            var res = new Array()
+            for (let i = 0; i < requestBody.itemRuleIds.length; i++) {
+                let itemRule = await itemService.getItemRule({ item_rule_id: requestBody.itemRuleIds[i] })
+                if (itemRule.length <= 0) {
+                    throw new Error('item_rule_id不存在: ' + requestBody.itemRuleIds[i])
+                }
+                else {
+                    if (itemRule[0].rule_id === 'null') {
+                        throw new Error('item_rule_id违法: ' + requestBody.itemRuleIds[i])
+                    }
+                    let rulePath = await itemService.getRulePath({ rule_id: itemRule[0].rule_id })
+                    res.push(rulePath)
+                }
+            }
+            return new SuccessModel({ msg: '获取事项规则路径成功', data: res })
+        }
+        throw new Error('请求体中需要一个itemRuleIds属性，且该属性是一个数组')
+    } catch (err) {
+        return new ErrorModel({ msg: '获取事项规则路径失败', data: err.message })
+    }
+}
+
+/**
+ * 获取规则
+ * @param {object} requestBody 
+ * @returns 
+ */
+async function getRules(requestBody) {
+    try {
+        var res = await itemService.getRule({
+            rule_id: requestBody.rule_id,
+            rule_name: requestBody.rule_name,
+            parentId: requestBody.parentId
+        })
+        return new SuccessModel({ msg: '获取规则成功', data: res })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取规则失败', data: err.message })
+    }
+}
+
+/**
+ * 获取规则的子规则
+ * @param {object} requestBody 
+ * @returns 
+ */
+async function getChildRules(requestBody) {
+    try {
+        if (requestBody.ruleIds) {
+            if (requestBody.ruleIds.length <= 0) {
+                throw new Error('数组长度小于等于0')
+            }
+            var res = new Array()
+            for (let i = 0; i < requestBody.ruleIds.length; i++) {
+                let parentId = requestBody.ruleIds[i]
+                let r = await itemService.getRule({ parentId: parentId })
+                res = res.concat(r)
+            }
+            return new SuccessModel({ msg: '获取规则成功', data: res })
+        }
+        throw new Error('需要ruleIds字段，且是个数组')
+    } catch (err) {
+        return new ErrorModel({ msg: '获取规则失败', data: err.message })
+    }
+}
+
 module.exports = {
     getRuleTree,
     getRegionTree,
@@ -413,5 +537,10 @@ module.exports = {
     deleteRules,
     getItemRules,
     createItemRules,
-    deleteItemRules
+    deleteItemRules,
+    getRulePath,
+    getItemRulePath,
+    getRules,
+    getChildRules,
+    getAllItemsByRegionId
 }

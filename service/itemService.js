@@ -132,7 +132,7 @@ async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
         if (item_rule_id) query.item_rule_id = item_rule_id
         if (rule_id) query.rule_id = rule_id
         if (region_id) query.region_id = region_id
-        var itemrules = await itemRule.find(query)
+        var itemrules = await itemRule.find(query).ne('rule_id', 'null')
         var res = []
         for (let i = 0; i < itemrules.length; i++) {
             res.push({
@@ -271,6 +271,47 @@ async function deleteItemRule({ item_rule_id }) {
     }
 }
 
+async function getRulePath({ rule_id }) {
+    try {
+        var res = []
+        do {
+            let r = await rule.findOne({ rule_id: rule_id })
+            res.unshift({
+                rule_id: r.rule_id,
+                rule_name: r.rule_name,
+                parentId: r.parentId
+            })
+            rule_id = r.rule_id
+        } while (rule_id !== '0')
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function getRegion({ region_id, region_name, region_level, parentId }) {
+    try {
+        var query = {}
+        if (region_id) query.region_id = region_id
+        if (region_name) query.region_name = region_name
+        if (region_level) query.region_level = region_level
+        if (parentId) query.parentId = parentId
+        var regions = await region.find(query)
+        var res = []
+        for (let i = 0; i < regions.length; i++) {
+            res.push({
+                region_id: regions[i].region_id,
+                region_name: regions[i].region_name,
+                region_level: regions[i].region_level,
+                parentId: regions[i].parentId
+            })
+        }
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
 module.exports = {
     getRuleTree,
     getItems,
@@ -283,5 +324,7 @@ module.exports = {
     getRegionTree,
     getRule,
     deleteRule,
-    deleteItemRule
+    deleteItemRule,
+    getRulePath,
+    getRegion
 }
