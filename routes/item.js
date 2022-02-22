@@ -94,12 +94,6 @@ router.get('/v1/getRules', async (req, res, next) => {
     res.json(data)
 })
 
-router.get('/v1/getChildRules', async (req, res, next) => {
-    let data = await itemController.getChildRules(req.body)
-    setStatusCode(res, data)
-    res.json(data)
-})
-
 router.get('/v1/getAllItemsByRegionId', async (req, res, next) => {
     let data = await itemController.getAllItemsByRegionId(req.body)
     setStatusCode(res, data)

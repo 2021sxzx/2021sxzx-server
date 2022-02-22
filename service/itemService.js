@@ -66,7 +66,6 @@ async function getItems({ item_id, release_time, item_status, create_time, task_
         if (create_time) query.create_time = create_time
         if (task_code) query.task_code = task_code
         if (item_rule_id) query.item_rule_id = item_rule_id
-        console.log(query)
         var items = await item.find(query)
         var res = []
         for (let i = 0; i < items.length; i++) {
@@ -132,7 +131,7 @@ async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
         if (item_rule_id) query.item_rule_id = item_rule_id
         if (rule_id) query.rule_id = rule_id
         if (region_id) query.region_id = region_id
-        var itemrules = await itemRule.find(query).ne('rule_id', 'null')
+        var itemrules = await itemRule.find(query)
         var res = []
         for (let i = 0; i < itemrules.length; i++) {
             res.push({
@@ -281,7 +280,7 @@ async function getRulePath({ rule_id }) {
                 rule_name: r.rule_name,
                 parentId: r.parentId
             })
-            rule_id = r.rule_id
+            rule_id = r.parentId
         } while (rule_id !== '0')
         return res
     } catch (err) {
