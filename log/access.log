@@ -104,3 +104,7 @@
 ::ffff:127.0.0.1 - - [22/Feb/2022:08:16:03 +0000] "GET /api/v1/getAllItemsByRegionId HTTP/1.1" 200 13551 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [22/Feb/2022:08:16:33 +0000] "GET /api/v1/getItemsByRegionId HTTP/1.1" 200 10905 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [22/Feb/2022:08:17:13 +0000] "GET /api/v1/getAllItemsByRegionId HTTP/1.1" 200 13551 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [22/Feb/2022:08:25:25 +0000] "GET /api/v1/getItemRulePath HTTP/1.1" 200 394 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [22/Feb/2022:08:27:13 +0000] "GET /api/v1/getItemRulePath HTTP/1.1" 200 324 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [22/Feb/2022:08:27:30 +0000] "GET /api/v1/getItemRulePath HTTP/1.1" 200 357 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [22/Feb/2022:08:27:44 +0000] "GET /api/v1/getItemRulePath HTTP/1.1" 200 451 "-" "PostmanRuntime/7.29.0"
