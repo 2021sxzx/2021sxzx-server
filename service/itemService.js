@@ -11,7 +11,7 @@ const region = require('../model/region')
 async function getRuleTree() {
     try {
         var rules = await rule.find().ne('rule_name', 'null')
-        var res = new Array()
+        var res = {}
         for (let i = 0; i < rules.length; i++) {
             res[rules[i].rule_id] = {
                 rule_id: rules[i].rule_id,
@@ -32,7 +32,7 @@ async function getRuleTree() {
 async function getRegionTree() {
     try {
         var regions = await region.find()
-        var res = new Array()
+        var res = {}
         for (let i = 0; i < regions.length; i++) {
             res[regions[i].region_id] = {
                 region_id: regions[i].region_id,

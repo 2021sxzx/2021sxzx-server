@@ -451,10 +451,10 @@ async function getRulePath(requestBody) {
             if (requestBody.ruleIds.length <= 0) {
                 throw new Error('数组长度小于等于0')
             }
-            var res = new Array()
+            var res = {}
             for (let i = 0; i < requestBody.ruleIds.length; i++) {
                 let rulePath = await itemService.getRulePath({ rule_id: requestBody.ruleIds[i] })
-                res.push(rulePath)
+                res[requestBody.ruleIds[i]] = rulePath
             }
             return new SuccessModel({ msg: '获取规则路径成功', data: res })
         }
@@ -475,7 +475,7 @@ async function getItemRulePath(requestBody) {
             if (requestBody.itemRuleIds.length <= 0) {
                 throw new Error('数组长度小于等于0')
             }
-            var res = new Array()
+            var res = {}
             for (let i = 0; i < requestBody.itemRuleIds.length; i++) {
                 let itemRule = await itemService.getItemRule({ item_rule_id: requestBody.itemRuleIds[i] })
                 if (itemRule.length <= 0) {
@@ -486,7 +486,7 @@ async function getItemRulePath(requestBody) {
                         throw new Error('item_rule_id违法: ' + requestBody.itemRuleIds[i])
                     }
                     let rulePath = await itemService.getRulePath({ rule_id: itemRule[0].rule_id })
-                    res.push(rulePath)
+                    res[requestBody.itemRuleIds[i]] = rulePath
                 }
             }
             return new SuccessModel({ msg: '获取事项规则路径成功', data: res })
