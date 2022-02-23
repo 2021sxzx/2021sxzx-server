@@ -32,7 +32,6 @@ router.post('/v1/user', async (req, res, next) => {
     account: req.body.account,
     password: req.body.password,
     role_name: req.body.role_name,
-    idc:req.body.idc
   })
   setStatusCode(res, data)
   res.json(data)
