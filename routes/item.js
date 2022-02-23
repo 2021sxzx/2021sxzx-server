@@ -100,4 +100,16 @@ router.get('/v1/getAllItemsByRegionId', async (req, res, next) => {
     res.json(data)
 })
 
+router.get('/v1/getItemGuide', async (req, res, next) => {
+    let data = await itemController.getItemGuide(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/getRegionPath', async (req, res, next) => {
+    let data = await itemController.getRegionPath(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 module.exports = router

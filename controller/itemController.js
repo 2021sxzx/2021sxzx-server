@@ -190,7 +190,7 @@ async function getAllItemsByRegionId(requestBody) {
             }
             var items = new Array()
             for (let i = 0; i < itemrules.length; i++) {
-                let r = await itemService.getItems({ 
+                let r = await itemService.getItems({
                     item_rule_id: itemrules[i].item_rule_id,
                     item_status: requestBody.item_status,
                     release_time: requestBody.release_time,
@@ -516,19 +516,43 @@ async function getRules(requestBody) {
 }
 
 /**
- * 获取规则的子规则
+ * 获取事项指南
  * @param {object} requestBody 
  * @returns 
  */
-async function getChildRules(requestBody) {
+async function getItemGuide(requestBody) {
     try {
-        if (requestBody.rule_id) {
-            var res = await itemService.getRule({ parentId: rule_id })
-            return new SuccessModel({ msg: '获取规则成功', data: res })
+        if (requestBody.task_code) {
+            var res = await itemService.getTask({ task_code: requestBody.task_code })
+            return new SuccessModel({ msg: '查询成功', data: res })
         }
-        throw new Error('需要rule_id字段')
+        throw new Error('需要task_code字段')
     } catch (err) {
-        return new ErrorModel({ msg: '获取规则失败', data: err.message })
+        return new ErrorModel({ msg: '查询失败', data: err.message })
+    }
+}
+
+/**
+ * 获取区划路径
+ * @param {object} requestBody 
+ * @returns 
+ */
+async function getRegionPath(requestBody) {
+    try {
+        if (requestBody.regionIds) {
+            if (requestBody.regionIds.length <= 0) {
+                throw new Error('数组长度小于等于0')
+            }
+            var res = {}
+            for (let i = 0; i < requestBody.regionIds.length; i++) {
+                let regionPath = await itemService.getRegionPath({ region_id: requestBody.regionIds[i] })
+                res[requestBody.regionIds[i]] = regionPath
+            }
+            return new SuccessModel({ msg: '获取区划路径成功', data: res })
+        }
+        throw new Error('请求体中需要一个regionIds属性，且该属性是一个数组')
+    } catch (err) {
+        return new ErrorModel({ msg: '获取区划路径失败', data: err.message })
     }
 }
 
@@ -547,6 +571,7 @@ module.exports = {
     getRulePath,
     getItemRulePath,
     getRules,
-    getChildRules,
-    getAllItemsByRegionId
+    getAllItemsByRegionId,
+    getItemGuide,
+    getRegionPath
 }

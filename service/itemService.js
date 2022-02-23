@@ -275,13 +275,40 @@ async function getRulePath({ rule_id }) {
         var res = []
         do {
             let r = await rule.findOne({ rule_id: rule_id })
-            res.unshift({
-                rule_id: r.rule_id,
-                rule_name: r.rule_name,
-                parentId: r.parentId
-            })
+            if (r) {
+                res.unshift({
+                    rule_id: r.rule_id,
+                    rule_name: r.rule_name,
+                    parentId: r.parentId
+                })
+            } else {
+                throw new Error('规则id不存在: ' + rule_id)
+            }
             rule_id = r.parentId
-        } while (rule_id !== '0')
+        } while (rule_id && rule_id !== '0')
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function getRegionPath({ region_id }) {
+    try {
+        var res = []
+        do {
+            let r = await region.findOne({ region_id: region_id })
+            if (r) {
+                res.unshift({
+                    region_id: r.region_id,
+                    region_name: r.region_name,
+                    region_level: r.region_level,
+                    parentId: r.parentId
+                })
+            } else {
+                throw new Error('区划id不存在: ' + region_id)
+            }
+            region_id = r.parentId
+        } while (region_id && region_id !== '')
         return res
     } catch (err) {
         throw new Error(err.message)
@@ -311,6 +338,15 @@ async function getRegion({ region_id, region_name, region_level, parentId }) {
     }
 }
 
+async function getTask({ task_code }) {
+    try {
+        var res = await task.findOne({ task_code: task_code })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
 module.exports = {
     getRuleTree,
     getItems,
@@ -325,5 +361,7 @@ module.exports = {
     deleteRule,
     deleteItemRule,
     getRulePath,
-    getRegion
+    getRegion,
+    getTask,
+    getRegionPath
 }
