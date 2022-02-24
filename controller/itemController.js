@@ -326,6 +326,41 @@ async function deleteRules(requestBody) {
 }
 
 /**
+ * 更新规则
+ * @param {object} requestBody 
+ * @returns 
+ */
+async function updateRules(requestBody) {
+    try {
+        if (requestBody.rules) {
+            if (requestBody.rules.length <= 0) {
+                throw new Error('数组长度小于等于0')
+            }
+            for (let i = 0; i < requestBody.rules.length; i++) {
+                let rule = await itemService.getRule({ rule_id: requestBody.rules[i].rule_id })
+                if (rule.length <= 0) {
+                    throw new Error('rule_id不存在: ' + requestBody.rules[i].rule_id)
+                }
+                else {
+                    if (rule[0].rule_name === 'null') {
+                        throw new Error('rule_id违法: ' + requestBody.rules[i].rule_id)
+                    }
+                }
+                await itemService.updateRule({ 
+                    rule_id: requestBody.rules[i].rule_id,
+                    rule_name: requestBody.rules[i].rule_name,
+                    parentId: requestBody.rules[i].parentId
+                })
+            }
+            return new SuccessModel({ msg: '更新规则成功' })
+        }
+        throw new Error('请求体中需要一个rules属性，且该属性是一个数组')
+    } catch (err) {
+        return new ErrorModel({ msg: '更新规则失败', data: err.message })
+    }
+}
+
+/**
  * 创建事项规则
  * @param {object} requestBody 
  * @returns 
@@ -437,6 +472,41 @@ async function deleteItemRules(requestBody) {
         throw new Error('请求体中需要一个itemRules属性，且该属性是一个数组')
     } catch (err) {
         return new ErrorModel({ msg: '删除事项规则失败', data: err.message })
+    }
+}
+
+/**
+ * 更新事项规则
+ * @param {object} requestBody 
+ * @returns 
+ */
+async function updateItemRules(requestBody) {
+    try {
+        if (requestBody.itemRules) {
+            if (requestBody.itemRules.length <= 0) {
+                throw new Error('数组长度小于等于0')
+            }
+            for (let i = 0; i < requestBody.itemRules.length; i++) {
+                let rule = await itemService.getItemRule({ item_rule_id: requestBody.itemRules[i].item_rule_id })
+                if (rule.length <= 0) {
+                    throw new Error('item_rule_id不存在: ' + requestBody.itemRules[i].item_rule_id)
+                }
+                else {
+                    if (rule[0].rule_name === 'null') {
+                        throw new Error('item_rule_id违法: ' + requestBody.itemRules[i].item_rule_id)
+                    }
+                }
+                await itemService.updateItemRule({
+                    item_rule_id: requestBody.itemRules[i].item_rule_id,
+                    rule_id: requestBody.itemRules[i].rule_id,
+                    region_id: requestBody.itemRules[i].region_id
+                })
+            }
+            return new SuccessModel({ msg: '更新事项规则成功' })
+        }
+        throw new Error('请求体中需要一个itemRules属性，且该属性是一个数组')
+    } catch (err) {
+        return new ErrorModel({ msg: '更新事项规则失败', data: err.message })
     }
 }
 
@@ -573,5 +643,7 @@ module.exports = {
     getRules,
     getAllItemsByRegionId,
     getItemGuide,
-    getRegionPath
+    getRegionPath,
+    updateRules,
+    updateItemRules
 }
