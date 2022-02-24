@@ -134,6 +134,9 @@ async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
         var itemrules = await itemRule.find(query)
         var res = []
         for (let i = 0; i < itemrules.length; i++) {
+            if (itemrules[i].rule_id === 'null' && itemrules[i].region_id === 'null') {
+                continue
+            }
             res.push({
                 create_time: itemrules[i].create_time,
                 item_rule_id: itemrules[i].item_rule_id,
@@ -163,6 +166,9 @@ async function getRule({ rule_id, rule_name, parentId }) {
         var rules = await rule.find(query)
         var res = []
         for (let i = 0; i < rules.length; i++) {
+            if (rules[i].rule_name === 'null') {
+                continue
+            }
             res.push({
                 rule_id: rules[i].rule_id,
                 rule_name: rules[i].rule_name,
