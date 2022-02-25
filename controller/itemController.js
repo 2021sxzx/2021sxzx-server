@@ -84,12 +84,13 @@ async function getItemRules(requestBody) {
                 rule_id: requestBody.rule_id,
                 region_id: requestBody.region_id
             })
+            var r = []
             for (let i = 0; i < res.length; i++) {
-                if (parseInt(res[i].create_time) < s || parseInt(res[i].create_time) > e) {
-                    res.splice(i, 1)
+                if (parseInt(res[i].create_time) >= s && parseInt(res[i].create_time) <= e) {
+                    r.push(res[i])
                 }
             }
-            return new SuccessModel({ msg: '查询成功', data: res })
+            return new SuccessModel({ msg: '查询成功', data: r })
         }
         var res = await itemService.getItemRule({
             item_rule_id: requestBody.item_rule_id,
