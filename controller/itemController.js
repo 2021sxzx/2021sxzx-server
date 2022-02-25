@@ -77,8 +77,8 @@ async function getItems(requestBody) {
 async function getItemRules(requestBody) {
     try {
         if (requestBody.start_time || requestBody.end_time) {
-            var s = requestBody.start_time ? requestBody.start_time : 0
-            var e = requestBody.end_time ? requestBody.end_time : 9999999999999
+            var s = requestBody.start_time ? parseInt(requestBody.start_time) : 0
+            var e = requestBody.end_time ? parseInt(requestBody.end_time) : 9999999999999
             var res = await itemService.getItemRule({
                 item_rule_id: requestBody.item_rule_id,
                 rule_id: requestBody.rule_id,
