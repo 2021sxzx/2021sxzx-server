@@ -56,6 +56,8 @@ async function getItemByUniId(requestBody) {
 async function getItems(requestBody) {
     try {
         var res = await itemService.getItems({
+            item_id: requestBody.item_id,
+            task_code: requestBody.task_code,
             release_time: requestBody.release_time,
             item_status: requestBody.item_status,
             create_time: requestBody.create_time,
