@@ -85,7 +85,7 @@ async function getItemRules(requestBody) {
                 region_id: requestBody.region_id
             })
             for (let i = 0; i < res.length; i++) {
-                if (parseInt(res[i].create_time) < s || parseInt(res[i].end_time) > e) {
+                if (parseInt(res[i].create_time) < s || parseInt(res[i].create_time) > e) {
                     res.splice(i, 1)
                 }
             }
