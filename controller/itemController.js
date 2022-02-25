@@ -76,6 +76,21 @@ async function getItems(requestBody) {
  */
 async function getItemRules(requestBody) {
     try {
+        if (requestBody.start_time || requestBody.end_time) {
+            var s = requestBody.start_time ? requestBody.start_time : 0
+            var e = requestBody.end_time ? requestBody.end_time : 9999999999999
+            var res = await itemService.getItemRule({
+                item_rule_id: requestBody.item_rule_id,
+                rule_id: requestBody.rule_id,
+                region_id: requestBody.region_id
+            })
+            for (let i = 0; i < res.length; i++) {
+                if (parseInt(res[i].create_time) < s || parseInt(res[i].end_time) > e) {
+                    res.splice(i, 1)
+                }
+            }
+            return new SuccessModel({ msg: '查询成功', data: res })
+        }
         var res = await itemService.getItemRule({
             item_rule_id: requestBody.item_rule_id,
             create_time: requestBody.create_time,
@@ -348,7 +363,7 @@ async function updateRules(requestBody) {
                         throw new Error('rule_id违法: ' + requestBody.rules[i].rule_id)
                     }
                 }
-                await itemService.updateRule({ 
+                await itemService.updateRule({
                     rule_id: requestBody.rules[i].rule_id,
                     rule_name: requestBody.rules[i].rule_name,
                     parentId: requestBody.rules[i].parentId
