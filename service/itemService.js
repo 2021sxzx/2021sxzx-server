@@ -124,7 +124,7 @@ async function getTasks({ task_code, task_name }) {
  * @param {String} region_id
  * @returns 
  */
-async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
+async function getItemRule({ create_time, item_rule_id, rule_id, region_id, return_stake }) {
     try {
         var query = {}
         if (create_time) query.create_time = create_time
@@ -134,7 +134,7 @@ async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
         var itemrules = await itemRule.find(query)
         var res = []
         for (let i = 0; i < itemrules.length; i++) {
-            if (itemrules[i].rule_id === 'null' && itemrules[i].region_id === 'null') {
+            if (return_stake === false && itemrules[i].rule_id === 'null' && itemrules[i].region_id === 'null') {
                 continue
             }
             res.push({
@@ -157,7 +157,7 @@ async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
  * @param {String} parentId
  * @returns 
  */
-async function getRule({ rule_id, rule_name, parentId }) {
+async function getRule({ rule_id, rule_name, parentId, return_stake }) {
     try {
         var query = {}
         if (rule_id) query.rule_id = rule_id
@@ -166,7 +166,7 @@ async function getRule({ rule_id, rule_name, parentId }) {
         var rules = await rule.find(query)
         var res = []
         for (let i = 0; i < rules.length; i++) {
-            if (rules[i].rule_name === 'null') {
+            if (return_stake === false && rules[i].rule_name === 'null') {
                 continue
             }
             res.push({

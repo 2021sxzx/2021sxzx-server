@@ -55,6 +55,23 @@ async function getItemByUniId(requestBody) {
  */
 async function getItems(requestBody) {
     try {
+        if (requestBody.start_time || requestBody.end_time) {
+            var s = requestBody.start_time ? parseInt(requestBody.start_time) : 0
+            var e = requestBody.end_time ? parseInt(requestBody.end_time) : 9999999999999
+            var res = await itemService.getItems({
+                item_id: requestBody.item_id,
+                task_code: requestBody.task_code,
+                item_status: requestBody.item_status,
+                item_rule_id: requestBody.item_rule_id
+            })
+            var r = []
+            for (let i = 0; i < res.length; i++) {
+                if (parseInt(res[i].create_time) >= s && parseInt(res[i].create_time) <= e) {
+                    r.push(res[i])
+                }
+            }
+            return new SuccessModel({ msg: '查询成功', data: r })
+        }
         var res = await itemService.getItems({
             item_id: requestBody.item_id,
             task_code: requestBody.task_code,
@@ -82,7 +99,8 @@ async function getItemRules(requestBody) {
             var res = await itemService.getItemRule({
                 item_rule_id: requestBody.item_rule_id,
                 rule_id: requestBody.rule_id,
-                region_id: requestBody.region_id
+                region_id: requestBody.region_id,
+                return_stake: false
             })
             var r = []
             for (let i = 0; i < res.length; i++) {
@@ -96,7 +114,8 @@ async function getItemRules(requestBody) {
             item_rule_id: requestBody.item_rule_id,
             create_time: requestBody.create_time,
             rule_id: requestBody.rule_id,
-            region_id: requestBody.region_id
+            region_id: requestBody.region_id,
+            return_stake: false
         })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
@@ -235,10 +254,10 @@ async function createRules(requestBody) {
             if (requestBody.rules.length <= 0) {
                 throw new Error('数组长度小于等于0')
             }
-            var stakes = await itemService.getRule({ rule_name: 'null' })
+            var stakes = await itemService.getRule({ rule_name: 'null', return_stake: true })
             if (stakes.length !== 1) {
                 await createRuleStake()
-                stakes = await itemService.getRule({ rule_name: 'null' })
+                stakes = await itemService.getRule({ rule_name: 'null', return_stake: true })
             }
             var stake = stakes[0]
             var maxRuleId = parseInt(stake.rule_id)
@@ -282,7 +301,7 @@ async function createRules(requestBody) {
 async function createRuleStake() {
     try {
         //先把全部桩删掉
-        var stakes = await itemService.getRule({ rule_name: 'null' })
+        var stakes = await itemService.getRule({ rule_name: 'null', return_stake: true })
         if (stakes.length > 0) {
             for (let i = 0; i < stakes.length; i++) {
                 await itemService.deleteRule({ rule_id: stakes[i].rule_id })
@@ -290,10 +309,10 @@ async function createRuleStake() {
         }
         //找出最大id并创建一个新的桩
         var maxRuleId = 0
-        var rules = await itemService.getRule({})
+        var rules = await itemService.getRule({ return_stake: false })
         for (let i = 0; i < rules.length; i++) {
             let ruleId = parseInt(rules[i].rule_id)
-            if (maxRuleId < ruleId && rules[i].rule_name !== 'null') {
+            if (maxRuleId < ruleId) {
                 maxRuleId = ruleId
             }
         }
@@ -387,10 +406,11 @@ async function createItemRules(requestBody) {
                 throw new Error('数组长度小于等于0')
             }
             //先把桩找出来，桩的id就是新创建的事项规则id
-            var stakes = await itemService.getItemRule({ rule_id: 'null', region_id: 'null' })
+            var stakes = await itemService.getItemRule({ rule_id: 'null', region_id: 'null', return_stake: true })
             if (stakes.length !== 1) {
+                console.log(stakes.length)
                 await createItemRuleStake()
-                stakes = await itemService.getItemRule({ rule_id: 'null', region_id: 'null' })
+                stakes = await itemService.getItemRule({ rule_id: 'null', region_id: 'null', return_stake: true })
             }
             var stake = stakes[0]
             var maxRuleId = parseInt(stake.item_rule_id)
@@ -400,7 +420,7 @@ async function createItemRules(requestBody) {
             for (let i = 0; i < requestBody.itemRules.length; i++) {
                 if (requestBody.itemRules[i].rule_id && requestBody.itemRules[i].region_id) {
                     var r = await itemService.getItemRule({
-                        rule_id: requestBody.itemRules[i].rule_id, region_id,
+                        rule_id: requestBody.itemRules[i].rule_id,
                         region_id: requestBody.itemRules[i].region_id
                     })
                     if (r.length > 0) {
@@ -441,7 +461,7 @@ async function createItemRules(requestBody) {
 async function createItemRuleStake() {
     try {
         //先删除全部的桩
-        var stakes = await itemService.getItemRule({ rule_id: 'null', region_id: 'null' })
+        var stakes = await itemService.getItemRule({ rule_id: 'null', region_id: 'null', return_stake: true })
         if (stakes.length > 0) {
             for (let i = 0; i < stakes.length; i++) {
                 await itemService.deleteItemRule({ item_rule_id: stakes[i].item_rule_id })
@@ -449,10 +469,10 @@ async function createItemRuleStake() {
         }
         //找到目前最大的id
         var maxRuleId = 0
-        var itemRules = await itemService.getItemRule({})
+        var itemRules = await itemService.getItemRule({ return_stake: false })
         for (let i = 0; i < itemRules.length; i++) {
             let ruleId = parseInt(itemRules[i].item_rule_id)
-            if (maxRuleId < ruleId && itemRules[i].rule_id !== 'null' && itemRules[i].region_id !== 'null') {
+            if (maxRuleId < ruleId) {
                 maxRuleId = ruleId
             }
         }
@@ -602,7 +622,8 @@ async function getRules(requestBody) {
         var res = await itemService.getRule({
             rule_id: requestBody.rule_id,
             rule_name: requestBody.rule_name,
-            parentId: requestBody.parentId
+            parentId: requestBody.parentId,
+            return_stake: false
         })
         return new SuccessModel({ msg: '获取规则成功', data: res })
     } catch (err) {
