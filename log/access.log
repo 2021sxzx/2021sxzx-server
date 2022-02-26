@@ -140,3 +140,4 @@
 ::ffff:127.0.0.1 - - [24/Feb/2022:08:53:24 +0000] "POST /api/v1/getRules HTTP/1.1" 200 228 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [24/Feb/2022:08:55:28 +0000] "POST /api/v1/getRules HTTP/1.1" 200 14173 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [24/Feb/2022:09:31:28 +0000] "POST /api/v1/getItemRules HTTP/1.1" 200 6752 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [26/Feb/2022:09:15:22 +0000] "POST /api/v1/getRules HTTP/1.1" 200 49 "-" "PostmanRuntime/7.29.0"
