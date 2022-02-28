@@ -124,4 +124,10 @@ router.post('/v1/updateItemRules', async (req, res, next) => {
     res.json(data)
 })
 
+router.post('/v1/getRegions', async (req, res, next) => {
+    let data = await itemController.getRegions(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 module.exports = router

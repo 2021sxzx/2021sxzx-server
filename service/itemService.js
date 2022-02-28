@@ -353,6 +353,22 @@ async function getTask({ task_code }) {
     }
 }
 
+async function updateItem({ item_id, release_time, item_status, create_time, task_code, item_rule_id }) {
+    try {
+        var newData = {}
+        if (release_time) newData.release_time = release_time
+        if (item_status) newData.item_status = item_status
+        if (create_time) newData.create_time = create_time
+        if (task_code === '' || task_code) newData.task_code = task_code
+        if (item_rule_id === '' || item_rule_id) newData.item_rule_id = item_rule_id
+        console.log(newData)
+        var res = await item.updateOne({ item_id: item_id }, newData)
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
 module.exports = {
     getRuleTree,
     getItems,
@@ -369,5 +385,6 @@ module.exports = {
     getRulePath,
     getRegion,
     getTask,
-    getRegionPath
+    getRegionPath,
+    updateItem
 }

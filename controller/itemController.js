@@ -506,13 +506,19 @@ async function deleteItemRules(requestBody) {
                     throw new Error('item_rule_id不存在: ' + requestBody.itemRules[i].item_rule_id)
                 }
                 else {
-                    if (rule[0].rule_name === 'null') {
+                    if (rule[0].rule_id === 'null' || rule[0].region_id === 'null') {
                         throw new Error('item_rule_id违法: ' + requestBody.itemRules[i].item_rule_id)
                     }
                 }
                 await itemService.deleteItemRule({ item_rule_id: requestBody.itemRules[i].item_rule_id })
+                //把相关的item的item_rule_id设为空字符串，并返回所有受影响的item
+                let items = await itemService.getItems({ item_rule_id: requestBody.itemRules[i].item_rule_id })
+                for (let j = 0; j < items.length; j++) {
+                    await itemService.updateItem({ item_id: items[j].item_id, item_rule_id: '' })
+                    items[j].item_rule_id = ''
+                }
             }
-            return new SuccessModel({ msg: '删除事项规则成功' })
+            return new SuccessModel({ msg: '删除事项规则成功', data: items })
         }
         throw new Error('请求体中需要一个itemRules属性，且该属性是一个数组')
     } catch (err) {
@@ -672,6 +678,20 @@ async function getRegionPath(requestBody) {
     }
 }
 
+async function getRegions(requestBody) {
+    try {
+        var regions = await itemService.getRegion({
+            region_id: requestBody.region_id,
+            region_name: requestBody.region_name,
+            region_level: requestBody.region_level,
+            parentId: requestBody.parentId
+        })
+        return new SuccessModel({ msg: '获取区划成功', data: regions })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取区划失败', data: err.message })
+    }
+}
+
 module.exports = {
     getRuleTree,
     getRegionTree,
@@ -691,5 +711,6 @@ module.exports = {
     getItemGuide,
     getRegionPath,
     updateRules,
-    updateItemRules
+    updateItemRules,
+    getRegions
 }
