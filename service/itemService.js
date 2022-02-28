@@ -11,13 +11,13 @@ const region = require('../model/region')
 async function getRuleTree() {
     try {
         var rules = await rule.find().ne('rule_name', 'null')
-        var res = []
+        var res = {}
         for (let i = 0; i < rules.length; i++) {
-            res.push({
+            res[rules[i].rule_id] = {
                 rule_id: rules[i].rule_id,
                 rule_name: rules[i].rule_name,
                 parentId: rules[i].parentId
-            })
+            }
         }
         return res
     } catch (err) {
@@ -32,14 +32,14 @@ async function getRuleTree() {
 async function getRegionTree() {
     try {
         var regions = await region.find()
-        var res = []
+        var res = {}
         for (let i = 0; i < regions.length; i++) {
-            res.push({
+            res[regions[i].region_id] = {
                 region_id: regions[i].region_id,
                 region_name: regions[i].region_name,
                 region_level: regions[i].region_level,
                 parentId: regions[i].parentId
-            })
+            }
         }
         return res
     } catch (err) {
@@ -124,7 +124,7 @@ async function getTasks({ task_code, task_name }) {
  * @param {String} region_id
  * @returns 
  */
-async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
+async function getItemRule({ create_time, item_rule_id, rule_id, region_id, return_stake }) {
     try {
         var query = {}
         if (create_time) query.create_time = create_time
@@ -134,6 +134,9 @@ async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
         var itemrules = await itemRule.find(query)
         var res = []
         for (let i = 0; i < itemrules.length; i++) {
+            if (return_stake === false && itemrules[i].rule_id === 'null' && itemrules[i].region_id === 'null') {
+                continue
+            }
             res.push({
                 create_time: itemrules[i].create_time,
                 item_rule_id: itemrules[i].item_rule_id,
@@ -154,7 +157,7 @@ async function getItemRule({ create_time, item_rule_id, rule_id, region_id }) {
  * @param {String} parentId
  * @returns 
  */
-async function getRule({ rule_id, rule_name, parentId }) {
+async function getRule({ rule_id, rule_name, parentId, return_stake }) {
     try {
         var query = {}
         if (rule_id) query.rule_id = rule_id
@@ -163,6 +166,9 @@ async function getRule({ rule_id, rule_name, parentId }) {
         var rules = await rule.find(query)
         var res = []
         for (let i = 0; i < rules.length; i++) {
+            if (return_stake === false && rules[i].rule_name === 'null') {
+                continue
+            }
             res.push({
                 rule_id: rules[i].rule_id,
                 rule_name: rules[i].rule_name,
@@ -252,6 +258,116 @@ async function updateRule({ rule_id, rule_name, parentId }) {
     }
 }
 
+async function deleteRule({ rule_id }) {
+    try {
+        var res = await rule.deleteOne({ rule_id: rule_id })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function deleteItemRule({ item_rule_id }) {
+    try {
+        var res = await itemRule.deleteOne({ item_rule_id: item_rule_id })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function getRulePath({ rule_id }) {
+    try {
+        var res = []
+        do {
+            let r = await rule.findOne({ rule_id: rule_id })
+            if (r) {
+                res.unshift({
+                    rule_id: r.rule_id,
+                    rule_name: r.rule_name,
+                    parentId: r.parentId
+                })
+            } else {
+                throw new Error('规则id不存在: ' + rule_id)
+            }
+            rule_id = r.parentId
+        } while (rule_id && rule_id !== '0')
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function getRegionPath({ region_id }) {
+    try {
+        var res = []
+        do {
+            let r = await region.findOne({ region_id: region_id })
+            if (r) {
+                res.unshift({
+                    region_id: r.region_id,
+                    region_name: r.region_name,
+                    region_level: r.region_level,
+                    parentId: r.parentId
+                })
+            } else {
+                throw new Error('区划id不存在: ' + region_id)
+            }
+            region_id = r.parentId
+        } while (region_id && region_id !== '')
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function getRegion({ region_id, region_name, region_level, parentId }) {
+    try {
+        var query = {}
+        if (region_id) query.region_id = region_id
+        if (region_name) query.region_name = region_name
+        if (region_level) query.region_level = region_level
+        if (parentId) query.parentId = parentId
+        var regions = await region.find(query)
+        var res = []
+        for (let i = 0; i < regions.length; i++) {
+            res.push({
+                region_id: regions[i].region_id,
+                region_name: regions[i].region_name,
+                region_level: regions[i].region_level,
+                parentId: regions[i].parentId
+            })
+        }
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function getTask({ task_code }) {
+    try {
+        var res = await task.findOne({ task_code: task_code })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function updateItem({ item_id, release_time, item_status, create_time, task_code, item_rule_id }) {
+    try {
+        var newData = {}
+        if (release_time) newData.release_time = release_time
+        if (item_status) newData.item_status = item_status
+        if (create_time) newData.create_time = create_time
+        if (task_code === '' || task_code) newData.task_code = task_code
+        if (item_rule_id === '' || item_rule_id) newData.item_rule_id = item_rule_id
+        var res = await item.updateOne({ item_id: item_id }, newData)
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
 module.exports = {
     getRuleTree,
     getItems,
@@ -262,5 +378,12 @@ module.exports = {
     updateItemRule,
     updateRule,
     getRegionTree,
-    getRule
+    getRule,
+    deleteRule,
+    deleteItemRule,
+    getRulePath,
+    getRegion,
+    getTask,
+    getRegionPath,
+    updateItem
 }
