@@ -249,50 +249,85 @@ async function getAllItemsByRegionId(requestBody) {
  * @returns 
  */
 async function createRules(requestBody) {
+    var createdRules = []
     try {
         if (requestBody.rules) {
             if (requestBody.rules.length <= 0) {
                 throw new Error('数组长度小于等于0')
             }
+            //检查桩
             var stakes = await itemService.getRule({ rule_name: 'null', return_stake: true })
             if (stakes.length !== 1) {
                 await createRuleStake()
                 stakes = await itemService.getRule({ rule_name: 'null', return_stake: true })
             }
             var stake = stakes[0]
+            //桩的id就是最大的rule_id，用于后续赋值
             var maxRuleId = parseInt(stake.rule_id)
+            //删除桩
             await itemService.deleteRule({ rule_id: stake.rule_id })
+            //dict的key是temp_id，value是规则节点
             var dict = new Array()
+            //给传入的规则节点创建rule_id
             for (let i = 0; i < requestBody.rules.length; i++) {
                 requestBody.rules[i].rule_id = maxRuleId.toString()
                 dict[requestBody.rules[i].temp_id] = requestBody.rules[i]
                 maxRuleId = maxRuleId + 1
             }
+            //修改parentId使它们指向rule_id而不是temp_id
             for (let i = 0; i < requestBody.rules.length; i++) {
                 if (dict[requestBody.rules[i].parentId]) {
                     requestBody.rules[i].parentId = dict[requestBody.rules[i].parentId].rule_id
                 }
             }
+            //创建规则
             for (let i = 0; i < requestBody.rules.length; i++) {
                 await itemService.createRule({
                     rule_id: requestBody.rules[i].rule_id,
                     rule_name: requestBody.rules[i].rule_name,
                     parentId: requestBody.rules[i].parentId
                 })
+                //记录已创建的规则的rule_id
+                createdRules.push(requestBody.rules[i].rule_id)
             }
+            //创建桩
             await itemService.createRule({
                 rule_id: maxRuleId.toString(),
                 rule_name: 'null',
                 parentId: ''
             })
-            return new SuccessModel({ msg: '创建规则成功' })
+            //返回真实的rule_id
+            var res = new Array()
+            for (let i = 0; i < requestBody.rules.length; i++) {
+                res.push({
+                    rule_id: requestBody.rules[i].rule_id,
+                    temp_id: requestBody.rules[i].temp_id
+                })
+            }
+            return new SuccessModel({ msg: '创建规则成功', data: res })
         }
         throw new Error('请求体中需要一个rules属性，且该属性是一个数组')
     } catch (err) {
-        try {
-            await createRuleStake()
-        } catch (e) {
-            return new ErrorModel({ msg: '创建规则失败', data: e.message })
+        if (createdRules.length === requestBody.rules.length) {
+            //规则创建成功，只是最后的桩创建失败了，不用管
+            var res = new Array()
+            for (let i = 0; i < requestBody.rules.length; i++) {
+                res.push({
+                    rule_id: requestBody.rules[i].rule_id,
+                    temp_id: requestBody.rules[i].temp_id
+                })
+            }
+            return new SuccessModel({ msg: '创建规则成功', data: res })
+        }
+        else {
+            //回退全部已创建的规则
+            try {
+                for (let i = 0; i < createdRules.length; i++) {
+                    await itemService.deleteRule({ rule_id: createdRules[i] })
+                }
+            } catch (error) {
+                return new ErrorModel({ msg: '创建规则失败，且回退操作失败，寄！', data: error.message })
+            }
         }
         return new ErrorModel({ msg: '创建规则失败', data: err.message })
     }
@@ -399,6 +434,7 @@ async function updateRules(requestBody) {
  * @returns 
  */
 async function createItemRules(requestBody) {
+    var createdItemRules = []
     try {
         if (requestBody.itemRules) {
             //数组长度不能小于等于0
@@ -437,6 +473,8 @@ async function createItemRules(requestBody) {
                     rule_id: requestBody.itemRules[i].rule_id ? requestBody.itemRules[i].rule_id : '',
                     region_id: requestBody.itemRules[i].region_id ? requestBody.itemRules[i].region_id : ''
                 })
+                //记录已创建的事项规则
+                createdItemRules.push(requestBody.itemRules[i].item_rule_id)
             }
             //重新创建一个桩
             await itemService.createItemRule({
@@ -449,10 +487,19 @@ async function createItemRules(requestBody) {
         }
         throw new Error('请求体中需要一个itemRules属性，且该属性是一个数组')
     } catch (err) {
-        try {
-            await createItemRuleStake()
-        } catch (e) {
-            return new ErrorModel({ msg: '创建事项规则失败', data: e.message })
+        if (createdItemRules.length === requestBody.itemRules.length) {
+            //创建成功了，只是最后创建桩失败，不用管
+            return new SuccessModel({ msg: '创建事项规则成功' })
+        }
+        else {
+            //回退所有创建操作
+            try {
+                for (let i = 0; i < createdItemRules.length; i++) {
+                    await itemService.deleteItemRule({ item_rule_id: createdItemRules[i] })
+                }
+            } catch (error) {
+                return new ErrorModel({ msg: '创建事项规则失败，且回退操作失败，寄！', data: error.message })
+            }
         }
         return new ErrorModel({ msg: '创建事项规则失败', data: err.message })
     }
@@ -495,13 +542,17 @@ async function createItemRuleStake() {
  * @returns 
  */
 async function deleteItemRules(requestBody) {
+    var deletedItemRules = []   //记录已删除的事项规则，方便在出错时回退删除操作
+    var updatedItems = []   //记录已修改的事项，方便在出错时回退更新操作
     try {
         if (requestBody.itemRules) {
             if (requestBody.itemRules.length <= 0) {
                 throw new Error('数组长度小于等于0')
             }
+            var res = new Array()
             for (let i = 0; i < requestBody.itemRules.length; i++) {
                 let rule = await itemService.getItemRule({ item_rule_id: requestBody.itemRules[i].item_rule_id })
+                //检查item_rule_id的合法性
                 if (rule.length <= 0) {
                     throw new Error('item_rule_id不存在: ' + requestBody.itemRules[i].item_rule_id)
                 }
@@ -510,18 +561,48 @@ async function deleteItemRules(requestBody) {
                         throw new Error('item_rule_id违法: ' + requestBody.itemRules[i].item_rule_id)
                     }
                 }
+                //根据传入的item_rule_id删除事项规则
                 await itemService.deleteItemRule({ item_rule_id: requestBody.itemRules[i].item_rule_id })
+                //记录事项规则删除之前的状态
+                deletedItemRules.push(rule[0])
                 //把相关的item的item_rule_id设为空字符串，并返回所有受影响的item
                 let items = await itemService.getItems({ item_rule_id: requestBody.itemRules[i].item_rule_id })
                 for (let j = 0; j < items.length; j++) {
+                    //更新相关的事项，把它们绑定的事项规则id设为空字符串
                     await itemService.updateItem({ item_id: items[j].item_id, item_rule_id: '' })
+                    //记录事项更新之前的状态
+                    updatedItems.push(items[j])
+                    //修改，不再访问数据库
                     items[j].item_rule_id = ''
                 }
+                //加到最终返回结果中
+                res.concat(items)
             }
-            return new SuccessModel({ msg: '删除事项规则成功', data: items })
+            return new SuccessModel({ msg: '删除事项规则成功', data: res })
         }
         throw new Error('请求体中需要一个itemRules属性，且该属性是一个数组')
     } catch (err) {
+        //回退所有操作
+        try {
+            for (let i = 0; i < deletedItemRules.length; i++) {
+                let itemrule = deletedItemRules[i]
+                await itemService.createItemRule({
+                    create_time: itemrule.create_time,
+                    item_rule_id: itemrule.item_rule_id,
+                    rule_id: itemrule.rule_id,
+                    region_id: itemrule.region_id
+                })
+            }
+            for (let i = 0; i < updatedItems.length; i++) {
+                let item = updatedItems[i]
+                await itemService.updateItem({
+                    item_id: item.item_id,
+                    item_rule_id: item.item_rule_id
+                })
+            }
+        } catch (error) {
+            return new ErrorModel({ msg: '删除事项规则失败，且回退操作失败，寄！', data: error.message })
+        }
         return new ErrorModel({ msg: '删除事项规则失败', data: err.message })
     }
 }

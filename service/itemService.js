@@ -361,7 +361,6 @@ async function updateItem({ item_id, release_time, item_status, create_time, tas
         if (create_time) newData.create_time = create_time
         if (task_code === '' || task_code) newData.task_code = task_code
         if (item_rule_id === '' || item_rule_id) newData.item_rule_id = item_rule_id
-        console.log(newData)
         var res = await item.updateOne({ item_id: item_id }, newData)
         return res
     } catch (err) {
