@@ -435,6 +435,7 @@ async function updateRules(requestBody) {
  */
 async function createItemRules(requestBody) {
     var createdItemRules = []
+    var haveSameItemRules = 0
     try {
         if (requestBody.itemRules) {
             //数组长度不能小于等于0
@@ -454,15 +455,18 @@ async function createItemRules(requestBody) {
             await itemService.deleteItemRule({ item_rule_id: stake.item_rule_id })
             //给要创建的事项规则分配id
             for (let i = 0; i < requestBody.itemRules.length; i++) {
+                //检查是否有重复的事项规则，重复的就不创建
                 if (requestBody.itemRules[i].rule_id && requestBody.itemRules[i].region_id) {
                     var r = await itemService.getItemRule({
                         rule_id: requestBody.itemRules[i].rule_id,
                         region_id: requestBody.itemRules[i].region_id
                     })
                     if (r.length > 0) {
+                        haveSameItemRules = haveSameItemRules + 1
                         continue
                     }
                 }
+                //分配id
                 requestBody.itemRules[i].item_rule_id = maxRuleId.toString()
                 maxRuleId = maxRuleId + 1
             }
@@ -487,7 +491,7 @@ async function createItemRules(requestBody) {
         }
         throw new Error('请求体中需要一个itemRules属性，且该属性是一个数组')
     } catch (err) {
-        if (createdItemRules.length === requestBody.itemRules.length) {
+        if (createdItemRules.length === requestBody.itemRules.length - haveSameItemRules) {
             //创建成功了，只是最后创建桩失败，不用管
             return new SuccessModel({ msg: '创建事项规则成功' })
         }
