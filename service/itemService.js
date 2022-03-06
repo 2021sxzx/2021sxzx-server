@@ -150,7 +150,7 @@ async function getTasks({ task_code = null, task_name = null }) {
  * @param {String} region_id
  * @returns 
  */
-async function getItemRule({
+async function getItemRules({
     create_time = null,
     item_rule_id = null,
     rule_id = null,
@@ -200,7 +200,7 @@ async function getItemRule({
  * @param {String} parentId
  * @returns 
  */
-async function getRule({
+async function getRules({
     rule_id = null,
     rule_name = null,
     parentId = null,
@@ -239,8 +239,11 @@ async function getRule({
 }
 
 /**
- * 创建事项规则
- * @param {*} param0 
+ * 创建一个事项规则
+ * @param {string} create_time
+ * @param {string} item_rule_id
+ * @param {string} rule_id
+ * @param {string} region_id
  * @returns 
  */
 async function createItemRule({
@@ -266,8 +269,29 @@ async function createItemRule({
 }
 
 /**
- * 创建规则
- * @param {*} param0 
+ * 批量创建事项规则
+ * @param {Array} itemRules 
+ * @returns 
+ */
+async function createItemRules({
+    itemRules = null
+}) {
+    try {
+        if (itemRules === null) {
+            throw new Error('call createItemRules error: itemRules is null')
+        }
+        var res = await itemRule.create(itemRules)
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+/**
+ * 创建一个规则
+ * @param {string} rule_id
+ * @param {string} rule_name
+ * @param {string} parentId
  * @returns 
  */
 async function createRule({
@@ -284,6 +308,25 @@ async function createRule({
             rule_name: rule_name,
             parentId: parentId
         })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+/**
+ * 批量创建规则
+ * @param {Array} rules 
+ * @returns 
+ */
+async function createRules({
+    rules = null
+}) {
+    try {
+        if (rules === null) {
+            throw new Error('call createRules error: rules is null')
+        }
+        var res = await rule.create(rules)
         return res
     } catch (err) {
         throw new Error(err.message)
@@ -385,7 +428,7 @@ async function getRulePath({ rule_id = null }) {
             throw new Error('call getRulePath error: rule_id is null')
         }
         var res = []
-        var rs = await getRule({ return_stake: false })
+        var rs = await getRules({ return_stake: false })
         var rules = {}
         rs.forEach(function (item, index) {
             rules[item.rule_id] = item
@@ -526,14 +569,16 @@ async function updateItem({
 module.exports = {
     getRuleTree,
     getItems,
-    getItemRule,
+    getItemRules,
     getItemTask,
     createItemRule,
+    createItemRules,
     createRule,
+    createRules,
     updateItemRule,
     updateRule,
     getRegionTree,
-    getRule,
+    getRules,
     deleteRule,
     deleteItemRule,
     getRulePath,
