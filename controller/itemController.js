@@ -288,7 +288,7 @@ async function getAllItemsByRegionId({
         }
         var itemrules = new Array()
         for (let i = 0; i < regions.length; i++) {
-            let r = await itemService.getItemRules({ region_id: regions[i] })
+            let r = await itemService.getItemRules({ region_id: regions[i], return_stake: false })
             itemrules = itemrules.concat(r)
         }
         var items = new Array()
@@ -437,7 +437,7 @@ async function deleteRules({
         }
         for (let i = 0; i < rules.length; i++) {
             //判断rule_id的合法性
-            let rule = await itemService.getRules({ rule_id: rules[i] })
+            let rule = await itemService.getRules({ rule_id: rules[i], return_stake: true })
             if (rule.length <= 0) {
                 throw new Error('rule_id不存在: ' + rules[i])
             }
@@ -479,7 +479,7 @@ async function updateRules({
         }
         for (let i = 0; i < rules.length; i++) {
             //判断rule_id的合法性
-            let rule = await itemService.getRules({ rule_id: rules[i].rule_id })
+            let rule = await itemService.getRules({ rule_id: rules[i].rule_id, return_stake: true })
             if (rule.length <= 0) {
                 throw new Error('rule_id不存在: ' + rules[i].rule_id)
             }
@@ -624,7 +624,7 @@ async function deleteItemRules({
         var res = new Array()
         for (let i = 0; i < itemRules.length; i++) {
             //检查item_rule_id的合法性
-            let rule = await itemService.getItemRules({ item_rule_id: itemRules[i] })
+            let rule = await itemService.getItemRules({ item_rule_id: itemRules[i], return_stake: true })
             if (rule.length <= 0) {
                 throw new Error('item_rule_id不存在: ' + itemRules[i])
             }
