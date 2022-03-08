@@ -78,8 +78,8 @@ async function getItems({
 }) {
     try {
         if (start_time !== null || end_time !== null) {
-            var s = (start_time !== null || start_time !== '') ? parseInt(start_time) : 0
-            var e = (end_time !== null || end_time !== '') ? parseInt(end_time) : 9999999999999
+            var s = (start_time !== null || start_time !== '') ? start_time : 0
+            var e = (end_time !== null || end_time !== '') ? end_time : 9999999999999
             var res = await itemService.getItems({
                 item_id: item_id,
                 task_code: task_code,
@@ -88,7 +88,7 @@ async function getItems({
             })
             var r = []
             for (let i = 0; i < res.length; i++) {
-                if (parseInt(res[i].create_time) >= s && parseInt(res[i].create_time) <= e) {
+                if (res[i].create_time >= s && res[i].create_time <= e) {
                     r.push(res[i])
                 }
             }
@@ -128,8 +128,8 @@ async function getItemRules({
 }) {
     try {
         if (start_time !== null || end_time !== null) {
-            var s = (start_time !== null || start_time !== '') ? parseInt(start_time) : 0
-            var e = (end_time !== null || end_time !== '') ? parseInt(end_time) : 9999999999999
+            var s = (start_time !== null || start_time !== '') ? start_time : 0
+            var e = (end_time !== null || end_time !== '') ? end_time : 9999999999999
             var res = await itemService.getItemRules({
                 item_rule_id: item_rule_id,
                 rule_id: rule_id,
@@ -138,7 +138,7 @@ async function getItemRules({
             })
             var r = []
             for (let i = 0; i < res.length; i++) {
-                if (parseInt(res[i].create_time) >= s && parseInt(res[i].create_time) <= e) {
+                if (res[i].create_time >= s && res[i].create_time <= e) {
                     r.push(res[i])
                 }
             }
@@ -624,21 +624,21 @@ async function deleteItemRules({
         var res = new Array()
         for (let i = 0; i < itemRules.length; i++) {
             //检查item_rule_id的合法性
-            let rule = await itemService.getItemRules({ item_rule_id: itemRules[i].item_rule_id })
+            let rule = await itemService.getItemRules({ item_rule_id: itemRules[i] })
             if (rule.length <= 0) {
-                throw new Error('item_rule_id不存在: ' + itemRules[i].item_rule_id)
+                throw new Error('item_rule_id不存在: ' + itemRules[i])
             }
             else {
                 if (rule[0].rule_id === 'null' || rule[0].region_id === 'null') {
-                    throw new Error('item_rule_id违法: ' + itemRules[i].item_rule_id)
+                    throw new Error('item_rule_id违法: ' + itemRules[i])
                 }
             }
             //根据传入的item_rule_id删除事项规则
-            await itemService.deleteItemRule({ item_rule_id: itemRules[i].item_rule_id })
+            await itemService.deleteItemRule({ item_rule_id: itemRules[i] })
             //记录事项规则删除之前的状态
             deletedItemRules.push(rule[0])
             //把相关的item的item_rule_id设为空字符串，并返回所有受影响的item
-            let items = await itemService.getItems({ item_rule_id: itemRules[i].item_rule_id })
+            let items = await itemService.getItems({ item_rule_id: itemRules[i] })
             for (let j = 0; j < items.length; j++) {
                 //更新相关的事项，把它们绑定的事项规则id设为空字符串
                 await itemService.updateItem({ item_id: items[j].item_id, item_rule_id: '' })
