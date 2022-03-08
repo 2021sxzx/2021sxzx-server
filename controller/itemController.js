@@ -686,7 +686,7 @@ async function updateItemRules({
         }
         for (let i = 0; i < itemRules.length; i++) {
             //检查item_rule_id的合法性
-            let itemrule = await itemService.getItemRules({ item_rule_id: itemRules[i].item_rule_id })
+            let itemrule = await itemService.getItemRules({ item_rule_id: itemRules[i].item_rule_id, return_stake: true })
             if (itemrule.length <= 0) {
                 throw new Error('item_rule_id不存在: ' + itemRules[i].item_rule_id)
             }
@@ -757,7 +757,7 @@ async function getItemRulePath({
         }
         var res = {}
         for (let i = 0; i < itemRuleIds.length; i++) {
-            let itemRule = await itemService.getItemRules({ item_rule_id: itemRuleIds[i] })
+            let itemRule = await itemService.getItemRules({ item_rule_id: itemRuleIds[i], return_stake: true })
             if (itemRule.length <= 0) {
                 throw new Error('item_rule_id不存在: ' + itemRuleIds[i])
             }
