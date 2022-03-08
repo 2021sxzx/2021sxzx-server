@@ -357,7 +357,7 @@ async function createRules({
                 parentId: rules[i].parentId
             })
         }
-        await itemService.createRules(arr)
+        await itemService.createRules({ rules: arr })
         createSuccess = true
         //创建桩
         await itemService.createRule({
@@ -555,7 +555,7 @@ async function createItemRules({
                 region_id: itemRules[i].region_id ? itemRules[i].region_id : ''
             })
         }
-        await itemService.createItemRules(arr)
+        await itemService.createItemRules({ itemRules: arr })
         createSuccess = true
         //重新创建一个桩
         await itemService.createItemRule({
