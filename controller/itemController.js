@@ -534,7 +534,8 @@ async function createItemRules({
             if (itemRules[i].rule_id && itemRules[i].region_id) {
                 var r = await itemService.getItemRules({
                     rule_id: itemRules[i].rule_id,
-                    region_id: itemRules[i].region_id
+                    region_id: itemRules[i].region_id,
+                    return_stake: false
                 })
                 if (r.length > 0) {
                     haveSameItemRules = haveSameItemRules + 1
