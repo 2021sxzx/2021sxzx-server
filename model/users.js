@@ -26,6 +26,10 @@ const usersSchema = new mongoose.Schema({
   activation_status:{ //激活状态
     type: Number,
     default:0
+  },
+  user_rank:{ //用户身份
+    type:Number,
+    default:0
   }
 })
 
