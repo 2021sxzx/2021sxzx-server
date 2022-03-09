@@ -11,6 +11,7 @@ const systemLogRouter=require("./routes/systemLog")
 const taskRouter = require("./routes/taskRoutes")
 const itemRouter = require('./routes/item')
 const userManagementRouter = require('./routes/userManagement')
+const roleRouter = require('./routes/role')
 
 const testRouter = require('./routes/test');
 
@@ -50,7 +51,7 @@ app.use('/api',systemLogRouter)
 app.use('/api', itemRouter)
 app.use('/api', userManagementRouter)
 app.use('/api', testRouter)
-app.use('/api',roleRouter)
+app.use('/api', roleRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
