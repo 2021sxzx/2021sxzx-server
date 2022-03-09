@@ -1,6 +1,6 @@
 const createError = require('http-errors');
 const express = require('express');
-const fs = require('fs')
+const fs = require('fs');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -13,7 +13,7 @@ const itemRouter = require('./routes/item')
 const userManagementRouter = require('./routes/userManagement')
 const roleRouter = require('./routes/role')
 
-const testRouter = require('./routes/test');
+const sideBarRouter = require('./routes/sideBar');
 
 const {MONGO_CONFIG} = require("./config/db") //数据库的配置信息
 const mongoose = require("mongoose")
@@ -50,7 +50,7 @@ app.use('/api',taskRouter)
 app.use('/api',systemLogRouter)
 app.use('/api', itemRouter)
 app.use('/api', userManagementRouter)
-app.use('/api', testRouter)
+app.use('/api', sideBarRouter)
 app.use('/api', roleRouter)
 
 // catch 404 and forward to error handler

@@ -2,6 +2,7 @@
 const sideBar = require('../model/sideBar');
 const sideBarMapPermission = require('../model/sideBarMapPermission');
 const roleMapPermission = require('../model/roleMapPermission');
+const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
 class sideBarData {
   async getSideBarList (role_name) {
@@ -52,9 +53,12 @@ class sideBarData {
       })
     )
 
-    return result.sort((a, b) => {
-      return a.id - b.id
-    });
+    return new SuccessModel({
+      msg: "获得侧边栏成功",
+      data: result.sort((a, b) => {
+        return a.id - b.id
+      })
+    })
   }
 
   async findChild (id) {
@@ -85,14 +89,6 @@ class sideBarData {
       id: parent.id,
       children: sideBar_,
     };
-  }
-
-  async addPermission (id, permission_identifier) {
-
-  }
-
-  async deletePermission (id, permission_identifier) {
-
   }
 }
 
