@@ -142,6 +142,10 @@ async function deleteRole (role_name) {
  * @return {Promise<Array[]>} 
  **/ 
 async function SearchRole (searchValue) {
+  // 如果搜索值为空就任意匹配所有非换行符之外的字符
+  if(!searchValue){
+    searchValue='.'
+  }
   const reg = new RegExp(searchValue, 'i')
   try {
     const res = await role.find({

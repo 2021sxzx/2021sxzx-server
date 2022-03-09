@@ -88,8 +88,7 @@ async function deleteUserAndReturnList (account) {
  */
 async function searchUserAndReturnList (searchValue) {
   try {
-    await searchUser(searchValue)
-    const res = await getUserList()
+    const res = await searchUser(searchValue)
     return new SuccessModel({
       msg: '查询成功',
       data: res

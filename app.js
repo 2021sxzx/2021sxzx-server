@@ -49,8 +49,8 @@ app.use('/api',taskRouter)
 app.use('/api',systemLogRouter)
 app.use('/api', itemRouter)
 app.use('/api', userManagementRouter)
-
 app.use('/api', testRouter)
+app.use('/api',roleRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
