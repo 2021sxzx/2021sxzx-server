@@ -6,6 +6,8 @@ const {
   SearchRole,
   calcaulatePermission,
   getPermissionList,
+  addPermission,
+  deletePermission
 } = require('../service/roleService')
 const { SuccessModel, ErrorModel } = require('../utils/resultModel')
 
@@ -156,11 +158,29 @@ async function searchRoleAndReturnObject (searchValue) {
   }
 }
 
+/**
+ * 修改角色权限
+ * @param {*} role_name 
+ * @param {*} permission_identifier_array 
+ */
+async function updatePermission (role_name, permission_identifier_array) {
+  try {
+    await deletePermission(role_name)
+    const res = await addPermission(role_name, permission_identifier_array)
+    return res
+  } catch (error) {
+    throw new ErrorModel({
+      msg: error.message
+    })
+  }
+}
+
 module.exports = {
   addRoleAndReturnObject,
   updateRoleAndReturnObject,
   returnRoleList,
   deleteRoleAndReturnObject,
   getPermissionListAndReturnObject,
-  searchRoleAndReturnObject
+  searchRoleAndReturnObject,
+  updatePermission
 }

@@ -6,7 +6,8 @@ const {
   returnRoleList,
   deleteRoleAndReturnObject,
   getPermissionListAndReturnObject,
-  searchRoleAndReturnObject
+  searchRoleAndReturnObject,
+  updatePermission
 } = require("../controller/roleController")
 
 function setStatusCode(res, data) {
@@ -45,10 +46,10 @@ router.delete('/v1/role', async (req, res, next) => {
  * 更新角色非权限相关的信息
  */
 router.patch('/v1/role', async (req, res, next) => {
-  let role = req.body
-  let data = await updateRoleAndReturnObject(role.role_name, role.role_describe)
-  setStatusCode(res, data)
-  res.json(data)
+  let role = req.body;
+  let data = await updateRoleAndReturnObject(role.role_name, role.role_describe);
+  setStatusCode(res, data);
+  res.json(data);
 })
 
 /**
@@ -71,11 +72,13 @@ router.get('/v1/searchRole', async (req, res, next) => {
 })
 
 /**
- * 修改用户权限
+ * 修改角色权限
  */
 router.patch('/v1/permission', async (req, res, next) => {
   let role = req.body
-  // let data = await 
+  let data = await updatePermission(role.role_name, role.permission_identifier_array)
+  setStatusCode(res, data)
+  res.json(data)
 })
 
 /**
@@ -86,6 +89,5 @@ router.get('/v1/permissionList', async (req, res, next) => {
   setStatusCode(res, data)
   res.json(data)
 })
-
 
 module.exports = router;

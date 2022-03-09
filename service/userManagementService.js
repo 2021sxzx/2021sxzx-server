@@ -92,7 +92,6 @@ async function searchUser (searchValue) {
   }
 }
 
-
 module.exports = {
   addUser,
   getUserList,
