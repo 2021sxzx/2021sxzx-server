@@ -30,7 +30,7 @@ async function addRole (role_name, role_describe, ...permission_identifier_array
 
     // 往权限角色关联表里面添加关联
     Promise.all(
-      await permission_identifier_array.map(async (item) => {
+      permission_identifier_array.map(async (item) => {
         const res = await roleMapPermission.create({
           role_name: role_name,
           permission_identifier: item

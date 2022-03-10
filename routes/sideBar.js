@@ -17,6 +17,6 @@ function wrap(handler) {
   };
 }
 
-router.post('/sideBar', wrap(sideBarController.sideBarList));
+router.post('/v1/sideBar', wrap(sideBarController.sideBarList));
 
 module.exports = router;

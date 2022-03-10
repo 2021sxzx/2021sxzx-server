@@ -8,7 +8,7 @@ const roleController = require('../controller/roleController')
  */
 router.post('/test', async function (req, res, next) {
   const {
-    role_name, 
+    role_name,
     role_describe
   } = req.body
   const permission = [0, 1, 2]

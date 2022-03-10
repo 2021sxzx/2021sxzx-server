@@ -137,14 +137,23 @@ async function getPermissionListAndReturnObject () {
  */
 async function searchRoleAndReturnObject (searchValue) {
   try {
-    const Role = await SearchRole(searchValue)
-    const Permission = await calcaulatePermission(Role.role_name)
+    const Role = await SearchRole(searchValue) // 多个角色，拿一个出来测试
 
-    const res = [{
-      role_name: Role.role_name,
-      role_describe: Role.role_describe,
-      permission: Permission
-    }]
+    let Permission = await Promise.all(
+      Role.map(async item => {
+        const res = await calcaulatePermission(item.role_name);
+        return res;
+      })
+    )
+    console.log(Role)
+    console.log(Permission)
+    const res = Role.map((item, index) => {
+      return {
+        role_name: item.role_name,
+        role_describe: item.role_describe,
+        permission: Permission[index]
+      }
+    })
 
     return new SuccessModel({
       msg: '搜索成功',
