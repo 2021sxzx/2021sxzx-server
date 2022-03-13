@@ -91,8 +91,6 @@ async function searchUser (searchValue) {
           user_name: { $regex : reg }
         },{
           account: { $regex : reg }
-        },{
-          password: { $regex : reg }
         }
       ]
     }, {
