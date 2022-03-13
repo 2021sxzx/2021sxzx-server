@@ -92,7 +92,7 @@ async function getRoleList () {
  */
 async function updateRole (role_name_old, role_name, role_describe) {
   try {
-    const res = await role.updateOne({
+    await role.updateOne({
       role_name: role_name_old
     }, {
       role_name: role_name,
@@ -104,6 +104,9 @@ async function updateRole (role_name_old, role_name, role_describe) {
     }, {
       role_name: role_name
     })
+    const res = await role.findOne({
+      role_name
+    });
     return res
   } catch (e) {
     return new Error(e.message)
@@ -118,19 +121,19 @@ async function updateRole (role_name_old, role_name, role_describe) {
  *    data
  * }
  */ 
-async function deleteRole (role_name) {
+async function deleteRole (role_name, role_describe) {
   try {
     const selectRoleMap = await users.find({
       role_name: role_name
     })
     if (selectRoleMap.length > 0) {
-      throw new Error("有用户在使用该角色，不允许删除")
+      return new Error("有用户在使用该角色，不允许删除")
     }
     const res = await role.deleteOne({
       role_name: role_name,
       role_describe: role_describe
     })
-    return res
+    return res;
   } catch (e) {
     throw new Error(e.message)
   }
@@ -157,6 +160,7 @@ async function SearchRole (searchValue) {
         }
       ]
     })
+    console.log(res)
     return res
   } catch (e) {
     throw new Error(e.message)
@@ -224,7 +228,7 @@ async function addPermission (role_name, ...permission_identifier_array) {
         return res
       })
     )
-
+    console.log(addedArr)
     return addedArr
 
   } catch (error) {

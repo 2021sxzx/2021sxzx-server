@@ -7,7 +7,17 @@ const {
   deleteRoleAndReturnObject,
   getPermissionListAndReturnObject,
   searchRoleAndReturnObject
-} = require("../controller/roleController")
+} = require("../controller/roleController");
+
+const {
+  calcaulatePermission
+} = require('../service/roleService')
+const role = require('../model/role');
+
+const {
+  isActivation,
+  setActivation
+} = require('../service/userManagementService');
 
 function setStatusCode(res, data) {
     if (data.code === 200) {
@@ -16,7 +26,10 @@ function setStatusCode(res, data) {
         res.statusCode = 404
     }
 }
-
+router.get('/test', async (req, res, next) => {
+  const resq = await setActivation('18029000390');
+  res.json(resq);
+})
 /**
  * 添加角色
  */
@@ -35,8 +48,8 @@ router.post('/v1/role', async (req, res, next) => {
  * 删除角色
  */
 router.delete('/v1/role', async (req, res, next) => {
-  let role = req.body.data
-  let data = await deleteRoleAndReturnObject(role.role_name)
+  let role = req.body
+  let data = await deleteRoleAndReturnObject(role.role_name, role.role_describe);
   setStatusCode(res, data)
   res.json(data)
 })
@@ -46,7 +59,7 @@ router.delete('/v1/role', async (req, res, next) => {
  */
 router.patch('/v1/role', async (req, res, next) => {
   let role = req.body
-  let data = await updateRoleAndReturnObject(role.role_name, role.role_describe)
+  let data = await updateRoleAndReturnObject(role.role_name_old, role.role_name, role.role_describe)
   setStatusCode(res, data)
   res.json(data)
 })
@@ -73,18 +86,20 @@ router.post('/v1/searchRole', async (req, res, next) => {
 /**
  * 修改用户权限
  */
-router.patch('/v1/permission', async (req, res, next) => {
-  let role = req.body
-  // let data = await 
-})
+// router.patch('/v1/permission', async (req, res, next) => {
+//   let {role_name} = req.body
+//   let data = await calcaulatePermission(role_name)
+//   res.json(data);
+// })
 
 /**
  * 列出权限列表
+ * 这个地方是测试
  */
-router.get('/v1/permissionList', async (req, res, next) => {
-  let data = await getPermissionListAndReturnObject()
-  setStatusCode(res, data)
-  res.json(data)
-})
+// router.get('/v1/permissionList', async (req, res, next) => {
+//   let data = await getPermissionListAndReturnObject()
+//   setStatusCode(res, data)
+//   res.json(data)
+// })
 
 module.exports = router;

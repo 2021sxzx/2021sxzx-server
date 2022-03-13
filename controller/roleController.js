@@ -1,5 +1,6 @@
 const {
   addRole,
+  getRole,
   getRoleList,
   updateRole,
   deleteRole,
@@ -24,7 +25,7 @@ async function addRoleAndReturnObject (
 ) {
   try {
     await addRole(role_name, role_describe, ...permission_identifier_array)
-    const res = await getRoleList()
+    const res = await getRole(role_name, role_describe);
 
     return new SuccessModel({
       msg: '添加角色列表成功',
@@ -43,9 +44,9 @@ async function addRoleAndReturnObject (
  * @param {*} role_name
  * @param {*} role_describe
  */
-async function updateRoleAndReturnObject (role_name, role_describe) {
+async function updateRoleAndReturnObject (role_name_old, role_name, role_describe) {
   try {
-    const res = await updateRole(role_name, role_describe)
+    const res = await updateRole(role_name_old, role_name, role_describe)
     return new SuccessModel({
       msg: '更新用户角色成功',
       data: res
@@ -99,9 +100,9 @@ async function returnRoleList () {
  * @param {*} role_name 
  * @returns {Promise<*>} 
  */
-async function deleteRoleAndReturnObject (role_name) {
+async function deleteRoleAndReturnObject (role_name, role_describe) {
   try {
-    const res = await deleteRole(role_name)
+    const res = await deleteRole(role_name, role_describe)
     return new SuccessModel({
       msg: '删除成功',
       data: res
@@ -137,16 +138,15 @@ async function getPermissionListAndReturnObject () {
  */
 async function searchRoleAndReturnObject (searchValue) {
   try {
-    const Role = await SearchRole(searchValue) // 多个角色，拿一个出来测试
-
+    const Role = await SearchRole(searchValue) // 多个角色的数组
+    
     let Permission = await Promise.all(
       Role.map(async item => {
         const res = await calcaulatePermission(item.role_name);
         return res;
       })
     )
-    console.log(Role)
-    console.log(Permission)
+
     const res = Role.map((item, index) => {
       return {
         role_name: item.role_name,

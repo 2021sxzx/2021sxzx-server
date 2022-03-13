@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const usersModel = require('../model/users')
 
 const {
   addUserAndReturnList,
@@ -39,8 +38,8 @@ router.post('/v1/user', async (req, res, next) => {
 
 // 修改用户
 router.patch('/v1/user', async (req, res, next) => {
-  const { user_name, password, role_name, account } = req.body
-  const data = await updateUserAndReturnList(user_name, password, role_name, account)
+  const { user_name, password, role_name, account, new_account } = req.body
+  const data = await updateUserAndReturnList(user_name, password, role_name, account, new_account )
   setStatusCode(res, data)
   res.json(data)
 })
@@ -60,5 +59,13 @@ router.post('/v1/searchUser', async (req, res, next) => {
   setStatusCode(res, data)
   res.json(data)
 })
+
+// 激活状态
+router.post('/v1/setActivation', async function (req, res, next) {
+  const {account} = req.body;
+  const result = await setActivationAndReturn(account);
+  res.json(result);
+});
+
 
 module.exports = router;

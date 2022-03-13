@@ -21,7 +21,12 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    let res = await users.find({})
+    let res = await users.find({}, {
+      user_name: 1,
+      password: 1,
+      role_name: 1,
+      account: 1
+    })
     return res
   } catch (e) {
     throw e.message 
@@ -34,16 +39,18 @@ async function getUserList () {
  * @param password
  * @param role_name
  * @param account
+ * @param new_account
  * @return {Promise<>}
  */
-async function updateUser (user_name, password, role_name, account) {
+async function updateUser (user_name, password, role_name, account, new_account) {
   try {
     let res = await users.updateOne({
       account: account
     }, {
       user_name: user_name,
       password: password,
-      role_name: role_name
+      role_name: role_name,
+      account: new_account
     })
     return res
   } catch (e) {
@@ -59,12 +66,12 @@ async function updateUser (user_name, password, role_name, account) {
 async function deleteUser (account) {
   try {
     let res = await users.deleteOne({
-      account: account
+      account
     })
     return res
   } catch (e) {
     throw e.message
-  } 
+  }
 }
 
 /**
@@ -86,7 +93,53 @@ async function searchUser (searchValue) {
           password: { $regex : reg }
         }
       ]
+    }, {
+      user_name: 1,
+      password: 1,
+      role_name: 1,
+      account: 1
     })
+    return res
+  } catch (e) {
+    throw e.message
+  }
+}
+
+async function isActivation (account) {
+  try {
+    let res = await users.findOne({
+      account
+    }, {
+      activation_status: 1
+    })
+    return res;
+  } catch {
+    throw e.message
+  }
+}
+
+async function setActivation (account) {
+  try {
+    let res = await users.findOne({
+      account
+    }, {
+      account: 1,
+      activation_status: 1
+    })
+    let tmp = res.activation_status === 1 ? 0 : 1;
+    console.log(tmp);
+    await users.updateOne({
+      account
+    }, {
+      activation_status: tmp
+    });
+    res = await users.findOne({
+      account
+    }, {
+      account: 1,
+      activation_status: 1
+    })
+    
     return res
   } catch (e) {
     throw e.message
@@ -98,5 +151,7 @@ module.exports = {
   getUserList,
   updateUser,
   deleteUser,
-  searchUser
+  searchUser,
+  isActivation,
+  setActivation
 }

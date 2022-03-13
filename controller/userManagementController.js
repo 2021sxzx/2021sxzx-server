@@ -5,7 +5,9 @@ const {
   getUserList,
   updateUser,
   deleteUser,
-  searchUser
+  searchUser,
+  isActivation,
+  setActivation
 } = require('../service/userManagementService')
 
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
@@ -52,9 +54,9 @@ async function returnUserList () {
  * @param account   用户账户
  * @return {Promise<SuccessModel | ErrorModel>}
  */
-async function updateUserAndReturnList (user_name, password, role_name, account) {
+async function updateUserAndReturnList (user_name, password, role_name, account, new_account) {
   try {
-    await updateUser(user_name, password, role_name, account)
+    await updateUser(user_name, password, role_name, account, new_account)
     const res = await getUserList()
     return new SuccessModel({
       msg: '修改成功',
@@ -94,7 +96,19 @@ async function searchUserAndReturnList (searchValue) {
       data: res
     })
   } catch (e) {
-    return new ErrorModel({msg: e.message})
+    throw new ErrorModel({msg: e.message})
+  }
+}
+
+async function setActivationAndReturn (account) {
+  try {
+    const res = await setActivation(account);
+    return new SuccessModel({
+      msg: '改变激活状态成功',
+      data: res
+    });
+  } catch (e) {
+    throw new ErrorModel({msg: e.message});
   }
 }
 
@@ -103,5 +117,6 @@ module.exports = {
   returnUserList,
   updateUserAndReturnList,
   deleteUserAndReturnList,
-  searchUserAndReturnList
+  searchUserAndReturnList,
+  setActivationAndReturn
 }

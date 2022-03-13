@@ -1,20 +1,42 @@
 const express = require('express');
 const router = express.Router();
-const roleService = require('../service/roleService')
-const roleController = require('../controller/roleController')
+// const {
+//   addUserAndReturnList,
+//   returnUserList,
+//   updateUserAndReturnList,
+//   deleteUserAndReturnList,
+//   searchUserAndReturnList,
+//   setActivationAndReturn
+// } = require('../controller/userManagementController');
 
-/**
- * 测试一下接口相关的函数有没有问题
- */
-router.post('/test', async function (req, res, next) {
-  const {
-    role_name,
-    role_describe
-  } = req.body
-  const permission = [0, 1, 2]
-  const res_ = await roleController.returnRoleList()
+// // 添加用户数据
+// router.post('/v1/user', async function (req, res, next) {
 
-  res.send({var: res_});
-});
+// });
+
+// // 返回用户列表
+// router.get('/v1/user', async function (req, res, next) {
+
+// })
+
+// // 更新用户数据
+// router.patch('/v1/user', async function (req, res, next) {
+
+// })
+
+// // 删除用户数据
+// router.delete('/v1/user', async function (req, res, next) {
+
+// })
+
+// router.post('/v1/searchUser', )
+
+
+// // 激活状态
+// router.post('/v1/setActivation', async function (req, res, next) {
+//   const {account} = req.body;
+//   const result = await setActivationAndReturn(account);
+//   res.json(result);
+// });
 
 module.exports = router;
