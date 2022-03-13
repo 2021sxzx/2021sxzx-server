@@ -25,7 +25,8 @@ async function getUserList () {
       user_name: 1,
       password: 1,
       role_name: 1,
-      account: 1
+      account: 1,
+
     })
     return res
   } catch (e) {
@@ -50,7 +51,8 @@ async function updateUser (user_name, password, role_name, account, new_account)
       user_name: user_name,
       password: password,
       role_name: role_name,
-      account: new_account
+      account: new_account,
+      activation_status: 1
     })
     return res
   } catch (e) {
@@ -97,7 +99,8 @@ async function searchUser (searchValue) {
       user_name: 1,
       password: 1,
       role_name: 1,
-      account: 1
+      account: 1,
+      activation_status: 1
     })
     return res
   } catch (e) {
