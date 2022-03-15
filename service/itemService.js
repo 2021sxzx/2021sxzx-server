@@ -10,16 +10,17 @@ const region = require('../model/region')
  */
 async function getRuleTree() {
     try {
-        var rules = await rule.find().ne('rule_name', 'null')
-        var res = {}
-        for (let i = 0; i < rules.length; i++) {
-            res[rules[i].rule_id] = {
-                rule_id: rules[i].rule_id,
-                rule_name: rules[i].rule_name,
-                parentId: rules[i].parentId
-            }
-        }
-        return res
+        var rules = await rule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
+        // var res = {}
+        // for (let i = 0; i < rules.length; i++) {
+        //     res[rules[i].rule_id] = {
+        //         rule_id: rules[i].rule_id,
+        //         rule_name: rules[i].rule_name,
+        //         parentId: rules[i].parentId
+        //     }
+        // }
+        // return res
+        return rules
     } catch (err) {
         throw new Error(err.message)
     }
@@ -31,17 +32,18 @@ async function getRuleTree() {
  */
 async function getRegionTree() {
     try {
-        var regions = await region.find()
-        var res = {}
-        for (let i = 0; i < regions.length; i++) {
-            res[regions[i].region_id] = {
-                region_id: regions[i].region_id,
-                region_name: regions[i].region_name,
-                region_level: regions[i].region_level,
-                parentId: regions[i].parentId
-            }
-        }
-        return res
+        var regions = await region.find({}, { _id: 0, __v: 0 })
+        // var res = {}
+        // for (let i = 0; i < regions.length; i++) {
+        //     res[regions[i].region_id] = {
+        //         region_id: regions[i].region_id,
+        //         region_name: regions[i].region_name,
+        //         region_level: regions[i].region_level,
+        //         parentId: regions[i].parentId
+        //     }
+        // }
+        // return res
+        return regions
     } catch (err) {
         throw new Error(err.message)
     }
@@ -55,6 +57,9 @@ async function getRegionTree() {
  * @param {String} create_time
  * @param {String} task_code
  * @param {String} item_rule_id
+ * @param {String} rule_id
+ * @param {String} region_id
+ * @param {Boolean} return_stake
  * @returns 
  */
 async function getItems({
@@ -63,9 +68,15 @@ async function getItems({
     item_status = null,
     create_time = null,
     task_code = null,
-    item_rule_id = null
+    item_rule_id = null,
+    rule_id = null,
+    region_id = null,
+    return_stake = null
 }) {
     try {
+        if (return_stake === null) {
+            throw new Error('call getItems error: return_stake is null')
+        }
         var query = {}
         if (item_id !== null) {
             query.item_id = item_id
@@ -85,16 +96,27 @@ async function getItems({
         if (item_rule_id !== null) {
             query.item_rule_id = item_rule_id
         }
+        if (rule_id !== null) {
+            query.rule_id = rule_id
+        }
+        if (region_id !== null) {
+            query.region_id = region_id
+        }
         var items = await item.find(query)
         var res = []
         for (let i = 0; i < items.length; i++) {
+            if (return_stake === false && items[i].task_code === 'null' && items[i].item_rule_id === 'null') {
+                continue
+            }
             res.push({
                 item_id: items[i].item_id,
                 release_time: items[i].release_time,
                 item_status: items[i].item_status,
                 create_time: items[i].create_time,
                 task_code: items[i].task_code,
-                item_rule_id: items[i].item_rule_id
+                item_rule_id: items[i].item_rule_id,
+                rule_id: items[i].rule_id,
+                region_id: items[i].region_id
             })
         }
         return res
@@ -113,7 +135,7 @@ async function getItemTask({ item_id = null }) {
         if (item_id === null) {
             throw new Error('call getItemTask error: item_id is null')
         }
-        var res = await task.find({ item_id: item_id })
+        var res = await task.find({ item_id: item_id }, { _id: 0, __v: 0 })
         return res
     } catch (err) {
         throw new Error(err.message)
@@ -135,7 +157,7 @@ async function getTasks({ task_code = null, task_name = null }) {
         if (task_name !== null) {
             query.task_name = task_name
         }
-        var res = await task.find(query)
+        var res = await task.find(query, { _id: 0, __v: 0 })
         return res
     } catch (err) {
         throw new Error(err.message)
@@ -410,12 +432,44 @@ async function deleteRule({ rule_id = null }) {
     }
 }
 
+async function deleteRules({
+    arr = null
+}) {
+    try {
+        if (arr === null) {
+            throw new Error('call deleteRules error: arr is null')
+        }
+        var res = await rule.deleteMany({
+            rule_id: { $in: arr }
+        })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
 async function deleteItemRule({ item_rule_id = null }) {
     try {
         if (item_rule_id === null) {
-            throw new Error('call item_rule_id error: item_rule_id is null')
+            throw new Error('call deleteItemRule error: item_rule_id is null')
         }
         var res = await itemRule.deleteOne({ item_rule_id: item_rule_id })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function deleteItemRules({
+    arr = null
+}) {
+    try {
+        if (arr === null) {
+            throw new Error('call deleteItemRules error: arr is null')
+        }
+        var res = await itemRule.deleteMany({
+            item_rule_id: { $in: arr }
+        })
         return res
     } catch (err) {
         throw new Error(err.message)
@@ -566,6 +620,71 @@ async function updateItem({
     }
 }
 
+async function createItem({
+    item_id = null,
+    release_time = null,
+    item_status = null,
+    create_time = null,
+    task_code = null,
+    item_rule_id = null
+}) {
+    try {
+        var newData = {}
+        if (item_id === null) {
+            throw new Error('call createItem error: item_id is null')
+        }
+        if (release_time !== null) {
+            newData.release_time = release_time
+        }
+        if (item_status !== null) {
+            newData.item_status = item_status
+        }
+        if (create_time !== null) {
+            newData.create_time = create_time
+        }
+        if (task_code !== null) {
+            newData.task_code = task_code
+        }
+        if (item_rule_id !== null) {
+            newData.item_rule_id = item_rule_id
+        }
+        var res = await item.create(newData)
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function createItems({
+    arr = null
+}) {
+    try {
+        if (arr === null) {
+            throw new Error('call createItems error: arr is null')
+        }
+        var res = await item.create(arr)
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
+async function deleteItem({
+    item_id = null
+}) {
+    try {
+        if (item_id === null) {
+            throw new Error('call deleteItem error: item_id is null')
+        }
+        var res = await item.deleteOne({
+            item_id: item_id
+        })
+        return res
+    } catch (err) {
+        throw new Error(err.message)
+    }
+}
+
 module.exports = {
     getRuleTree,
     getItems,
@@ -585,5 +704,10 @@ module.exports = {
     getRegion,
     getTask,
     getRegionPath,
-    updateItem
+    updateItem,
+    createItem,
+    deleteItem,
+    createItems,
+    deleteRules,
+    deleteItemRules
 }
