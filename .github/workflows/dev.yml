@@ -15,10 +15,9 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          cd /www/wwwroot/sxzx
-          git remote add origin git@github.com:2021sxzx/2021sxzx-server.git
-          git checkout -b dev
-          git pull
+          cd /www/wwwroot
+          git clone -b dev https://github.com/2021sxzx/2021sxzx-server.git
+          cd ./2021sxzx-server
           export NODE_HOME=/www/server/nvm/versions/node/v16.13.0
           export PATH=$PATH:$NODE_HOME/bin
           npm install
