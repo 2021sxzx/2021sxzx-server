@@ -7,22 +7,32 @@ const itemSchema = new mongoose.Schema({
         required: true
     },
     release_time: {  // 发布时间
-        type: String,
-        default: ""
+        type: Number,
+        default: 9999999999999
     },
     item_status: {   // 事项状态
         type: Number,
         default: 0
     },
     create_time: {   // 创建时间
-        type: String,
+        type: Number,
         default: Date.now()
     },
     task_code: { // 事项指南编码
         type: String,
+        default: ''
     },
     item_rule_id: {  // 事项规则id
         type: String,
+        default: ''
+    },
+    rule_id: {  //规则id
+        type: String,
+        default: ''
+    },
+    region_id: {    //区划id
+        type: String,
+        default: ''
     }
 })
 

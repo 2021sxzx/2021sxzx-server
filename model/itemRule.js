@@ -3,7 +3,7 @@ const mongoose = require("mongoose")
 // comment表的定义
 const itemRuleSchema = new mongoose.Schema({
     create_time: {  // 创建时间
-        type: String,
+        type: Number,
         default: Date.now()
     },
     item_rule_id: {  // 事项规则编码
