@@ -17,8 +17,6 @@ jobs:
         script: |
           cd /www/wwwroot
           git clone -b dev https://github.com/2021sxzx/2021sxzx-server.git
-          export NODE_HOME=/www/server/nvm/versions/node/v16.14.0
-          export PATH=$PATH:$NODE_HOME/bin
           cd ./2021sxzx-server
           npm install
           pm2 delete 0
