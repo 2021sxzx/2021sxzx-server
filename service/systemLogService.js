@@ -1,16 +1,58 @@
 const systemLog = require("../model/systemLog");
 const users = require("../model/users");
+const fs = require('fs')
 
+/**
+ * 请求操作映射表
+ * @returns {Promise<*|*>}
+ */
+function chargeTypeChange(value) {
+  var chargeTypeGroup = {
+      "GET /api/v1/allSystemLog":"查询所有日志",
+      "GET /api/v1/allSystemLogDetail":"查询详细日志",
+  };
+  return chargeTypeGroup[value];
+};
+
+/**
+ * 看看log是什么
+ * @returns {Promise<*|*>}
+ */
+ async function showSystemLog() {
+  try {
+    // let data = fs.readFile('2021sxzx-server\service\test.txt')
+    // return "data";
+    // fs.readFile('service/test.txt',function(err,data){
+    //   return "data";
+    //   if (err){
+    //     return "data";
+    //     console.error(err);
+    //   }
+    //   else{
+    //     return "data";
+    //   }
+    // })
+    var data = fs.readFileSync('log/access.log');
+    data=data.toString().split("\n");
+    var dataArray=[]
+    data.forEach(function(item,index){
+      dataArray.push({log_id:index,create_time:item.substr(item.indexOf("[")+1,20),content:chargeTypeChange(item.slice(item.indexOf("\"")+1,item.indexOf("H")-1)),user_name:'zyk',idc:'133'})
+    })
+    return (dataArray);
+  } catch (e) {
+    return "showSystemLog:"+e.message;
+  }
+}
 /**
  * 专门为解决bug写的返回全部系统日志（不包括操作人）的接口
  * @returns {Promise<*|*>}
  */
-async function getAllSystemLog2() {
+ async function getAllSystemLog2() {
   try {
     let res = await systemLog.find();
     return res;
   } catch (e) {
-    return "e.message";
+    return e.message;
   }
 }
 
@@ -67,14 +109,14 @@ async function searchByCondition({ myself, today, thisWeek }) {
       return systemLogData
       // return [{idc:"001"}]
   //     TimeZone time = TimeZone.getTimeZone("Etc/GMT-8");  //转换为中国时区
- 
+
   // TimeZone.setDefault(time);
   //     var d = new Date();
   //     return d;
   //     newSystemLogData = systemLogData.filter((currentItem) => {
   //       return currentItem.create_time.substring(0, 10) == d.toJSON().substring(0,10);
   //     });
-    } 
+    }
     // else {
     //   return (newSystemLogData = systemLogData.filter((currentItem) => {
     //     return currentItem.user_name === "张毅";
@@ -170,4 +212,5 @@ module.exports = {
   getSystemLogDetail,
   getAllSystemLog2,
   searchByCondition,
+  showSystemLog,
 };

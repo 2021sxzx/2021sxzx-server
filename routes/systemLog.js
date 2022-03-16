@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const {
     getAllSystemLogDetail,
-    getSearchSystemLog
+    getSearchSystemLog,
+    showSystemLogController
   } = require("../controller/systemLogController")
-  
+
 function setStatusCode(res,data) {
   if(data.code === 200) {
     res.statusCode = 200
@@ -16,9 +17,18 @@ function setStatusCode(res,data) {
 /* 系统日志相关的路由处理. */
 
 /**
+ * show系统日志的获取
+ */
+ router.get('/v1/show', async (req,res,next) => {
+  let data = await showSystemLogController()
+  setStatusCode(res,data)
+  res.json(data)
+})
+
+/**
  * 系统日志的获取
  */
-router.get('/v1/log', async (req,res,next) => {
+ router.get('/v1/log', async (req,res,next) => {
   let data = await getAllSystemLogDetail()
   setStatusCode(res,data)
   res.json(data)
