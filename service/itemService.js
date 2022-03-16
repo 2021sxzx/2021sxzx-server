@@ -11,16 +11,11 @@ const region = require('../model/region')
 async function getRuleTree() {
     try {
         var rules = await rule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
-        // var res = {}
-        // for (let i = 0; i < rules.length; i++) {
-        //     res[rules[i].rule_id] = {
-        //         rule_id: rules[i].rule_id,
-        //         rule_name: rules[i].rule_name,
-        //         parentId: rules[i].parentId
-        //     }
-        // }
-        // return res
-        return rules
+        var res = {}
+        for (let i = 0; i < rules.length; i++) {
+            res[rules[i].rule_id] = rules[i]
+        }
+        return res
     } catch (err) {
         throw new Error(err.message)
     }
@@ -33,17 +28,11 @@ async function getRuleTree() {
 async function getRegionTree() {
     try {
         var regions = await region.find({}, { _id: 0, __v: 0 })
-        // var res = {}
-        // for (let i = 0; i < regions.length; i++) {
-        //     res[regions[i].region_id] = {
-        //         region_id: regions[i].region_id,
-        //         region_name: regions[i].region_name,
-        //         region_level: regions[i].region_level,
-        //         parentId: regions[i].parentId
-        //     }
-        // }
-        // return res
-        return regions
+        var res = {}
+        for (let i = 0; i < regions.length; i++) {
+            res[regions[i].region_id] = regions[i]
+        }
+        return res
     } catch (err) {
         throw new Error(err.message)
     }

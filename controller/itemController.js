@@ -31,44 +31,17 @@ async function getRegionTree() {
 }
 
 /**
- * 根据唯一id获取事项
- * @param {string} item_id 事项id
- * @param {string} task_code 事项指南实施编码
- * @returns 
- */
-async function getItemByUniId({
-    item_id = null,
-    task_code = null
-}) {
-    try {
-        if (item_id === null && task_code === null) {
-            throw new Error('需要item_id或者task_code')
-        }
-        else if (item_id !== null) {
-            var res = await itemService.getItems({ item_id: item_id, return_stake: false })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        else if (task_code !== null) {
-            var res = await itemService.getItems({ task_code: task_code, return_stake: false })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-    } catch (err) {
-        return new ErrorModel({ msg: '查询失败', data: err.message })
-    }
-}
-
-/**
  * 获取事项
  * @param {Number} create_start_time 事项创建时间的起始时间
  * @param {Number} create_end_time 事项创建时间的终止时间
  * @param {Number} release_start_time 事项发布时间的起始时间
  * @param {Number} release_end_time 事项发布时间的终止时间
- * @param {Array} item_id 事项id
- * @param {Array} task_code 事项指南实施编码
- * @param {Number} item_status 事项状态
- * @param {Array} item_rule_id 事项规则id
- * @param {Array} rule_id 规则id
- * @param {Array} region_id 区划id
+ * @param {Array<String>} item_id 事项id
+ * @param {Array<String>} task_code 事项指南实施编码
+ * @param {Array<Number>} item_status 事项状态
+ * @param {Array<String>} item_rule_id 事项规则id
+ * @param {Array<String>} rule_id 规则id
+ * @param {Array<String>} region_id 区划id
  * @returns 
  */
 async function getItems({
@@ -102,33 +75,6 @@ async function getItems({
         release_end_time = (release_end_time !== null) ? release_end_time : 9999999999999
         query.release_time = { $gte: release_start_time, $lte: release_end_time }
         var res = await modelItem.find(query, { _id: 0, __v: 0 })
-        // if (start_time !== null || end_time !== null) {
-        //     var s = (start_time !== null || start_time !== '') ? start_time : 0
-        //     var e = (end_time !== null || end_time !== '') ? end_time : 9999999999999
-        //     var res = await itemService.getItems({
-        //         item_id: item_id,
-        //         task_code: task_code,
-        //         item_status: item_status,
-        //         item_rule_id: item_rule_id,
-        //         return_stake: false
-        //     })
-        //     var r = []
-        //     for (let i = 0; i < res.length; i++) {
-        //         if (res[i].create_time >= s && res[i].create_time <= e) {
-        //             r.push(res[i])
-        //         }
-        //     }
-        //     return new SuccessModel({ msg: '查询成功', data: r })
-        // }
-        // var res = await itemService.getItems({
-        //     item_id: item_id,
-        //     task_code: task_code,
-        //     release_time: release_time,
-        //     item_status: item_status,
-        //     create_time: create_time,
-        //     item_rule_id: item_rule_id,
-        //     return_stake: false
-        // })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -137,12 +83,12 @@ async function getItems({
 
 /**
  * 获取事项规则
- * @param {string} start_time 事项规则创建时间的起始时间
- * @param {string} end_time 事项规则创建时间的终止时间
- * @param {string} item_rule_id 事项规则id
- * @param {string} rule_id 规则id
- * @param {string} region_id 区划id
- * @param {string} create_time 事项规则创建时间
+ * @param {String} start_time 事项规则创建时间的起始时间
+ * @param {String} end_time 事项规则创建时间的终止时间
+ * @param {String} item_rule_id 事项规则id
+ * @param {String} rule_id 规则id
+ * @param {String} region_id 区划id
+ * @param {String} create_time 事项规则创建时间
  * @returns 
  */
 async function getItemRules({
@@ -179,159 +125,6 @@ async function getItemRules({
             return_stake: false
         })
         return new SuccessModel({ msg: '查询成功', data: res })
-    } catch (err) {
-        return new ErrorModel({ msg: '查询失败', data: err.message })
-    }
-}
-
-/**
- * 根据规则id获取事项
- * @param {string} rule_id 规则id 
- * @param {number} item_status 事项状态
- * @param {string} release_time 事项发布时间
- * @param {string} create_time 事项创建时间
- * @returns 
- */
-async function getItemsByRuleId({
-    rule_id = null,
-    item_status = null,
-    release_time = null,
-    create_time = null
-}) {
-    try {
-        if (rule_id === null) {
-            throw new Error('需要rule_id')
-        }
-        var itemrules = await itemService.getItemRules({
-            rule_id: rule_id,
-            return_stake: false
-        })
-        // console.log(itemrules)
-        var itemruleids = []
-        for (let i = 0; i < itemrules.length; i++) {
-            if (!itemruleids.includes(itemrules[i].item_rule_id)) {
-                itemruleids.push(itemrules[i].item_rule_id)
-            }
-        }
-        var res = []
-        for (let i = 0; i < itemruleids.length; i++) {
-            let r = await itemService.getItems({
-                item_rule_id: itemruleids[i],
-                item_status: item_status,
-                release_time: release_time,
-                create_time: create_time,
-                return_stake: false
-            })
-            res = res.concat(r)
-        }
-        return new SuccessModel({ msg: '查询成功', data: res })
-    } catch (err) {
-        return new ErrorModel({ msg: '查询失败', data: err.message })
-    }
-}
-
-/**
- * 根据区划id获取该区划的事项
- * @param {string} region_id 区划id
- * @param {number} item_status 事项状态
- * @param {string} release_time 事项发布时间
- * @param {string} create_time 事项创建时间
- * @returns 
- */
-async function getItemsByRegionId({
-    region_id = null,
-    item_status = null,
-    release_time = null,
-    create_time = null
-}) {
-    try {
-        if (region_id === null) {
-            throw new Error('至少需要region_id')
-        }
-        var itemrules = await itemService.getItemRules({
-            region_id: region_id,
-            return_stake: false
-        })
-        var itemruleids = new Array()
-        for (let i = 0; i < itemrules.length; i++) {
-            if (!itemruleids.includes(itemrules[i])) {
-                itemruleids.push(itemrules[i].item_rule_id)
-            }
-        }
-        var res = new Array()
-        for (let i = 0; i < itemruleids.length; i++) {
-            let r = await itemService.getItems({
-                item_rule_id: itemruleids[i],
-                item_status: item_status,
-                release_time: release_time,
-                create_time: create_time,
-                return_stake: false
-            })
-            res = res.concat(r)
-        }
-        return new SuccessModel({ msg: '查询成功', data: res })
-    } catch (err) {
-        return new ErrorModel({ msg: '查询失败', data: err.message })
-    }
-}
-
-/**
- * 根据区划id获取该区划以及下级区划的全部事项
- * @param {string} region_id 区划id
- * @param {number} item_status 事项状态
- * @param {string} release_time 事项发布时间
- * @param {string} create_time 事项创建时间
- * @returns 
- */
-async function getAllItemsByRegionId({
-    region_id = null,
-    item_status = null,
-    release_time = null,
-    create_time = null
-}) {
-    try {
-        if (region_id === null) {
-            throw new Error('至少需要region_id')
-        }
-        var flag = true
-        var regions = new Array()
-        let root = await itemService.getRegion({ region_id: region_id })
-        for (let i = 0; i < root.length; i++) {
-            if (!regions.includes(root[i].region_id)) {
-                regions.push(root[i].region_id)
-            }
-        }
-        while (flag) {
-            let lastLen = regions.length
-            for (let i = 0; i < lastLen; i++) {
-                let r = await itemService.getRegion({ parentId: regions[i].region_id })
-                for (let j = 0; j < r.length; j++) {
-                    if (!regions.includes(r[j].region_id)) {
-                        regions.push(r[j].region_id)
-                    }
-                }
-            }
-            if (regions.length === lastLen) {
-                flag = false
-            }
-        }
-        var itemrules = new Array()
-        for (let i = 0; i < regions.length; i++) {
-            let r = await itemService.getItemRules({ region_id: regions[i], return_stake: false })
-            itemrules = itemrules.concat(r)
-        }
-        var items = new Array()
-        for (let i = 0; i < itemrules.length; i++) {
-            let r = await itemService.getItems({
-                item_rule_id: itemrules[i].item_rule_id,
-                item_status: item_status,
-                release_time: release_time,
-                create_time: create_time,
-                return_stake: false
-            })
-            items = items.concat(r)
-        }
-        return new SuccessModel({ msg: '查询成功', data: items })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
     }
@@ -420,6 +213,9 @@ async function createRules({
     }
 }
 
+/**
+ * 创建rule表里面的桩（非外部接口）
+ */
 async function createRuleStake() {
     try {
         //先把全部桩删掉
@@ -614,6 +410,9 @@ async function createItemRules({
     }
 }
 
+/**
+ * 创建item_rule表的桩（非外部接口）
+ */
 async function createItemRuleStake() {
     try {
         //先删除全部的桩
@@ -756,89 +555,39 @@ async function updateItemRules({
 
 /**
  * 通过rule_id获取对应的规则路径
- * @param {Array} ruleIds 规则id数组
+ * @param {Array<String>} rule_id 规则id数组
  * @returns 
  */
-async function getRulePath({
-    ruleIds = null
+async function getRulePaths({
+    rule_id = null
 }) {
     try {
-        if (ruleIds === null) {
+        if (rule_id === null) {
             throw new Error('请求体中需要一个ruleIds属性，且该属性是一个数组')
         }
-        if (ruleIds.length <= 0) {
+        if (rule_id.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        //读一次数据库，建立dict，key是rule_id，value是规则树节点
+        var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
+        var dic = {}
+        rules.forEach(function (value) { dic[value.rule_id] = value })
+        //计算路径
         var res = {}
-        for (let i = 0; i < ruleIds.length; i++) {
-            let rulePath = await itemService.getRulePath({ rule_id: ruleIds[i] })
-            res[ruleIds[i]] = rulePath
+        for (let i = 0; i < rule_id.length; i++) {
+            let rulePath = []
+            let node = dic[rule_id[i]] ? dic[rule_id[i]] : null
+            while (node !== null) {
+                rulePath.unshift(node)
+                node = dic[node.parentId] ? dic[node.parentId] : null
+            }
+            res[rule_id[i]] = rulePath
         }
         return new SuccessModel({ msg: '获取规则路径成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '获取规则路径失败', data: err.message })
     }
 }
-
-/**
- * 通过item_rule_id获取对应的规则路径
- * @param {Array} itemRuleIds 事项规则id数组
- * @returns 
- */
-async function getItemRulePath({
-    itemRuleIds = null
-}) {
-    try {
-        if (itemRuleIds === null) {
-            throw new Error('请求体中需要一个itemRuleIds属性，且该属性是一个数组')
-        }
-        if (itemRuleIds.length <= 0) {
-            throw new Error('数组长度小于等于0')
-        }
-        var res = {}
-        for (let i = 0; i < itemRuleIds.length; i++) {
-            let itemRule = await itemService.getItemRules({ item_rule_id: itemRuleIds[i], return_stake: true })
-            if (itemRule.length <= 0) {
-                throw new Error('item_rule_id不存在: ' + itemRuleIds[i])
-            }
-            else {
-                if (itemRule[0].rule_id === 'null' && itemRule[0].region_id === 'null') {
-                    throw new Error('item_rule_id违法: ' + itemRuleIds[i])
-                }
-                let rulePath = await itemService.getRulePath({ rule_id: itemRule[0].rule_id })
-                res[itemRuleIds[i]] = rulePath
-            }
-        }
-        return new SuccessModel({ msg: '获取事项规则路径成功', data: res })
-    } catch (err) {
-        return new ErrorModel({ msg: '获取事项规则路径失败', data: err.message })
-    }
-}
-
-/**
- * 获取规则
- * @param {String} rule_id 规则id
- * @param {String} rule_name 规则名称
- * @param {String} parentId 父规则id
- * @returns 
- */
-// async function getRules({
-//     rule_id = null,
-//     rule_name = null,
-//     parentId = null
-// }) {
-//     try {
-//         var res = await itemService.getRules({
-//             rule_id: rule_id,
-//             rule_name: rule_name,
-//             parentId: parentId,
-//             return_stake: false
-//         })
-//         return new SuccessModel({ msg: '获取规则成功', data: res })
-//     } catch (err) {
-//         return new ErrorModel({ msg: '获取规则失败', data: err.message })
-//     }
-// }
 
 /**
  * 获取事项指南
@@ -861,23 +610,33 @@ async function getItemGuide({
 
 /**
  * 获取区划路径
- * @param {Array} regionIds 区划id
+ * @param {Array<String>} region_id 区划id
  * @returns 
  */
-async function getRegionPath({
-    regionIds = null
+async function getRegionPaths({
+    region_id = null
 }) {
     try {
-        if (regionIds === null) {
+        if (region_id === null) {
             throw new Error('请求体中需要一个regionIds属性，且该属性是一个数组')
         }
-        if (regionIds.length <= 0) {
+        if (region_id.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        //读取一次数据库，建立dict，key是region_id，value是区划树节点
+        var regions = await modelRegion.find({}, { _id: 0, __v: 0 })
+        var dic = {}
+        regions.forEach(function (value) { dic[value.region_id] = value })
+        //计算路径
         var res = {}
-        for (let i = 0; i < regionIds.length; i++) {
-            let regionPath = await itemService.getRegionPath({ region_id: regionIds[i] })
-            res[regionIds[i]] = regionPath
+        for (let i = 0; i < region_id.length; i++) {
+            let regionPath = []
+            let node = dic[region_id[i]] ? dic[region_id[i]] : null
+            while (node !== null) {
+                regionPath.unshift(node)
+                node = dic[node.parentId] ? dic[node.parentId] : null
+            }
+            res[region_id[i]] = regionPath
         }
         return new SuccessModel({ msg: '获取区划路径成功', data: res })
     } catch (err) {
@@ -887,10 +646,12 @@ async function getRegionPath({
 
 /**
  * 获取区划
- * @param {String} region_id 区划id
- * @param {String} region_name 区划名称
- * @param {Number} region_level 区划等级
- * @param {String} parentId 上级区划id
+ * @param {Array<String>} region_id 区划id
+ * @param {String} region_name 区划名称，用于模糊查询
+ * @param {Array<Number>} region_level 区划等级
+ * @param {Array<String>} parentId 上级区划id
+ * @param {Number} page_size 页大小
+ * @param {Number} page_num 页码
  * @returns 
  */
 async function getRegions({
@@ -910,13 +671,13 @@ async function getRegions({
         // })
         if (region_id !== null) {
             //region_id查找唯一区划
-            var regions = await modelRegion.find({ region_id: region_id }, { _id: 0, __v: 0 })
-            return new SuccessModel({ msg: '获取区划成功', data: regions })
+            var regions = await modelRegion.find({ region_id: { $in: region_id } }, { _id: 0, __v: 0 })
+            return new SuccessModel({ msg: '查询成功', data: regions })
         }
         var query = {}
         if (region_name !== null) query.region_name = { $regex: region_name }
-        if (region_level !== null) query.region_level = region_level
-        if (parentId !== null) query.parentId = parentId
+        if (region_level !== null) query.region_level = { $in: region_level }
+        if (parentId !== null) query.parentId = { $in: parentId }
         var regions = await modelRegion.find(query, { _id: 0, __v: 0 })
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
@@ -930,9 +691,9 @@ async function getRegions({
                 return new SuccessModel({ msg: '查询成功', data: r })
             }
         }
-        return new SuccessModel({ msg: '获取区划成功', data: regions })
+        return new SuccessModel({ msg: '查询成功', data: regions })
     } catch (err) {
-        return new ErrorModel({ msg: '获取区划失败', data: err.message })
+        return new ErrorModel({ msg: '查询失败', data: err.message })
     }
 }
 
@@ -997,6 +758,9 @@ async function createItems({
     }
 }
 
+/**
+ * 创建item表的桩（非外部接口）
+ */
 async function createItemStake() {
     try {
         //先删除全部桩
@@ -1029,6 +793,12 @@ async function createItemStake() {
     }
 }
 
+/**
+ * 根据规则id和区划id获取下级区划，存在事项的区划，其haveItem是1，没有则是0
+ * @param {String} rule_id 规则id
+ * @param {String} region_id 区划id
+ * @returns 
+ */
 async function getChildRegionsByRuleAndRegion({
     rule_id = null,
     region_id = null
@@ -1046,7 +816,7 @@ async function getChildRegionsByRuleAndRegion({
             rule_id: rule_id,
             region_id: { $in: regionIds }
         }, { _id: 0, __v: 0 })
-        //子区划中有事项的havaItem是1，否则是0
+        //子区划中有事项的haveItem是1，否则是0
         childRegions.forEach(function (value) {
             value.haveItem = 0
             res.forEach(function (v) {
@@ -1061,6 +831,17 @@ async function getChildRegionsByRuleAndRegion({
     }
 }
 
+/**
+ * 获取规则
+ * @param {Array<String>} rule_id 规则id
+ * @param {String} rule_name 规则名称，用于模糊查询
+ * @param {Array<String>} parentId 父规则id
+ * @param {Number} start_time 规则创建时间的起始时间
+ * @param {Number} end_time 规则创建时间的终止时间
+ * @param {Number} page_size 页大小
+ * @param {Number} page_num 页码
+ * @returns 
+ */
 async function getRules({
     rule_id = null,
     rule_name = null,
@@ -1074,7 +855,8 @@ async function getRules({
         //rule_id用于准确查询
         if (rule_id !== null) {
             var res = await modelRule.find({
-                rule_id: rule_id
+                rule_id: { $in: rule_id },
+                rule_name: { $ne: 'null' }
             }, { _id: 0, __v: 0 })
             return new SuccessModel({ msg: '查询成功', data: res })
         }
@@ -1105,7 +887,7 @@ async function getRules({
             let start = (start_time !== null) ? start_time : 0
             let end = (end_time !== null) ? end_time : 9999999999999
             var res = await modelRule.find({
-                parentId: parentId,
+                parentId: { $in: parentId },
                 create_time: { $gte: start, $lte: end }
             }, { _id: 0, __v: 0 })
             if (page_size !== null && page_num !== null) {
@@ -1130,21 +912,16 @@ async function getRules({
 module.exports = {
     getRuleTree,
     getRegionTree,
-    getItemByUniId,
     getItems,
-    getItemsByRuleId,
-    getItemsByRegionId,
     createRules,
     deleteRules,
     getItemRules,
     createItemRules,
     deleteItemRules,
-    getRulePath,
-    getItemRulePath,
+    getRulePaths,
     getRules,
-    getAllItemsByRegionId,
     getItemGuide,
-    getRegionPath,
+    getRegionPaths,
     updateRules,
     updateItemRules,
     getRegions,
