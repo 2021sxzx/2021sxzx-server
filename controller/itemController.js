@@ -3,6 +3,7 @@ const { ErrorModel, SuccessModel } = require('../utils/resultModel')
 const modelItem = require('../model/item')
 const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
+const modelTask = require('../model/task')
 
 /**
  * 获取规则树
@@ -42,6 +43,8 @@ async function getRegionTree() {
  * @param {Array<String>} item_rule_id 事项规则id
  * @param {Array<String>} rule_id 规则id
  * @param {Array<String>} region_id 区划id
+ * @param {Number} page_size 页大小
+ * @param {Number} page_num 页码
  * @returns 
  */
 async function getItems({
@@ -54,7 +57,9 @@ async function getItems({
     item_status = null,
     item_rule_id = null,
     rule_id = null,
-    region_id = null
+    region_id = null,
+    page_size = null,
+    page_num = null
 }) {
     try {
         var query = {}
@@ -75,6 +80,18 @@ async function getItems({
         release_end_time = (release_end_time !== null) ? release_end_time : 9999999999999
         query.release_time = { $gte: release_start_time, $lte: release_end_time }
         var res = await modelItem.find(query, { _id: 0, __v: 0 })
+        if (page_size !== null && page_num !== null) {
+            //只返回部分查询结果
+            if (page_size < res.length) {
+                var r = new Array()
+                for (let i = 0; i < page_size; i++) {
+                    let index = page_size * page_num + i
+                    if (index >= res.length) break
+                    r.push(res[index])
+                }
+                return new SuccessModel({ msg: '查询成功', data: r })
+            }
+        }
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -82,7 +99,7 @@ async function getItems({
 }
 
 /**
- * 获取事项规则
+ * 获取事项规则（弃用）
  * @param {String} start_time 事项规则创建时间的起始时间
  * @param {String} end_time 事项规则创建时间的终止时间
  * @param {String} item_rule_id 事项规则id
@@ -325,7 +342,7 @@ async function updateRules({
 }
 
 /**
- * 创建事项规则
+ * 创建事项规则（弃用）
  * @param {Array} itemRules 待创建的事项规则
  * @returns 
  */
@@ -432,7 +449,7 @@ async function createItemRuleStake() {
 }
 
 /**
- * 删除事项规则
+ * 删除事项规则（弃用）
  * @param {Array} itemRules 待删除的事项规则
  * @returns 
  */
@@ -495,7 +512,7 @@ async function deleteItemRules({
 }
 
 /**
- * 更新事项规则
+ * 更新事项规则（弃用）
  * @param {Array} itemRules 待更新的事项规则 
  * @returns 
  */
@@ -578,7 +595,7 @@ async function getRulePaths({
 
 /**
  * 获取事项指南
- * @param {String} task_code 事项指南实施编码
+ * @param {String} task_code 事项指南编码
  * @returns 
  */
 async function getItemGuide({
@@ -588,7 +605,7 @@ async function getItemGuide({
         if (task_code === null) {
             throw new Error('需要task_code字段')
         }
-        var res = await itemService.getTask({ task_code: task_code })
+        var res = await modelTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -686,7 +703,7 @@ async function getRegions({
 
 /**
  * 创建事项
- * @param {Array} items 待创建的事项
+ * @param {Array<Object>} items 待创建的事项
  * @returns 
  */
 async function createItems({
@@ -701,39 +718,43 @@ async function createItems({
             throw new Error('数组长度小于等于0')
         }
         //检查桩
-        var stakes = await itemService.getItems({
+        var stakes = await modelItem.find({
             task_code: 'null',
-            item_rule_id: 'null',
-            return_stake: true
-        })
+            rule_id: 'null',
+            region_id: 'null'
+        }, { _id: 0, __v: 0 })
         if (stakes.length !== 1) {
             await createItemStake()
-            stakes = await itemService.getItems({
+            stakes = await modelItem.find({
                 task_code: 'null',
-                item_rule_id: 'null',
-                return_stake: true
-            })
+                rule_id: 'null',
+                region_id: 'null'
+            }, { _id: 0, __v: 0 })
         }
         //暂时删除桩
-        await itemService.deleteItem({ item_id: stakes[0].item_id })
-        var maxValue = parseInt(stakes[0].item_id)
+        var stake = stakes[0]
+        await modelItem.deleteOne({ item_id: stake.item_id })
+        var maxValue = parseInt(stake.item_id)
         //遍历数组创建事项
         var newData = []
         for (let i = 0; i < items.length; i++) {
             newData.push({
                 item_id: maxValue.toString(),
-                task_code: (items[i].task_code) ? items[i].task_code : '',
-                item_rule_id: (items[i].item_rule_id) ? items[i].item_rule_id : ''
+                task_code: (items[i].task_code !== null) ? items[i].task_code : '',
+                rule_id: (items[i].rule_id !== null) ? items[i].rule_id : '',
+                region_id: (items[i].region_id !== null) ? items[i].region_id : '',
+                item_status: (items[i].item_status !== null) ? items[i].item_status : 0
             })
             maxValue = maxValue + 1
         }
-        await itemService.createItems({ arr: newData })
+        await modelItem.create(newData)
         createSuccess = true
         //创建桩
-        await itemService.createItem({
+        await modelItem.create({
             item_id: maxValue.toString(),
             task_code: 'null',
-            item_rule_id: 'null'
+            rule_id: 'null',
+            region_id: 'null'
         })
         return new SuccessModel({ msg: '创建事项成功' })
     } catch (err) {
@@ -751,16 +772,17 @@ async function createItems({
 async function createItemStake() {
     try {
         //先删除全部桩
-        var stakes = await itemService.getItems({
+        await modelItem.deleteMany({
             task_code: 'null',
-            item_rule_id: 'null',
-            return_stake: true
+            rule_id: 'null',
+            region_id: 'null'
         })
-        for (let i = 0; i < stakes.length; i++) {
-            await itemService.deleteItem({ item_id: stakes[i].item_id })
-        }
         //计算桩的item_id
-        var items = await itemService.getItems({ return_stake: false })
+        var items = await modelItem.find({
+            task_code: { $ne: 'null' },
+            rule_id: { $ne: 'null' },
+            region_id: { $ne: 'null' }
+        }, { _id: 0, __v: 0 })
         var maxValue = 0
         for (let i = 0; i < items.length; i++) {
             var num = parseInt(items[i].item_id)
@@ -770,10 +792,11 @@ async function createItemStake() {
         }
         maxValue = maxValue + 1
         //创建桩
-        await itemService.createItem({
+        await modelItem.create({
             item_id: maxValue.toString(),
             task_code: 'null',
-            item_rule_id: 'null'
+            rule_id: 'null',
+            region_id: 'null'
         })
     } catch (err) {
         throw new Error(err.message)
@@ -919,18 +942,18 @@ module.exports = {
     getRuleTree,
     getRegionTree,
     getItems,
+    createItems,
+    getRules,
     createRules,
     deleteRules,
-    getItemRules,
-    createItemRules,
-    deleteItemRules,
-    getRulePaths,
-    getRules,
-    getItemGuide,
-    getRegionPaths,
     updateRules,
-    updateItemRules,
+    getRulePaths,
+    // getItemRules,
+    // createItemRules,
+    // deleteItemRules,
+    // updateItemRules,
     getRegions,
-    createItems,
-    getChildRegionsByRuleAndRegion
+    getRegionPaths,
+    getChildRegionsByRuleAndRegion,
+    getItemGuide,
 }
