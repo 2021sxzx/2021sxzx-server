@@ -132,7 +132,7 @@ async function getItemRules({
 
 /**
  * 创建规则
- * @param {Array} rules 待创建的规则
+ * @param {Array<Object>} rules 待创建的规则
  * @returns 
  */
 async function createRules({
@@ -147,16 +147,16 @@ async function createRules({
             throw new Error('数组长度小于等于0')
         }
         //检查桩
-        var stakes = await itemService.getRules({ rule_name: 'null', return_stake: true })
+        var stakes = await modelRule.find({ rule_name: 'null' }, { _id: 0, __v: 0 })
         if (stakes.length !== 1) {
             await createRuleStake()
-            stakes = await itemService.getRules({ rule_name: 'null', return_stake: true })
+            stakes = await modelRule.find({ rule_name: 'null' }, { _id: 0, __v: 0 })
         }
         var stake = stakes[0]
         //桩的id就是最大的rule_id，用于后续赋值
         var maxRuleId = parseInt(stake.rule_id)
         //删除桩
-        await itemService.deleteRule({ rule_id: stake.rule_id })
+        await modelRule.deleteOne({ rule_id: stake.rule_id })
         //dict的key是temp_id，value是规则节点
         var dict = new Array()
         //给传入的规则节点创建rule_id
@@ -180,10 +180,10 @@ async function createRules({
                 parentId: rules[i].parentId
             })
         }
-        await itemService.createRules({ rules: arr })
+        await modelRule.create(arr)
         createSuccess = true
         //创建桩
-        await itemService.createRule({
+        await modelRule.create({
             rule_id: maxRuleId.toString(),
             rule_name: 'null',
             parentId: ''
@@ -219,15 +219,10 @@ async function createRules({
 async function createRuleStake() {
     try {
         //先把全部桩删掉
-        var stakes = await itemService.getRules({ rule_name: 'null', return_stake: true })
-        if (stakes.length > 0) {
-            for (let i = 0; i < stakes.length; i++) {
-                await itemService.deleteRule({ rule_id: stakes[i].rule_id })
-            }
-        }
+        await modelRule.deleteMany({ rule_name: 'null' })
         //找出最大id并创建一个新的桩
         var maxRuleId = 0
-        var rules = await itemService.getRules({ return_stake: false })
+        var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
         for (let i = 0; i < rules.length; i++) {
             let ruleId = parseInt(rules[i].rule_id)
             if (maxRuleId < ruleId) {
@@ -235,7 +230,7 @@ async function createRuleStake() {
             }
         }
         maxRuleId = maxRuleId + 1
-        await itemService.createRule({
+        await modelRule.create({
             rule_id: maxRuleId.toString(),
             rule_name: 'null',
             parentId: ''
@@ -247,13 +242,12 @@ async function createRuleStake() {
 
 /**
  * 删除规则
- * @param {Array} rules 待删除的规则
+ * @param {Array<String>} rules 待删除的规则
  * @returns 
  */
 async function deleteRules({
     rules = null
 }) {
-    var deletedRules = []
     try {
         if (rules === null) {
             throw new Error('请求体中需要一个rules属性，且该属性是一个数组')
@@ -263,44 +257,36 @@ async function deleteRules({
         }
         for (let i = 0; i < rules.length; i++) {
             //判断rule_id的合法性
-            let rule = await itemService.getRules({ rule_id: rules[i], return_stake: true })
-            if (rule.length <= 0) {
+            let rule = await modelRule.findOne({ rule_id: rules[i] }, { _id: 0, __v: 0 })
+            if (rule === null) {
                 throw new Error('rule_id不存在: ' + rules[i])
             }
             else {
-                if (rule[0].rule_name === 'null') {
+                if (rule.rule_name === 'null') {
                     throw new Error('rule_id违法: ' + rules[i])
                 }
             }
             var needDelete = [] //需要删除的规则树节点的规则id
-            var node = rule[0]  //规则树节点
-            do {
+            var node = rule  //规则树节点
+            while (true) {
                 needDelete.push(node.rule_id)
-                let child = await itemService.getRules({ parentId: node.parentId, return_stake: false })
-                if (child.length > 1) break    //父节点有其他子节点，不需要删除
-                let parent = await itemService.getRules({ rule_id: node.parentId, return_stake: false })
-                node = parent[0]
-            } while (true)
+                let brothers = await modelRule.find({ parentId: node.parentId }, { _id: 0, __v: 0 })
+                if (brothers.length > 1) break    //父节点有其他子节点，不需要删除
+                let parent = await modelRule.findOne({ rule_id: node.parentId }, { _id: 0, __v: 0 })
+                node = parent
+            }
             //批量删除
-            await itemService.deleteRules({ arr: needDelete })
-            deletedRules.push(rule[0])
+            await modelRule.deleteMany({ rule_id: { $in: needDelete } })
         }
         return new SuccessModel({ msg: '删除规则成功' })
     } catch (err) {
-        if (deletedRules.length > 0) {
-            var str = '数据库出错，只删除了部分规则：\n'
-            for (let i = 0; i < deletedRules.length; i++) {
-                str = str + deletedRules[i].rule_name + '\n'
-            }
-            return new ErrorModel({ msg: '批量删除规则失败', data: str })
-        }
         return new ErrorModel({ msg: '删除规则失败', data: err.message })
     }
 }
 
 /**
  * 更新规则
- * @param {Array} rules 待更新的规则
+ * @param {Array<Object>} rules 待更新的规则
  * @returns 
  */
 async function updateRules({
@@ -315,18 +301,19 @@ async function updateRules({
         }
         for (let i = 0; i < rules.length; i++) {
             //判断rule_id的合法性
-            let rule = await itemService.getRules({ rule_id: rules[i].rule_id, return_stake: true })
-            if (rule.length <= 0) {
+            let rule = await modelRule.findOne({ rule_id: rules[i].rule_id }, { _id: 0, __v: 0 })
+            if (rule === null) {
                 throw new Error('rule_id不存在: ' + rules[i].rule_id)
             }
             else {
-                if (rule[0].rule_name === 'null') {
+                if (rule.rule_name === 'null') {
                     throw new Error('rule_id违法: ' + rules[i].rule_id)
                 }
             }
             //更新rule
-            await itemService.updateRule({
-                rule_id: rules[i].rule_id,
+            if (rules[i].rule_name === null) rules[i].rule_name = rule.rule_name
+            if (rules[i].parentId === null) rules[i].parentId = rule.parentId
+            await modelRule.updateOne({ rule_id: rules[i].rule_id }, {
                 rule_name: rules[i].rule_name,
                 parentId: rules[i].parentId
             })
@@ -904,6 +891,25 @@ async function getRules({
             }
             return new SuccessModel({ msg: '查询成功', data: res })
         }
+        //只根据创建时间查询，或者全量查询
+        var start = (start_time !== null) ? start_time : 0
+        var end = (end_time !== null) ? end_time : 9999999999999
+        var res = await modelRule.find({
+            create_time: { $gte: start, $lte: end }
+        }, { _id: 0, __v: 0 })
+        if (page_size !== null && page_num !== null) {
+            //只返回部分查询结果
+            if (page_size < res.length) {
+                var r = new Array()
+                for (let i = 0; i < page_size; i++) {
+                    let index = page_size * page_num + i
+                    if (index >= res.length) break
+                    r.push(res[index])
+                }
+                return new SuccessModel({ msg: '查询成功', data: r })
+            }
+        }
+        return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
     }
