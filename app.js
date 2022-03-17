@@ -14,7 +14,7 @@ const userManagementRouter = require('./routes/userManagement')
 const roleRouter = require('./routes/role')
 
 const sideBarRouter = require('./routes/sideBar');
-const permissionouter = require('./routes/permission');
+const permissionRouter = require('./routes/permission');
 
 const {MONGO_CONFIG} = require("./config/db") //数据库的配置信息
 const mongoose = require("mongoose")
@@ -53,7 +53,7 @@ app.use('/api', itemRouter)
 app.use('/api', userManagementRouter)
 app.use('/api', sideBarRouter)
 app.use('/api', roleRouter)
-app.use('/api', permissionouter)
+app.use('/api', permissionRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

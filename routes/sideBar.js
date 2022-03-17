@@ -9,7 +9,7 @@ function wrap(handler) {
     try {
       await handler(req, res, next);
     } catch (e) {
-      throw ErrorModel({
+      throw new ErrorModel({
         msg: "获取侧边栏失败",
         data: e.message
       });

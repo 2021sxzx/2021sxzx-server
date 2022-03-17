@@ -1,4 +1,5 @@
-const roleMapPermission = require('../model/roleMapPermission')
+const roleMapPermission = require('../model/roleMapPermission');
+const permission = require('../model/permission')
 
 /**
  * 添加角色权限，在角色权限关联表里面进行添加
@@ -17,7 +18,6 @@ const roleMapPermission = require('../model/roleMapPermission')
         return res
       })
     )
-    console.log(addedArr)
     return addedArr
 
   } catch (error) {
@@ -58,7 +58,20 @@ async function patchPermission (role_name, ...permission_identifier_array) {
     const res = await addPermission(role_name, ...permission_identifier_array);
     return res;
   } catch {
-    throw new Error(e.message)  
+    throw new Error(e.message)
+  }
+}
+
+/**
+ * 列出权限列表
+ * @return {Promise<Array[]>}
+ */ 
+async function getPermissionList () {
+  try {
+    const res = await permission.find({})
+    return res
+  } catch (e) {
+    throw new Error(e.message)
   }
 }
 
@@ -66,5 +79,6 @@ module.exports = {
   addPermission,
   deletePermission,
   searchPermission,
-  patchPermission
+  patchPermission,
+  getPermissionList
 }
