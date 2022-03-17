@@ -20,9 +20,19 @@ const itemSchema = new mongoose.Schema({
     },
     task_code: { // 事项指南编码
         type: String,
+        default: ''
     },
     item_rule_id: {  // 事项规则id
         type: String,
+        default: ''
+    },
+    rule_id: {  //规则id
+        type: String,
+        default: ''
+    },
+    region_id: {    //区划id
+        type: String,
+        default: ''
     }
 })
 
