@@ -19,8 +19,19 @@ router.post('/v1/login', async (req, res, next) => {
     let loginData = req.body;
     let data = await postLogin(loginData);
     setStatusCode(res, data);
-    res.cookie('auth-token', data.data[1].token, data.data[0]);
-    res.json(data.data[1]);
+    console.log('login');
+    if (data.code == 200) {
+        const jwt = data.data.jwt;
+        const token = jwt.token;
+        const cookie = data.data.cookie;
+        res.cookie('auth-token', token, cookie);
+        res.json(data);
+    } else if (data.code == 404) {
+        console.log(data.msg);
+        res.status(403).send(data.msg);
+
+    }
+
 });
 
 

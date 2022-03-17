@@ -14,42 +14,34 @@ async function authenticate(loginData) {
         if (res !== null) {
             // Compare password
             if (password == res.password) {
-
                 const token = jwt.sign({
                     account: res.account,
+                    user_rank: res.user_rank
                 }, process.env.JWT_SECRET || 'test', {
                     expiresIn: "1h"
                 });
 
-                let res2 = [
-                    {
+                let response = {
+                    message: 'You have successfully logged in!',
+                    code: 200,
+                    cookie: {
                         expires: new Date(Date.now() + 900),
                         secure: false,
                         httpOnly: true
                     },
-                    {
-                        message: 'You have successfully logged in!',
+                    jwt: {
                         token: token,
                         expiresIn: 3600
                     }
-                ]
-                /*res.cookie('auth-token', token, {
-                    expires: new Date(Date.now() + 900),
-                    secure: false,
-                    httpOnly: true
-                });
-                res.json({
-                    message: 'You have successfully logged in!',
-                    token: token,
-                    expiresIn: 3600
-                });*/
-                return res2;
+                }
+
+                return response;
 
             } else {
-                return ({ message: 'Password is incorrect.' });
+                return ({ message: '密码错误，请重试.', code: 403 });
             }
         } else {
-            return ({ message: 'You do not have an account yet. Please register.' });
+            return ({ message: '该账号不存在.', code: 403 });
         }
 
     } catch (e) {

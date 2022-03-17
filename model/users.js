@@ -1,13 +1,11 @@
 const mongoose = require("mongoose")
 
-// comment表的定义
+// users表的定义
 const usersSchema = new mongoose.Schema({
-  idc: {   //证件号码
-    type: String,
-    required: true
-  },
+  // XXX(钟卓江)：头像用string表示没问题吗，是图片 url 还是说二进制表示
   profile_picture: {   // 头像
     type: String,
+    default: ''
   },
   user_name: {  // 用户名
     type: String,
@@ -17,13 +15,17 @@ const usersSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  account: {   // 账号信息
+  account: {   // 账号-手机号
     type: String,
     required: true
   },
-  password: {  // 密码
+  password: { // 密码
     type: String,
     required: true
+  },
+  activation_status: { //激活状态
+    type: Number,
+    default: 0
   },
   activation_status: {   //激活状态
     type: Number,
