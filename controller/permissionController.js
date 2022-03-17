@@ -3,7 +3,7 @@ const {
   deletePermission,
   searchPermission,
   patchPermission
-} = requrie('../service/permissionService');
+} = require('../service/permissionService');
 const { SuccessModel, ErrorModel } = require('../utils/resultModel')
 
 class permissionController {
