@@ -11,33 +11,31 @@ const permission = require('../model/permission')
  * @return {Promise} 返回值是一个角色，没有角色对应的权限
  * 得要是一个数组，就不太好了。因为不好携带
  */
-async function addRole (role_name, role_describe, ...permission_identifier_array) {
+async function addRole (role_name, role_describe, permission_identifier_array) {
   try {   
-    // 控制保证必须有输入权限
-    if (new Set(permission_identifier_array).length <= 1) {
-      throw new Error("权限数组不够噢")
-    }
+    // // 控制保证必须有输入权限
+    // if (new Set(permission_identifier_array).length <= 1) {
+    //   throw new Error("权限数组不够噢")
+    // }
 
-    // 列出所有角色
-    const roleList = await role.find({})
+    // // 列出所有角色
+    // const roleList = await role.find({})
 
-    // 后台检查是否有同样的数据，如果有，就不允许插入
-    roleList.forEach((item) => {
-      if (role_name === item.role_name && role_describe === item.role_describe) {
-        throw new Error("不允许插入噢")
-      }
-    })
+    // // 后台检查是否有同样的数据，如果有，就不允许插入
+    // roleList.forEach((item) => {
+    //   if (role_name === item.role_name && role_describe === item.role_describe) {
+    //     throw new Error("不允许插入噢")
+    //   }
+    // })
 
     // 往权限角色关联表里面添加关联
-    Promise.all(
-      permission_identifier_array.map(async (item) => {
-        const res = await roleMapPermission.create({
-          role_name: role_name,
-          permission_identifier: item
-        })
-        return res
+
+    permission_identifier_array.forEach((item) => {
+      roleMapPermission.create({
+        role_name: role_name,
+        permission_identifier: item
       })
-    )
+    })
 
     // 添加角色
     const res = await role.create({

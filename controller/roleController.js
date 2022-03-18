@@ -21,10 +21,10 @@ const { SuccessModel, ErrorModel } = require('../utils/resultModel')
 async function addRoleAndReturnObject (
   role_name,
   role_describe,
-  ...permission_identifier_array
+  permission_identifier_array
 ) {
   try {
-    await addRole(role_name, role_describe, ...permission_identifier_array)
+    await addRole(role_name, role_describe, permission_identifier_array)
     const res = await getRole(role_name, role_describe);
 
     return new SuccessModel({
