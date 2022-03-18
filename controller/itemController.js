@@ -83,7 +83,7 @@ async function getItems({
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
             if (page_size < res.length) {
-                var r = new Array()
+                var r = []
                 for (let i = 0; i < page_size; i++) {
                     let index = page_size * page_num + i
                     if (index >= res.length) break
@@ -650,7 +650,8 @@ async function getRegionPaths({
 
 /**
  * 获取区划
- * @param {Array<String>} region_id 区划id
+ * @param {Array<String>} region_id region表内唯一id
+ * @param {Array<String>} region_code 区划编码
  * @param {String} region_name 区划名称，用于模糊查询
  * @param {Array<Number>} region_level 区划等级
  * @param {Array<String>} parentId 上级区划id
@@ -660,6 +661,7 @@ async function getRegionPaths({
  */
 async function getRegions({
     region_id = null,
+    region_code = null,
     region_name = null,
     region_level = null,
     parentId = null,
@@ -667,15 +669,20 @@ async function getRegions({
     page_num = null
 }) {
     try {
-        // var regions = await itemService.getRegion({
-        //     region_id: region_id,
-        //     region_name: region_name,
-        //     region_level: region_level,
-        //     parentId: parentId
-        // })
         if (region_id !== null) {
             //region_id查找唯一区划
-            var regions = await modelRegion.find({ region_id: { $in: region_id } }, { _id: 0, __v: 0 })
+            var regions = await modelRegion.find({
+                region_id: { $in: region_id },
+                region_code: { $ne: 'null' },
+                region_name: { $ne: 'null' }
+            }, { _id: 0, __v: 0 })
+            return new SuccessModel({ msg: '查询成功', data: regions })
+        }
+        if (region_code !== null) {
+            //region_code查找唯一区划
+            var regions = await modelRegion.find({
+                region_code: { $in: region_code }
+            }, { _id: 0, __v: 0 })
             return new SuccessModel({ msg: '查询成功', data: regions })
         }
         var query = {}
@@ -685,15 +692,18 @@ async function getRegions({
         var regions = await modelRegion.find(query, { _id: 0, __v: 0 })
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
-            if (page_size < regions.length) {
-                var r = new Array()
-                for (let i = 0; i < page_size; i++) {
-                    let index = page_size * page_num + i
-                    if (index >= regions.length) break
-                    r.push(regions[index])
-                }
-                return new SuccessModel({ msg: '查询成功', data: r })
+            var r = []
+            for (let i = 0; i < page_size; i++) {
+                let index = page_size * page_num + i
+                if (index >= regions.length) break
+                r.push(regions[index])
             }
+            var dict = {}
+            dict.data = r
+            dict.total = regions.length
+            dict.page_size = page_size
+            dict.page_num = page_num
+            return new SuccessModel({ msg: '查询成功', data: dict })
         }
         return new SuccessModel({ msg: '查询成功', data: regions })
     } catch (err) {
@@ -850,8 +860,6 @@ async function getChildRegionsByRuleAndRegion({
  * @param {Array<String>} parentId 父规则id
  * @param {Number} start_time 规则创建时间的起始时间
  * @param {Number} end_time 规则创建时间的终止时间
- * @param {Number} page_size 页大小
- * @param {Number} page_num 页码
  * @returns 
  */
 async function getRules({
@@ -859,9 +867,7 @@ async function getRules({
     rule_name = null,
     parentId = null,
     start_time = null,
-    end_time = null,
-    page_size = null,
-    page_num = null //从0开始
+    end_time = null
 }) {
     try {
         //rule_id用于准确查询
@@ -880,23 +886,6 @@ async function getRules({
                 rule_name: { $regex: rule_name },
                 create_time: { $gte: start, $lte: end }
             }, { _id: 0, __v: 0 })
-            if (page_size !== null && page_num !== null) {
-                //只返回部分查询结果
-                if (page_size < res.length) {
-                    var d = {}
-                    var r = []
-                    for (let i = 0; i < page_size; i++) {
-                        let index = page_size * page_num + i
-                        if (index >= res.length) break
-                        r.push(res[index])
-                    }
-                    d.data = r
-                    d.total = res.length
-                    d.page_size = page_size
-                    d.page_num = d.page_num
-                    return new SuccessModel({ msg: '查询成功', data: d })
-                }
-            }
             return new SuccessModel({ msg: '查询成功', data: res })
         }
         //parentId用于查找子规则
@@ -907,43 +896,15 @@ async function getRules({
                 parentId: { $in: parentId },
                 create_time: { $gte: start, $lte: end }
             }, { _id: 0, __v: 0 })
-            if (page_size !== null && page_num !== null) {
-                //只返回部分查询结果
-                if (page_size < res.length) {
-                    var d = {}
-                    var r = []
-                    for (let i = 0; i < page_size; i++) {
-                        let index = page_size * page_num + i
-                        if (index >= res.length) break
-                        r.push(res[index])
-                    }
-                    d.data = r
-                    d.total = res.length
-                    d.page_size = page_size
-                    d.page_num = page_num
-                    return new SuccessModel({ msg: '查询成功', data: r })
-                }
-            }
             return new SuccessModel({ msg: '查询成功', data: res })
         }
         //只根据创建时间查询，或者全量查询
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         var res = await modelRule.find({
+            rule_name: { $ne: 'null' },
             create_time: { $gte: start, $lte: end }
         }, { _id: 0, __v: 0 })
-        if (page_size !== null && page_num !== null) {
-            //只返回部分查询结果
-            if (page_size < res.length) {
-                var r = new Array()
-                for (let i = 0; i < page_size; i++) {
-                    let index = page_size * page_num + i
-                    if (index >= res.length) break
-                    r.push(res[index])
-                }
-                return new SuccessModel({ msg: '查询成功', data: r })
-            }
-        }
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
