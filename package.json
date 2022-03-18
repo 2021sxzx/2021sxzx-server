@@ -18,5 +18,18 @@
     "mongoose": "^6.0.5",
     "morgan": "~1.9.1",
     "nodemon": "^2.0.12"
-  }
+  },
+  "description": "- 首先对js包括es6有一定的学习\r - 对node环境的js运行有一定的了解\r - 学习过express框架的基本操作，b站上有很多的教程，也可以直接看express的官方文档\r - 对mongodb有一定的了解，使用mongoose来对mongodb进行操作，b站也有资源，mongoose的文档也比较容易懂",
+  "main": "app.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2021sxzx/2021sxzx-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/2021sxzx/2021sxzx-server/issues"
+  },
+  "homepage": "https://github.com/2021sxzx/2021sxzx-server#readme"
 }
