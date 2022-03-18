@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-// comment表的定义
+// systemLog表的定义
 const systemLogSchema = new mongoose.Schema({
   log_id:{  //日志编号
     type:String,
@@ -13,6 +13,12 @@ const systemLogSchema = new mongoose.Schema({
   content:{  //日志内容
     type:String,
     required:true
+  },
+  idc:{
+    type:String
+  },
+  user_name:{
+    type:String
   }
 })
 

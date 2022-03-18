@@ -2,31 +2,39 @@ const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 // comment表的定义
 const itemSchema = new mongoose.Schema({
-  item_id:{       // 事项编码
-    type:String,
-    required:true
-  },
-  release_time:{  // 发布时间
-    type:String,
-    default:""
-  },
-  item_status:{   // 事项状态
-    type:Number,
-    default:0
-  },
-  create_time:{   // 创建时间
-    type:String,
-    default:Date.now()
-  },
-  item_guide_id:{ // 事项指南编码
-    type:String,
-    ref:"item_guide"
-  },
-  item_rule_id:{  // 事项规则id
-    type:String,
-    ref:"item_rule"
-  }
+    item_id: {       // 事项编码
+        type: String,
+        required: true
+    },
+    release_time: {  // 发布时间
+        type: Number,
+        default: 9999999999999
+    },
+    item_status: {   // 事项状态
+        type: Number,
+        default: 0
+    },
+    create_time: {   // 创建时间
+        type: Number,
+        default: Date.now()
+    },
+    task_code: { // 事项指南编码
+        type: String,
+        default: ''
+    },
+    item_rule_id: {  // 事项规则id
+        type: String,
+        default: ''
+    },
+    rule_id: {  //规则id
+        type: String,
+        default: ''
+    },
+    region_id: {    //区划id
+        type: String,
+        default: ''
+    }
 })
 
-const item = mongoose.model('item',itemSchema)
+const item = mongoose.model('item', itemSchema, 'item')
 module.exports = item

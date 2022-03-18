@@ -1,0 +1,22 @@
+name: CI/CD
+on:
+  push:
+    branches: [ dev ]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cd /www/wwwroot/2021sxzx-server
+          git pull
+          npm install
+          pm2 delete 0
+          pm2 start npm --name sxzx -- run pro

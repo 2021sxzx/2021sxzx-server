@@ -21,25 +21,25 @@ function setStatusCode(res,data) {
 /**
  * 用户评价接口
  */
-router.post('/comment',async (req,res,next) => {
+router.post('/v1/comment',async (req,res,next) => {
   let commentData = req.body;
   commentData.create_time = Date.now()
   let data = await saveUserComment(commentData);
-  setStatusCode(res,data)
+  setStatusCode(res, data)
   res.json(data)
 })
 
 /**
  * 用户评论数据的获取
  */
-router.get('/allComment',async (req,res,next) => {
+router.get('/v1/comment',async (req,res,next) => {
   let commentData = req.query
   let data = await getUserComments(commentData)
   setStatusCode(res,data)
   res.json(data)
 })
 
-router.get('/allComment2', async (req,res,next) => {
+router.get('/v1/allComment', async (req,res,next) => {
   let data = await getUserComments2()
   setStatusCode(res,data)
   res.json(data)
@@ -48,7 +48,7 @@ router.get('/allComment2', async (req,res,next) => {
 /**
  * 搜索功能
  */
-router.post('/searchComment',async (req,res,next) => {
+router.post('/v1/searchComment',async (req,res,next) => {
   let searchData = req.body
   let data = await getSearchComment(searchData)
   setStatusCode(res,data)
@@ -58,7 +58,7 @@ router.post('/searchComment',async (req,res,next) => {
 /**
  * 用户评价的参数获取
  */
-router.get('/commentParam',async (req,res,next) => {
+router.get('/v1/commentParam',async (req,res,next) => {
   let data = await getParam()
   setStatusCode(res,data)
   res.json(data)

@@ -1,7 +1,7 @@
 const comment = require("../model/comment")
 const item = require("../model/item")
 const itemRule = require("../model/itemRule")
-const itemGuide = require("../model/itemGuide")
+const itemGuide = require("../model/task")
 const rule = require("../model/rule")
 
 /**
@@ -117,25 +117,25 @@ async function getCommentTotal() {
  * @param item_id 事项编码
  * @returns {Promise<*>}
  */
-async function getItemGuide(item_id){
+async function getTask(item_id){
   try {
     let itemData = await getItem(item_id)
     let data = await item.aggregate([
       {
         $lookup:{
-          from:"item_guides",
+          from:"tasks",
           pipeline:[
             {
               $match:{
-                item_guide_id:itemData.item_guide_id
+                task_code:itemData.task_code
               }
             }
           ],
-          as: 'item_guide'
+          as: 'task'
         }
       }
     ])
-    return data[0].item_guide[0]
+    return data[0].task[0]
   } catch (e) {
     return e.message
   }
@@ -209,10 +209,10 @@ async function getCommentDetail({pageNum,score}) {
     for(let i=0;i<commentArr.length;i++) {
       let item_id = commentArr[i].item_id
       let ruleData = await getRule(item_id)
-      let item_guide = await getItemGuide(item_id)
+      let task = await getTask(item_id)
       let item_rule = await getItemRule(item_id)
       commentArr[i].rule = ruleData
-      commentArr[i].item_guide = item_guide
+      commentArr[i].task = task
       commentArr[i].item_rule = item_rule
     }
     return commentArr
@@ -261,12 +261,12 @@ async function searchByCondition({startTime,endTime,score,type,typeData}) {
         break
       case 2:
         newCommentData = newCommentData.filter((currentItem, currentIndex) => {
-          return currentItem.item_guide.item_guide_name.indexOf(typeData) !== -1
+          return currentItem.task.task_name.indexOf(typeData) !== -1
         })
         break
       case 3:
         newCommentData = newCommentData.filter((currentItem, currentIndex) => {
-          return currentItem.item_guide.item_guide_id.indexOf(typeData) !== -1
+          return currentItem.task.task_code.indexOf(typeData) !== -1
         })
         break
       case 4:
