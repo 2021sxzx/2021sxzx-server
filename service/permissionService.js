@@ -47,7 +47,7 @@ async function searchPermission (role_name) {
     })
     return resArr;
   } catch {
-    throw new Error(e.message)  
+    throw new Error(e.message);
   }
 }
 
