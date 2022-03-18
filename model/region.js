@@ -6,6 +6,10 @@ const regionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    region_code: {
+        type: String,
+        required: true
+    },
     region_name: {
         type: String,
         required: true
