@@ -120,22 +120,8 @@ async function getCommentTotal() {
 async function getTask(item_id){
   try {
     let itemData = await getItem(item_id)
-    let data = await item.aggregate([
-      {
-        $lookup:{
-          from:"tasks",
-          pipeline:[
-            {
-              $match:{
-                task_code:itemData.task_code
-              }
-            }
-          ],
-          as: 'task'
-        }
-      }
-    ])
-    return data[0].task[0]
+    let data = await task.find({task_code: itemData.task_code},{ _id: 1, task_code: 1, task_name: 1})
+    return data[0]
   } catch (e) {
     return e.message
   }
@@ -149,22 +135,8 @@ async function getTask(item_id){
 async function getItemRule(item_id) {
   try {
     let itemData = await getItem(item_id)
-    let data = await item.aggregate([
-      {
-        $lookup:{
-          from:"item_rule",
-          pipeline:[
-            {
-              $match:{
-                item_rule_id:itemData.item_rule_id
-              }
-            }
-          ],
-          as: 'item_rule'
-        }
-      }
-    ])
-    return data[0].item_rule[0]
+    let data = await itemRule.find({item_rule_id: itemData.item_rule_id})
+    return data[0]
   } catch (e) {
     return e.message
   }
