@@ -5,13 +5,13 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
-const usersRouter = require('./routes/users');
+// const usersRouter = require('./routes/users');
 const commentRouter = require("./routes/comment")
 const systemLogRouter=require("./routes/systemLog")
 const taskRouter = require("./routes/taskRoutes")
-const itemRouter = require('./routes/item')
-const userManagementRouter = require('./routes/userManagement')
-const roleRouter = require('./routes/role')
+const itemRouter = require('./routes/item');
+const userManagementRouter = require('./routes/userManagement');
+const roleRouter = require('./routes/role');
 
 const sideBarRouter = require('./routes/sideBar');
 const permissionRouter = require('./routes/permission');
@@ -45,7 +45,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 处理路由
-app.use('/api', usersRouter);
+// app.use('/api', usersRouter);
 app.use('/api',commentRouter);
 app.use('/api',taskRouter)
 app.use('/api',systemLogRouter)
@@ -60,7 +60,6 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
-console.log(123)
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development

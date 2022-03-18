@@ -2,7 +2,7 @@
 const sideBar = require('../model/sideBar');
 const sideBarMapPermission = require('../model/sideBarMapPermission');
 const roleMapPermission = require('../model/roleMapPermission');
-const { SuccessModel, ErrorModel } = require('../utils/resultModel');
+const { SuccessModel } = require('../utils/resultModel');
 
 class sideBarData {
   async getSideBarList (role_name) {
