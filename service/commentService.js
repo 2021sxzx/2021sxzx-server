@@ -1,7 +1,7 @@
 const comment = require("../model/comment")
 const item = require("../model/item")
 const itemRule = require("../model/itemRule")
-const itemGuide = require("../model/task")
+const task = require("../model/task")
 const rule = require("../model/rule")
 
 /**
@@ -152,11 +152,11 @@ async function getItemRule(item_id) {
     let data = await item.aggregate([
       {
         $lookup:{
-          from:"item_rules",
+          from:"item_rule",
           pipeline:[
             {
               $match:{
-                create_time:itemData.item_rule_id
+                item_rule_id:itemData.item_rule_id
               }
             }
           ],
