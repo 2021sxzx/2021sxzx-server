@@ -59,11 +59,14 @@ async function addRole (role_name, role_describe, permission_identifier_array) {
  */
 async function getRole (role_name, role_describe) {
   try {
-    const roleObj = await role.find({
+    const roleObj = await role.findOne({
       role_name: role_name, 
       role_describe: role_describe
+    }, {
+      role_name: 1,
+      role_describe: 1
     })
-    return roleObj
+    return roleObj;
   } catch (error) {
     throw new Error(error.message)
   }

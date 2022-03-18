@@ -26,10 +26,18 @@ async function addRoleAndReturnObject (
   try {
     await addRole(role_name, role_describe, permission_identifier_array)
     const res = await getRole(role_name, role_describe);
-
+    const calPermission = await calcaulatePermission(role_name);
+    console.log({
+      ...res,
+      permission: calPermission
+    })
     return new SuccessModel({
       msg: '添加角色列表成功',
-      data: res,
+      data: {
+        role_name: res.role_name,
+        role_describe: res.role_describe,
+        permission: calPermission
+      }
     })
   } catch (e) {
     throw new ErrorModel({
