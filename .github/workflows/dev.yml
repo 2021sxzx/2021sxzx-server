@@ -15,12 +15,8 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          cd /www/wwwroot/sxzx
-          git remote add origin git@github.com:2021sxzx/2021sxzx-server.git
-          git checkout -b dev
+          cd /www/wwwroot/2021sxzx-server
           git pull
-          export NODE_HOME=/www/server/nvm/versions/node/v16.13.0
-          export PATH=$PATH:$NODE_HOME/bin
           npm install
           pm2 delete 0
           pm2 start npm --name sxzx -- run pro

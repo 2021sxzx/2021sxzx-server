@@ -13,7 +13,11 @@ const ruleSchema = new mongoose.Schema({
     },
     parentId: {     // 父节点的id名称
         type: String,
-        default: "0"  // 默认为根节点
+        default: ''
+    },
+    create_time: {  // 创建时间
+        type: Number,
+        default: Date.now()
     }
 })
 

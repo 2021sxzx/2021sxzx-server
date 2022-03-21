@@ -25,7 +25,7 @@ router.post('/v1/comment',async (req,res,next) => {
   let commentData = req.body;
   commentData.create_time = Date.now()
   let data = await saveUserComment(commentData);
-  setStatusCode(res,data)
+  setStatusCode(res, data)
   res.json(data)
 })
 
