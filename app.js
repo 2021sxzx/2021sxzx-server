@@ -5,18 +5,12 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
-const jwt = require('jsonwebtoken');
-
-
 const usersRouter = require('./routes/users');
 const commentRouter = require("./routes/comment")
 const systemLogRouter = require("./routes/systemLog")
 const taskRouter = require("./routes/taskRoutes")
 const itemRouter = require('./routes/item')
-<<<<<<< HEAD
-const systemResourceRouter=require('./routes/systemResource')
-const {MONGO_CONFIG} = require("./config/db") //数据库的配置信息
-=======
+// const systemResourceRouter=require('./routes/systemResource')
 const loginRouter = require('./routes/login')
 const userManagementRouter = require('./routes/userManagement')
 const roleRouter = require('./routes/role')
@@ -26,7 +20,6 @@ const permissionRouter = require('./routes/permission');
 
 const { MONGO_CONFIG } = require("./config/db") //数据库的配置信息
 
->>>>>>> 261d30e771c433014adf11fade7ca00a566dbdc5
 const mongoose = require("mongoose")
 // const rule = require("./model/rule")
 // const itemRule = require("./model/itemRule")
@@ -94,9 +87,7 @@ app.use('/api', commentRouter);
 app.use('/api', taskRouter)
 app.use('/api', systemLogRouter)
 app.use('/api', itemRouter)
-<<<<<<< HEAD
-app.use('/api',systemResourceRouter)
-=======
+// app.use('/api',systemResourceRouter)
 app.use('/api', loginRouter)
 app.use('/api', userManagementRouter)
 app.use('/api', sideBarRouter)
@@ -104,7 +95,6 @@ app.use('/api', roleRouter)
 app.use('/api', permissionRouter)
 //app.use('/api', verifyRouter)
 
->>>>>>> 261d30e771c433014adf11fade7ca00a566dbdc5
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
@@ -112,7 +102,7 @@ app.use(function (req, res, next) {
 
 console.log(123)
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   // 错误根据生产环境进行一个配置
@@ -123,3 +113,4 @@ app.use(function (err, req, res, next) {
   res.render('error');
 });
 module.exports = app;
+
