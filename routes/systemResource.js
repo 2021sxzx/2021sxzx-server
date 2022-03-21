@@ -3,8 +3,9 @@ const router = express.Router();
 const {
     getAllSystemLogDetail,
     getSearchSystemLog,
-    showSystemLogController
-  } = require("../controller/systemLogController")
+    showSystemLogController,
+    getCpuPercentageController
+  } = require("../controller/systemResourceController")
 
 function setStatusCode(res,data) {
   if(data.code === 200) {
@@ -15,6 +16,15 @@ function setStatusCode(res,data) {
 }
 
 /* 系统日志相关的路由处理. */
+
+/**
+ * 获取cpu占用率
+ */
+ router.get('/v1/showCpuPercentage', async (req,res,next) => {
+    let data = await getCpuPercentageController()
+    setStatusCode(res,data)
+    res.json(data)
+  })
 
 /**
  * show系统日志的获取

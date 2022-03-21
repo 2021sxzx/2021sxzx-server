@@ -13,7 +13,7 @@ async function authenticate(loginData) {
         let res = await user.findOne({ account: account })
         if (res !== null) {
             // Compare password
-            if (password == res.password) {
+            if (password === res.password) {
                 const token = jwt.sign({
                     account: res.account,
                     user_rank: res.user_rank
@@ -21,7 +21,7 @@ async function authenticate(loginData) {
                     expiresIn: "1h"
                 });
 
-                let response = {
+                return {
                     message: 'You have successfully logged in!',
                     code: 200,
                     cookie: {
@@ -32,10 +32,9 @@ async function authenticate(loginData) {
                     jwt: {
                         token: token,
                         expiresIn: 3600
-                    }
-                }
-
-                return response;
+                    },
+                    role_name: res.role_name
+                };
 
             } else {
                 return ({ message: '密码错误，请重试.', code: 403 });

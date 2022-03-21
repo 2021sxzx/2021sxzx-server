@@ -5,14 +5,12 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
-const jwt = require('jsonwebtoken');
-
-
 const usersRouter = require('./routes/users');
 const commentRouter = require("./routes/comment")
 const systemLogRouter = require("./routes/systemLog")
 const taskRouter = require("./routes/taskRoutes")
 const itemRouter = require('./routes/item')
+// const systemResourceRouter=require('./routes/systemResource')
 const loginRouter = require('./routes/login')
 const userManagementRouter = require('./routes/userManagement')
 const roleRouter = require('./routes/role')
@@ -41,6 +39,11 @@ const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.lo
 app.use(logger('combined', {
   stream: accessLogStream
 }));
+//往日志添加用户信息
+// logger.token('id',function getId(req){return 'zyk'});
+// app.use(logger(':id :remote-addr - :remote-user [:date[iso]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
+//   stream: accessLogStream
+// }));
 // post请求的参数的获取, express会将解析之后, 转换成对象的post请求参数放到请求对象的body属性中
 app.use(express.json());// 告诉express能够解析 application/json类型的请求参数
 app.use(express.urlencoded({ extended: false }));// 告诉express能够解析 表单类型的请求参数 application/x-www-form-urlencoded
@@ -84,6 +87,7 @@ app.use('/api', commentRouter);
 app.use('/api', taskRouter)
 app.use('/api', systemLogRouter)
 app.use('/api', itemRouter)
+// app.use('/api',systemResourceRouter)
 app.use('/api', loginRouter)
 app.use('/api', userManagementRouter)
 app.use('/api', sideBarRouter)
@@ -98,7 +102,7 @@ app.use(function (req, res, next) {
 
 console.log(123)
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   // 错误根据生产环境进行一个配置
@@ -109,3 +113,4 @@ app.use(function (err, req, res, next) {
   res.render('error');
 });
 module.exports = app;
+
