@@ -9,6 +9,7 @@ const commentRouter = require("./routes/comment")
 const systemLogRouter=require("./routes/systemLog")
 const taskRouter = require("./routes/taskRoutes")
 const itemRouter = require('./routes/item')
+const systemResourceRouter=require('./routes/systemResource')
 const {MONGO_CONFIG} = require("./config/db") //数据库的配置信息
 const mongoose = require("mongoose")
 // const rule = require("./model/rule")
@@ -48,6 +49,7 @@ app.use('/api',commentRouter);
 app.use('/api',taskRouter)
 app.use('/api',systemLogRouter)
 app.use('/api', itemRouter)
+app.use('/api',systemResourceRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
