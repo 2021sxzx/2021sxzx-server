@@ -50,7 +50,7 @@ async function getRegionTree() {
  * @param {Array<Number>} item_status 事项状态
  * @param {Array<String>} item_rule_id 事项规则id
  * @param {Array<String>} rule_id 规则id
- * @param {Array<String>} region_id 区划id
+ * @param {Array<String>} region_code 区划id
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns 
@@ -65,7 +65,7 @@ async function getItems({
     item_status = null,
     item_rule_id = null,
     rule_id = null,
-    region_id = null,
+    region_code = null,
     page_size = null,
     page_num = null
 }) {
@@ -79,8 +79,8 @@ async function getItems({
         else query.item_rule_id = { $ne: 'null' }
         if (rule_id !== null) query.rule_id = { $in: rule_id }
         else query.rule_id = { $ne: 'null' }
-        if (region_id !== null) query.region_id = { $in: region_id }
-        else query.region_id = { $ne: 'null' }
+        if (region_code !== null) query.region_code = { $in: region_code }
+        else query.region_code = { $ne: 'null' }
         create_start_time = (create_start_time !== null) ? create_start_time : 0
         create_end_time = (create_end_time !== null) ? create_end_time : 9999999999999
         query.create_time = { $gte: create_start_time, $lte: create_end_time }
@@ -112,7 +112,7 @@ async function getItems({
  * @param {String} end_time 事项规则创建时间的终止时间
  * @param {String} item_rule_id 事项规则id
  * @param {String} rule_id 规则id
- * @param {String} region_id 区划id
+ * @param {String} region_code 区划id
  * @param {String} create_time 事项规则创建时间
  * @returns 
  */
@@ -121,7 +121,7 @@ async function getItemRules({
     end_time = null,
     item_rule_id = null,
     rule_id = null,
-    region_id = null,
+    region_code = null,
     create_time = null
 }) {
     try {
@@ -131,7 +131,7 @@ async function getItemRules({
             var res = await itemService.getItemRules({
                 item_rule_id: item_rule_id,
                 rule_id: rule_id,
-                region_id: region_id,
+                region_code: region_code,
                 return_stake: false
             })
             var r = []
@@ -146,7 +146,7 @@ async function getItemRules({
             item_rule_id: item_rule_id,
             create_time: create_time,
             rule_id: rule_id,
-            region_id: region_id,
+            region_code: region_code,
             return_stake: false
         })
         return new SuccessModel({ msg: '查询成功', data: res })
@@ -357,10 +357,10 @@ async function createItemRules({
             throw new Error('数组长度小于等于0')
         }
         //先把桩找出来，桩的id就是新创建的事项规则id
-        var stakes = await itemService.getItemRules({ rule_id: 'null', region_id: 'null', return_stake: true })
+        var stakes = await itemService.getItemRules({ rule_id: 'null', region_code: 'null', return_stake: true })
         if (stakes.length !== 1) {
             await createItemRuleStake()
-            stakes = await itemService.getItemRules({ rule_id: 'null', region_id: 'null', return_stake: true })
+            stakes = await itemService.getItemRules({ rule_id: 'null', region_code: 'null', return_stake: true })
         }
         var stake = stakes[0]
         var maxRuleId = parseInt(stake.item_rule_id)
@@ -369,10 +369,10 @@ async function createItemRules({
         //给要创建的事项规则分配id
         for (let i = 0; i < itemRules.length; i++) {
             //检查是否有重复的事项规则，重复的就不创建
-            if (itemRules[i].rule_id && itemRules[i].region_id) {
+            if (itemRules[i].rule_id && itemRules[i].region_code) {
                 var r = await itemService.getItemRules({
                     rule_id: itemRules[i].rule_id,
-                    region_id: itemRules[i].region_id,
+                    region_code: itemRules[i].region_code,
                     return_stake: false
                 })
                 if (r.length > 0) {
@@ -390,7 +390,7 @@ async function createItemRules({
                 create_time: Date.now(),
                 item_rule_id: itemRules[i].item_rule_id,
                 rule_id: itemRules[i].rule_id ? itemRules[i].rule_id : '',
-                region_id: itemRules[i].region_id ? itemRules[i].region_id : ''
+                region_code: itemRules[i].region_code ? itemRules[i].region_code : ''
             })
         }
         await itemService.createItemRules({ itemRules: arr })
@@ -400,7 +400,7 @@ async function createItemRules({
             create_time: Date.now(),
             item_rule_id: maxRuleId.toString(),
             rule_id: 'null',
-            region_id: 'null'
+            region_code: 'null'
         })
         return new SuccessModel({ msg: '创建事项规则成功' })
     } catch (err) {
@@ -418,7 +418,7 @@ async function createItemRules({
 async function createItemRuleStake() {
     try {
         //先删除全部的桩
-        var stakes = await itemService.getItemRules({ rule_id: 'null', region_id: 'null', return_stake: true })
+        var stakes = await itemService.getItemRules({ rule_id: 'null', region_code: 'null', return_stake: true })
         if (stakes.length > 0) {
             for (let i = 0; i < stakes.length; i++) {
                 await itemService.deleteItemRule({ item_rule_id: stakes[i].item_rule_id })
@@ -439,7 +439,7 @@ async function createItemRuleStake() {
             create_time: Date.now(),
             item_rule_id: maxRuleId.toString(),
             rule_id: 'null',
-            region_id: 'null'
+            region_code: 'null'
         })
     } catch (err) {
         throw new Error('联系管理员检查数据库的item_rule表，确保rule_id和region_id为null的桩存在且item_rule_id是最大值')
@@ -471,7 +471,7 @@ async function deleteItemRules({
                 throw new Error('item_rule_id不存在: ' + itemRules[i])
             }
             else {
-                if (rule[0].rule_id === 'null' || rule[0].region_id === 'null') {
+                if (rule[0].rule_id === 'null' || rule[0].region_code === 'null') {
                     throw new Error('item_rule_id违法: ' + itemRules[i])
                 }
             }
@@ -532,7 +532,7 @@ async function updateItemRules({
                 throw new Error('item_rule_id不存在: ' + itemRules[i].item_rule_id)
             }
             else {
-                if (itemrule[0].rule_id === 'null' && itemrule[0].region_id === 'null') {
+                if (itemrule[0].rule_id === 'null' && itemrule[0].region_code === 'null') {
                     throw new Error('item_rule_id违法: ' + itemRules[i].item_rule_id)
                 }
             }
@@ -540,7 +540,7 @@ async function updateItemRules({
             await itemService.updateItemRule({
                 item_rule_id: itemRules[i].item_rule_id,
                 rule_id: itemRules[i].rule_id,
-                region_id: itemRules[i].region_id
+                region_code: itemRules[i].region_code
             })
             //记录已更新的事项规则
             updated.push(itemrule[0])
@@ -718,14 +718,14 @@ async function createItems({
         var stakes = await modelItem.find({
             task_code: 'null',
             rule_id: 'null',
-            region_id: 'null'
+            region_code: 'null'
         }, { _id: 0, __v: 0 })
         if (stakes.length !== 1) {
             await createItemStake()
             stakes = await modelItem.find({
                 task_code: 'null',
                 rule_id: 'null',
-                region_id: 'null'
+                region_code: 'null'
             }, { _id: 0, __v: 0 })
         }
         //暂时删除桩
@@ -739,7 +739,7 @@ async function createItems({
                 item_id: maxValue.toString(),
                 task_code: (items[i].task_code !== null) ? items[i].task_code : '',
                 rule_id: (items[i].rule_id !== null) ? items[i].rule_id : '',
-                region_id: (items[i].region_id !== null) ? items[i].region_id : '',
+                region_code: (items[i].region_code !== null) ? items[i].region_code : '',
                 item_status: (items[i].item_status !== null) ? items[i].item_status : 0
             })
             maxValue = maxValue + 1
@@ -751,7 +751,7 @@ async function createItems({
             item_id: maxValue.toString(),
             task_code: 'null',
             rule_id: 'null',
-            region_id: 'null'
+            region_code: 'null'
         })
         return new SuccessModel({ msg: '创建事项成功' })
     } catch (err) {
@@ -772,13 +772,13 @@ async function createItemStake() {
         await modelItem.deleteMany({
             task_code: 'null',
             rule_id: 'null',
-            region_id: 'null'
+            region_code: 'null'
         })
         //计算桩的item_id
         var items = await modelItem.find({
             task_code: { $ne: 'null' },
             rule_id: { $ne: 'null' },
-            region_id: { $ne: 'null' }
+            region_code: { $ne: 'null' }
         }, { _id: 0, __v: 0 })
         var maxValue = 0
         for (let i = 0; i < items.length; i++) {
@@ -793,7 +793,7 @@ async function createItemStake() {
             item_id: maxValue.toString(),
             task_code: 'null',
             rule_id: 'null',
-            region_id: 'null'
+            region_code: 'null'
         })
     } catch (err) {
         throw new Error(err.message)
@@ -818,7 +818,7 @@ async function deleteItems({
         for (let i = 0; i < items.length; i++) {
             //判断item_id的合法性
             let item = await modelItem.findOne({ item_id: items[i] }, { _id: 0, __v: 0 })
-            if (item === null || item.task_code === 'null' || item.rule_id === 'null' || item.region_id === 'null') {
+            if (item === null || item.task_code === 'null' || item.rule_id === 'null' || item.region_code === 'null') {
                 throw new Error('item_id错误: ' + items[i])
             }
         }
@@ -848,17 +848,17 @@ async function updateItems({
         for (let i = 0; i < items.length; i++) {
             //判断item_id的合法性
             let item = await modelItem.findOne({ item_id: items[i].item_id }, { _id: 0, __v: 0 })
-            if (item === null || item.task_code === 'null' || item.rule_id === 'null' || item.region_id === 'null') {
+            if (item === null || item.task_code === 'null' || item.rule_id === 'null' || item.region_code === 'null') {
                 throw new Error('region_id错误: ' + items[i].item_id)
             }
             //更新item
             if (items[i].task_code === null) items[i].task_code = item.task_code
             if (items[i].rule_id === null) items[i].rule_id = item.rule_id
-            if (items[i].region_id === null) items[i].region_id = item.region_id
+            if (items[i].region_code === null) items[i].region_code = item.region_code
             await modelItem.updateOne({ item_id: items[i].item_id }, {
                 task_code: items[i].task_code,
                 rule_id: items[i].rule_id,
-                region_id: items[i].region_id
+                region_code: items[i].region_code
             })
         }
         return new SuccessModel({ msg: '更新成功' })
