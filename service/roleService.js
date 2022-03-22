@@ -188,10 +188,30 @@ async function calcaulatePermission (role_name) {
         let Item = await permission.findOne({
           permission_identifier: permission_identifier
         })
-        return Item.permission
+        return Item.permission;
       })
     )
 
+    return permissionFindArr
+
+  } catch (e) {
+    throw new Error(e.message)
+  }
+}
+
+async function calcaulatePermissionIdentifier (role_name) {
+  try {
+    // 获取角色权限索引值列表
+    const permissionFindArrPrv = await roleMapPermission.find({
+      role_name: role_name
+    })
+    // 获取角色名称
+    const permissionFindArr = await Promise.all(
+      permissionFindArrPrv.map(async (item) => {
+        return item.permission_identifier
+      })
+    )
+    console.log(role_name, permissionFindArr)
     return permissionFindArr
 
   } catch (e) {
@@ -259,6 +279,7 @@ module.exports = {
   deleteRole,
   SearchRole,
   calcaulatePermission,
+  calcaulatePermissionIdentifier,
   getPermissionList,
   addPermission,
   deletePermission

@@ -6,6 +6,7 @@ const {
   deleteRole,
   SearchRole,
   calcaulatePermission,
+  calcaulatePermissionIdentifier,
   getPermissionList,
   addPermission,
   deletePermission
@@ -76,18 +77,22 @@ async function returnRoleList () {
     const roleList = await getRoleList()
     const permissionList = await Promise.all(
       await roleList.map(async (item) => {
-        const permissions = await calcaulatePermission(item.role_name)
-        return permissions
+        const permissions = await calcaulatePermission(item.role_name);
+        const permissionIdentifierArray = await calcaulatePermissionIdentifier(item.role_name);
+        return {
+          permissions,
+          permissionIdentifierArray
+        };
       })
     )
-  
     let res = []
   
     for (let i = 0; i < roleList.length; i++) {
       res.push({
         role_name: roleList[i].role_name,
         role_describe: roleList[i].role_describe,
-        permission: permissionList[i]
+        permission: permissionList[i].permissions,
+        permission_identifier_array: permissionList[i].permissionIdentifierArray
       })
     }
   
