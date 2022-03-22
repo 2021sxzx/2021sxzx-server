@@ -102,7 +102,7 @@ app.use(function (req, res, next) {
 
 console.log(123)
 // error handler
-app.use(function (err, req, res) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   // 错误根据生产环境进行一个配置
