@@ -76,32 +76,26 @@ router.post('/v1/updateRules', async (req, res, next) => {
     res.json(data)
 })
 
-// router.post('/v1/getItemRules', async (req, res, next) => {
-//     let data = await itemController.getItemRules(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
-
-// router.post('/v1/createItemRules', async (req, res, next) => {
-//     let data = await itemController.createItemRules(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
-
-// router.post('/v1/deleteItemRules', async (req, res, next) => {
-//     let data = await itemController.deleteItemRules(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
-
-// router.post('/v1/updateItemRules', async (req, res, next) => {
-//     let data = await itemController.updateItemRules(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
-
 router.post('/v1/getRegions', async (req, res, next) => {
     let data = await itemController.getRegions(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/createRegions', async (req, res, next) => {
+    let data = await itemController.createRegions(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/deleteRegions', async (req, res, next) => {
+    let data = await itemController.deleteRegions(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/updateRegions', async (req, res, next) => {
+    let data = await itemController.updateRegions(req.body)
     setStatusCode(res, data)
     res.json(data)
 })
