@@ -62,7 +62,6 @@ async function getItems({
     item_id = null,
     task_code = null,
     item_status = null,
-    item_rule_id = null,
     rule_id = null,
     region_code = null,
     page_size = null,
@@ -74,8 +73,6 @@ async function getItems({
         if (task_code !== null) query.task_code = { $in: task_code }
         else query.task_code = { $ne: 'null' }
         if (item_status !== null) query.item_status = { $in: item_status }
-        if (item_rule_id !== null) query.item_rule_id = { $in: item_rule_id }
-        else query.item_rule_id = { $ne: 'null' }
         if (rule_id !== null) query.rule_id = { $in: rule_id }
         else query.rule_id = { $ne: 'null' }
         if (region_code !== null) query.region_code = { $in: region_code }
@@ -562,7 +559,7 @@ async function deleteItems({
         }
         for (let i = 0; i < items.length; i++) {
             //判断item_id的合法性
-            let item = await modelItem.findOne({ _id: items[i] }, { _id: 0, __v: 0 })
+            let item = await modelItem.findOne({ _id: items[i] }, { __v: 0 })
             if (item === null || item.task_code === 'null' || item.rule_id === 'null' || item.region_code === 'null') {
                 throw new Error('_id错误: ' + items[i])
             }
@@ -680,7 +677,7 @@ async function getRules({
             var res = await modelRule.find({
                 rule_id: { $in: rule_id },
                 rule_name: { $ne: 'null' }
-            }, { _id: 0, __v: 0 })
+            }, { __v: 0 })
             return new SuccessModel({ msg: '查询成功', data: res })
         }
         //rule_name用于模糊查询
@@ -759,7 +756,7 @@ async function createRegions({
 
 /**
  * 删除区划
- * @param {Array<String>} regions 待删除的区划（用region_code删除）
+ * @param {Array<String>} regions 待删除的区划（用_id删除）
  * @returns 
  */
 async function deleteRegions({
@@ -774,12 +771,12 @@ async function deleteRegions({
         }
         //判断region_code的合法性
         for (let i = 0; i < regions.length; i++) {
-            var rs = await modelRegion.findOne({ region_code: regions[i] }, { __v: 0 })
+            var rs = await modelRegion.findOne({ _id: regions[i] }, { __v: 0 })
             if (rs === null) {
                 throw new Error('region_code不存在: ' + regions[i])
             }
         }
-        await modelRegion.deleteMany({ region_code: { $in: regions } })
+        await modelRegion.deleteMany({ _id: { $in: regions } })
         return new SuccessModel({ msg: '删除成功' })
     } catch (err) {
         return new ErrorModel({ msg: '删除失败', data: err.message })
