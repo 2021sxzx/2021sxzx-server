@@ -30,7 +30,7 @@ const itemSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
-    region_id: {    //区划id
+    region_code: {    //区划id
         type: String,
         default: ''
     }
