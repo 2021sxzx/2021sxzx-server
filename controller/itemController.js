@@ -879,7 +879,7 @@ async function getChildRegionsByRuleAndRegion({
 }) {
     try {
         if (rule_id === null || region_code === null) {
-            throw new Error('rule_id和region_id不能为空')
+            throw new Error('rule_id和region_code不能为空')
         }
         //找出子区划
         var childRegions = await modelRegion.find({ parentId: region_code }, { _id: 0, __v: 0 })
