@@ -115,7 +115,6 @@ async function getItems({
 async function createRules({
     rules = null
 }) {
-    var createSuccess = false
     try {
         if (rules === null) {
             throw new Error('请求体中需要一个rules属性，且该属性是一个数组')
@@ -157,35 +156,30 @@ async function createRules({
                 parentId: rules[i].parentId
             })
         }
-        await modelRule.create(arr)
-        createSuccess = true
-        //创建桩
-        await modelRule.create({
-            rule_id: maxRuleId.toString(),
-            rule_name: 'null',
-            parentId: ''
-        })
-        //返回真实的rule_id
-        var res = new Array()
+        var result = await modelRule.create(arr)
+        //返回真实的rule_id和_id
+        var res = {}
         for (let i = 0; i < rules.length; i++) {
-            res.push({
-                rule_id: rules[i].rule_id,
-                temp_id: rules[i].temp_id
-            })
-        }
-        return new SuccessModel({ msg: '创建规则成功', data: res })
-    } catch (err) {
-        if (createSuccess === true) {
-            //规则创建成功，只是最后的桩创建失败了，不用管
-            var res = new Array()
-            for (let i = 0; i < rules.length; i++) {
-                res.push({
-                    rule_id: rules[i].rule_id,
-                    temp_id: rules[i].temp_id
-                })
+            for (let j = 0; j < result.length; j++) {
+                if (result[j].rule_id === rules[i].rule_id) {
+                    res[rules[i].temp_id] = result[j]
+                    break
+                }
             }
+        }
+        //创建桩
+        try {
+            await modelRule.create({
+                rule_id: maxRuleId.toString(),
+                rule_name: 'null',
+                parentId: ''
+            })
+        } catch (e) {
             return new SuccessModel({ msg: '创建规则成功', data: res })
         }
+        //返回结果
+        return new SuccessModel({ msg: '创建规则成功', data: res })
+    } catch (err) {
         return new ErrorModel({ msg: '创建规则失败', data: err.message })
     }
 }
@@ -232,24 +226,25 @@ async function deleteRules({
         if (rules.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
-        var needDelete = [] //需要删除的规则树节点的规则id
+        // var needDelete = [] //需要删除的规则树节点的规则id
         for (let i = 0; i < rules.length; i++) {
             //判断rule_id的合法性
             let rule = await modelRule.findOne({ rule_id: rules[i] }, { _id: 0, __v: 0 })
             if (rule === null || rule.rule_name === 'null') {
                 throw new Error('rule_id错误: ' + rules[i])
             }
-            var node = rule  //规则树节点
-            while (true) {
-                needDelete.push(node.rule_id)
-                let brothers = await modelRule.find({ parentId: node.parentId }, { _id: 0, __v: 0 })
-                if (brothers.length > 1) break    //父节点有其他子节点，不需要删除
-                let parent = await modelRule.findOne({ rule_id: node.parentId }, { _id: 0, __v: 0 })
-                node = parent
-            }
+            // var node = rule  //规则树节点
+            // while (true) {
+            //     needDelete.push(node.rule_id)
+            //     let brothers = await modelRule.find({ parentId: node.parentId }, { _id: 0, __v: 0 })
+            //     if (brothers.length > 1) break    //父节点有其他子节点，不需要删除
+            //     let parent = await modelRule.findOne({ rule_id: node.parentId }, { _id: 0, __v: 0 })
+            //     node = parent
+            // }
         }
         //批量删除
-        await modelRule.deleteMany({ rule_id: { $in: needDelete } })
+        // await modelRule.deleteMany({ rule_id: { $in: needDelete } })
+        await modelRule.deleteMany({ rule_id: { $in: rules } })
         return new SuccessModel({ msg: '删除规则成功' })
     } catch (err) {
         return new ErrorModel({ msg: '删除规则失败', data: err.message })
@@ -264,6 +259,7 @@ async function deleteRules({
 async function updateRules({
     rules = null
 }) {
+    var modifiedCount = 0
     try {
         if (rules === null) {
             throw new Error('请求体中需要一个rules属性，且该属性是一个数组')
@@ -272,20 +268,28 @@ async function updateRules({
             throw new Error('数组长度小于等于0')
         }
         for (let i = 0; i < rules.length; i++) {
+            //解构，没有传的字段默认null
+            let {
+                rule_id = null,
+                rule_name = null,
+                parentId = null
+            } = rules[i]
+            if (rule_id === null) {
+                throw new Error('更新规则的时候需要传rule_id')
+            }
             //判断rule_id的合法性
-            let rule = await modelRule.findOne({ rule_id: rules[i].rule_id }, { _id: 0, __v: 0 })
+            let rule = await modelRule.findOne({ rule_id: rule_id }, { _id: 0, __v: 0 })
             if (rule === null || rule.rule_name === 'null') {
-                throw new Error('rule_id错误: ' + rules[i].rule_id)
+                throw new Error('rule_id错误: ' + rule_id)
             }
             //更新rule
-            if (rules[i].rule_name === null) rules[i].rule_name = rule.rule_name
-            if (rules[i].parentId === null) rules[i].parentId = rule.parentId
-            await modelRule.updateOne({ rule_id: rules[i].rule_id }, {
-                rule_name: rules[i].rule_name,
-                parentId: rules[i].parentId
-            })
+            let newData = {}
+            if (rule_name !== null) newData.rule_name = rule_name
+            if (parentId !== null) newData.parentId = parentId
+            await modelRule.updateOne({ rule_id: rule_id }, newData)
+            modifiedCount += 1
         }
-        return new SuccessModel({ msg: '更新规则成功' })
+        return new SuccessModel({ msg: '更新规则成功', data: modifiedCount })
     } catch (err) {
         return new ErrorModel({ msg: '更新规则失败', data: err.message })
     }
@@ -450,7 +454,6 @@ async function getRegions({
 async function createItems({
     items = null
 }) {
-    var createSuccess = false
     try {
         if (items === null) {
             throw new Error('至少需要items属性，且该属性是一个数组')
@@ -495,20 +498,20 @@ async function createItems({
         }
         //批量创建
         await modelItem.create(newData)
-        createSuccess = true
         //创建桩
-        await modelItem.create({
-            item_id: maxValue.toString(),
-            task_code: 'null',
-            rule_id: 'null',
-            region_code: 'null'
-        })
-        return new SuccessModel({ msg: '创建事项成功' })
-    } catch (err) {
-        //只是最后创建桩失败了，不用管
-        if (createSuccess === true) {
+        try {
+            await modelItem.create({
+                item_id: maxValue.toString(),
+                task_code: 'null',
+                rule_id: 'null',
+                region_code: 'null'
+            })
+        } catch (e) {
             return new SuccessModel({ msg: '创建事项成功' })
         }
+        //返回结果
+        return new SuccessModel({ msg: '创建事项成功' })
+    } catch (err) {
         return new ErrorModel({ msg: '创建事项失败', data: err.message })
     }
 }
@@ -588,6 +591,7 @@ async function deleteItems({
 async function updateItems({
     items = null
 }) {
+    var modifiedCount = 0
     try {
         if (items === null) {
             throw new Error('请求体中需要一个items属性，且该属性是一个数组')
@@ -616,8 +620,9 @@ async function updateItems({
             if (rule_id !== null) newData.rule_id = rule_id
             if (region_code !== null) newData.region_code = region_code
             await modelItem.updateOne({ _id: _id }, newData)
+            modifiedCount += 1
         }
-        return new SuccessModel({ msg: '更新成功' })
+        return new SuccessModel({ msg: '更新成功', data: modifiedCount })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
     }
@@ -695,7 +700,7 @@ async function getRules({
             var res = await modelRule.find({
                 rule_name: { $regex: rule_name },
                 create_time: { $gte: start, $lte: end }
-            }, { _id: 0, __v: 0 })
+            }, { __v: 0 })
             return new SuccessModel({ msg: '查询成功', data: res })
         }
         //parentId用于查找子规则
@@ -705,7 +710,7 @@ async function getRules({
             var res = await modelRule.find({
                 parentId: { $in: parentId },
                 create_time: { $gte: start, $lte: end }
-            }, { _id: 0, __v: 0 })
+            }, { __v: 0 })
             return new SuccessModel({ msg: '查询成功', data: res })
         }
         //只根据创建时间查询，或者全量查询
@@ -714,7 +719,7 @@ async function getRules({
         var res = await modelRule.find({
             rule_name: { $ne: 'null' },
             create_time: { $gte: start, $lte: end }
-        }, { _id: 0, __v: 0 })
+        }, { __v: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -799,6 +804,7 @@ async function deleteRegions({
 async function updateRegions({
     regions = null
 }) {
+    var modifiedCount = 0
     try {
         if (regions === null) {
             throw new Error('请求体中需要一个regions属性，且该属性是一个数组')
@@ -830,8 +836,9 @@ async function updateRegions({
             if (region_level !== null) newData.region_level = region_level
             if (parentId !== null) newData.parentId = parentId
             await modelRegion.updateOne({ _id: _id }, newData)
+            modifiedCount += 1
         }
-        return new SuccessModel({ msg: '更新成功' })
+        return new SuccessModel({ msg: '更新成功', data: modifiedCount })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
     }
