@@ -30,7 +30,7 @@ async function getRegionTree() {
         var regions = await modelRegion.find({}, { __v: 0 })
         var res = {}
         for (let i = 0; i < regions.length; i++) {
-            res[regions[i].region_code] = regions[i]
+            res[regions[i]['_id']] = regions[i]
         }
         return new SuccessModel({ msg: '获取区划树成功', data: res })
     } catch (err) {
@@ -388,6 +388,7 @@ async function getRegionPaths({
  * @param {String} region_name 区划名称，用于模糊查询
  * @param {Array<Number>} region_level 区划等级
  * @param {Array<String>} parentId 上级区划id
+ * @param {Array<String>} parentCode 上级区划编码（如果和parentId一起传的话就优先使用这个）
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns 
@@ -397,6 +398,7 @@ async function getRegions({
     region_name = null,
     region_level = null,
     parentId = null,
+    parentCode = null,
     page_size = null,
     page_num = null
 }) {
@@ -412,6 +414,12 @@ async function getRegions({
         if (region_name !== null) query.region_name = { $regex: region_name }
         if (region_level !== null) query.region_level = { $in: region_level }
         if (parentId !== null) query.parentId = { $in: parentId }
+        if (parentCode !== null) {
+            let codes = await modelRegion.find({ region_code: { $in: parentCode } }, { __v: 0 })
+            let parentid = []
+            codes.forEach(function (value) { parentid.push(value['_id']) })
+            query.parentId = { $in: parentid }
+        }
         var regions = await modelRegion.find(query, { __v: 0 })
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
