@@ -1573,3 +1573,4 @@ zyk ::1 - - [2022-03-08T08:11:22.916Z] "GET /api/v1/allComment HTTP/1.1" 200 282
 ::ffff:127.0.0.1 - - [22/Mar/2022:07:43:10 +0000] "POST /api/v1/setActivation HTTP/1.1" 200 133 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [22/Mar/2022:07:43:42 +0000] "POST /api/v1/setActivation HTTP/1.1" 200 133 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [22/Mar/2022:07:43:43 +0000] "POST /api/v1/setActivation HTTP/1.1" 200 133 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [22/Mar/2022:12:21:38 +0000] "GET /api/v1/role HTTP/1.1" 200 758 "-" "PostmanRuntime/7.29.0"
