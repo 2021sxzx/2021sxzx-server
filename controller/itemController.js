@@ -6,7 +6,7 @@ const modelTask = require('../model/task')
 
 /**
  * 获取规则树
- * @returns 
+ * @returns
  */
 async function getRuleTree() {
     try {
@@ -23,7 +23,7 @@ async function getRuleTree() {
 
 /**
  * 获取区划树
- * @returns 
+ * @returns
  */
 async function getRegionTree() {
     try {
@@ -52,7 +52,7 @@ async function getRegionTree() {
  * @param {Array<String>} region_code 区划编码
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
- * @returns 
+ * @returns
  */
 async function getItems({
     create_start_time = null,
@@ -110,7 +110,7 @@ async function getItems({
 /**
  * 创建规则
  * @param {Array<Object>} rules 待创建的规则
- * @returns 
+ * @returns
  */
 async function createRules({
     rules = null
@@ -214,7 +214,7 @@ async function createRuleStake() {
 /**
  * 删除规则
  * @param {Array<String>} rules 待删除的规则
- * @returns 
+ * @returns
  */
 async function deleteRules({
     rules = null
@@ -254,7 +254,7 @@ async function deleteRules({
 /**
  * 更新规则
  * @param {Array<Object>} rules 待更新的规则（不更新的字段传null）
- * @returns 
+ * @returns
  */
 async function updateRules({
     rules = null
@@ -298,7 +298,7 @@ async function updateRules({
 /**
  * 通过rule_id获取对应的规则路径
  * @param {Array<String>} rule_id 规则id数组
- * @returns 
+ * @returns
  */
 async function getRulePaths({
     rule_id = null
@@ -334,7 +334,7 @@ async function getRulePaths({
 /**
  * 获取事项指南
  * @param {String} task_code 事项指南编码
- * @returns 
+ * @returns
  */
 async function getItemGuide({
     task_code = null
@@ -353,7 +353,7 @@ async function getItemGuide({
 /**
  * 获取区划路径
  * @param {Array<String>} region_code 区划编码
- * @returns 
+ * @returns
  */
 async function getRegionPaths({
     region_code = null
@@ -395,7 +395,7 @@ async function getRegionPaths({
  * @param {Array<String>} parentCode 上级区划编码（如果和parentId一起传的话就优先使用这个）
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
- * @returns 
+ * @returns
  */
 async function getRegions({
     region_code = null,
@@ -449,7 +449,7 @@ async function getRegions({
 /**
  * 创建事项
  * @param {Array<Object>} items 待创建的事项（可以传三个字段，事项指南编码、规则id和区划编码）
- * @returns 
+ * @returns
  */
 async function createItems({
     items = null
@@ -556,7 +556,7 @@ async function createItemStake() {
 /**
  * 删除事项
  * @param {Array<String>} items 待删除的事项（_id）
- * @returns 
+ * @returns
  */
 async function deleteItems({
     items = null
@@ -586,7 +586,7 @@ async function deleteItems({
 /**
  * 更新事项
  * @param {Array<Object} items 待更新的事项（不更新的字段传null，记得传_id）
- * @returns 
+ * @returns
  */
 async function updateItems({
     items = null
@@ -632,7 +632,7 @@ async function updateItems({
  * 根据规则id和区划id获取下级区划，存在事项的区划，其haveItem是1，没有则是0
  * @param {String} rule_id 规则id
  * @param {String} region_code 区划id
- * @returns 
+ * @returns
  */
 async function getChildRegionsByRuleAndRegion({
     rule_id = null,
@@ -662,7 +662,7 @@ async function getChildRegionsByRuleAndRegion({
         result.push(region._doc)
         //找出该区划的下级区划
         var childRegions = await modelRegion.find({ parentId: region['_id'] }, { __v: 0 })
-        childRegions.forEach(function (value) {
+        childRegions.forEach(async function (value) {
             //遍历区划，检查该区划包括其全部下级区划在内是否存在rule_id对应的事项
             var regionCodes = []
             var q = []
@@ -700,7 +700,7 @@ async function getChildRegionsByRuleAndRegion({
  * @param {Array<String>} parentId 父规则id
  * @param {Number} start_time 规则创建时间的起始时间
  * @param {Number} end_time 规则创建时间的终止时间
- * @returns 
+ * @returns
  */
 async function getRules({
     rule_id = null,
@@ -757,7 +757,7 @@ async function getRules({
  * @param {String} region_name 区划名称
  * @param {String} region_level 区划等级
  * @param {String} parentCode 上级区划的区划编码（必须是已有的区划）
- * @returns 
+ * @returns
  */
 async function createRegion({
     region_code = null,
@@ -792,7 +792,7 @@ async function createRegion({
 /**
  * 删除区划
  * @param {Array<String>} regions 待删除的区划（用_id删除）
- * @returns 
+ * @returns
  */
 async function deleteRegions({
     regions = null
@@ -821,7 +821,7 @@ async function deleteRegions({
 /**
  * 更新区划
  * @param {Array<Object>} regions 待更新的区划（不更新的字段传null，记得传_id）
- * @returns 
+ * @returns
  */
 async function updateRegions({
     regions = null
