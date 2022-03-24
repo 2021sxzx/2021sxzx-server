@@ -763,16 +763,16 @@ async function createRegion({
     region_code = null,
     region_name = null,
     region_level = null,
-    parentCode = null
+    parentId = null
 }) {
     try {
-        if (region_code === null || region_name === null || region_level === null || parentCode === null) {
+        if (region_code === null || region_name === null || region_level === null || parentId === null) {
             throw new Error('创建区划的时候必须包括全部字段的信息，包括region_code、region_name、region_level和parentCode')
         }
         //创建区划
-        var parent = await modelRegion.findOne({ region_code: parentCode }, { __v: 0 })
+        var parent = await modelRegion.findOne({ _id: parentId }, { __v: 0 })
         if (parent === null) {
-            throw new Error('parentCode不存在: ' + parentCode)
+            throw new Error('parentId不存在: ' + parentId)
         }
         if (parent.region_level + 1 !== region_level) {
             throw new Error('region_level错误，上级区划的region_level是' + parent.region_level)
@@ -781,7 +781,7 @@ async function createRegion({
             region_code: region_code,
             region_name: region_name,
             region_level: region_level,
-            parentId: parent['_id']
+            parentId: parentId
         })
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
