@@ -82,8 +82,8 @@ router.post('/v1/getRegions', async (req, res, next) => {
     res.json(data)
 })
 
-router.post('/v1/createRegions', async (req, res, next) => {
-    let data = await itemController.createRegions(req.body)
+router.post('/v1/createRegion', async (req, res, next) => {
+    let data = await itemController.createRegion(req.body)
     setStatusCode(res, data)
     res.json(data)
 })
