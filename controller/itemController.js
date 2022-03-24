@@ -497,7 +497,7 @@ async function createItems({
             maxValue = maxValue + 1
         }
         //批量创建
-        await modelItem.create(newData)
+        var result = await modelItem.create(newData)
         //创建桩
         try {
             await modelItem.create({
@@ -507,10 +507,10 @@ async function createItems({
                 region_code: 'null'
             })
         } catch (e) {
-            return new SuccessModel({ msg: '创建事项成功' })
+            return new SuccessModel({ msg: '创建事项成功', data: result })
         }
         //返回结果
-        return new SuccessModel({ msg: '创建事项成功' })
+        return new SuccessModel({ msg: '创建事项成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '创建事项失败', data: err.message })
     }
@@ -642,25 +642,50 @@ async function getChildRegionsByRuleAndRegion({
         if (rule_id === null || region_code === null) {
             throw new Error('rule_id和region_code不能为空')
         }
-        //找出子区划
-        var childRegions = await modelRegion.find({ parentId: region_code }, { _id: 0, __v: 0 })
-        var regionCodes = []
-        childRegions.forEach(function (value) { regionCodes.push(value.region_code) })
-        //找出匹配的事项
+        //把传入的region_code转成_id
+        var region = await modelRegion.findOne({ region_code: region_code }, { __v: 0 })
+        if (region === null) {
+            throw new Error('region_code不存在: ' + region_code)
+        }
+        //保存结果
+        var result = []
+        //先判断该区划本身是否有匹配的事项
         var res = await modelItem.find({
             rule_id: rule_id,
-            region_code: { $in: regionCodes }
+            region_code: region_code
         }, { _id: 0, __v: 0 })
-        //子区划中有事项的haveItem是1，否则是0
-        var result = []
+        //有事项haveItem是1，否则是0
+        region._doc.haveItem = 0
+        if (res.length > 0) {
+            region._doc.haveItem = 1
+        }
+        result.push(region._doc)
+        //找出该区划的下级区划
+        var childRegions = await modelRegion.find({ parentId: region['_id'] }, { __v: 0 })
         childRegions.forEach(function (value) {
-            value._doc.haveItem = 0
-            result.push(value._doc)
-            res.forEach(function (v) {
-                if (v.region_code === value.region_code) {
-                    value._doc.haveItem = 1
+            //遍历区划，检查该区划包括其全部下级区划在内是否存在rule_id对应的事项
+            var regionCodes = []
+            var q = []
+            q.push(value)
+            while (q.length > 0) {
+                let node = q.shift()
+                regionCodes.push(node.region_code)
+                let children = await modelRegion.find({ parentId: node['_id'] }, { __v: 0 })
+                if (children.length > 0) {
+                    q.push.apply(q, children)
                 }
-            })
+            }
+            //找出匹配的事项
+            var res = await modelItem.find({
+                rule_id: rule_id,
+                region_code: { $in: regionCodes }
+            }, { _id: 0, __v: 0 })
+            //子区划中有事项的haveItem是1，否则是0
+            value._doc.haveItem = 0
+            if (res.length > 0) {
+                value._doc.haveItem = 1
+            }
+            result.push(value._doc)
         })
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
@@ -728,40 +753,37 @@ async function getRules({
 
 /**
  * 创建区划
- * @param {Array<Object>} regions 待创建的区划（必须包含全部字段信息）
+ * @param {String} region_code 区划编码
+ * @param {String} region_name 区划名称
+ * @param {String} region_level 区划等级
+ * @param {String} parentCode 上级区划的区划编码（必须是已有的区划）
  * @returns 
  */
-async function createRegions({
-    regions = null
+async function createRegion({
+    region_code = null,
+    region_name = null,
+    region_level = null,
+    parentCode = null
 }) {
     try {
-        if (regions === null) {
-            throw new Error('请求体中需要一个regions属性，且该属性是一个数组')
-        }
-        if (regions.length <= 0) {
-            throw new Error('数组长度小于等于0')
+        if (region_code === null || region_name === null || region_level === null || parentCode === null) {
+            throw new Error('创建区划的时候必须包括全部字段的信息，包括region_code、region_name、region_level和parentCode')
         }
         //创建区划
-        var arr = []
-        for (let i = 0; i < regions.length; i++) {
-            let {
-                region_code = null,
-                region_name = null,
-                region_level = null,
-                parentId = null
-            } = regions[i]
-            if (region_code === null || region_name === null || region_level === null || parentId === null) {
-                throw new Error('创建区划的时候必须包括全部字段的信息，包括region_code、region_name、region_level和parentId')
-            }
-            arr.push({
-                region_code: region_code,
-                region_name: region_name,
-                region_level: region_level,
-                parentId: parentId
-            })
+        var parent = await modelRegion.findOne({ region_code: parentCode }, { __v: 0 })
+        if (parent === null) {
+            throw new Error('parentCode不存在: ' + parentCode)
         }
-        await modelRegion.create(arr)
-        return new SuccessModel({ msg: '创建成功' })
+        if (parent.region_level + 1 !== region_level) {
+            throw new Error('region_level错误，上级区划的region_level是' + parent.region_level)
+        }
+        var result = await modelRegion.create({
+            region_code: region_code,
+            region_name: region_name,
+            region_level: region_level,
+            parentId: parent['_id']
+        })
+        return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '创建失败', data: err.message })
     }
@@ -857,7 +879,7 @@ module.exports = {
     updateRules,
     getRulePaths,
     getRegions,
-    createRegions,
+    createRegion,
     deleteRegions,
     updateRegions,
     getRegionPaths,
