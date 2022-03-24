@@ -2,10 +2,6 @@ const mongoose = require("mongoose")
 
 //region表的定义
 const regionSchema = new mongoose.Schema({
-    region_id: {
-        type: String,
-        required: true
-    },
     region_code: {
         type: String,
         required: true

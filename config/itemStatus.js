@@ -5,27 +5,27 @@ const itemStatus = {
         next: [1]
     },
     'FirstAudit': {
-        id: 2,
+        id: 1,
         status_name: '一级审核员审核中',
-        next: [4, 6]
+        next: [2, 4, 5]
     },
     'SecondAudit': {
-        id: 3,
+        id: 2,
         status_name: '二级审核员审核中',
-        next: [4, 5]
+        next: [3, 4, 5]
     },
     'Success': {
-        id: 4,
+        id: 3,
         status_name: '审核通过',
-        next: [6]
+        next: [5]
     },
     'Failure': {
-        id: 5,
+        id: 4,
         status_name: '审核不通过',
-        next: [1]
+        next: [0]
     },
-    '': {
-        id: 6,
+    'Recall': {
+        id: 5,
         status_name: '撤回待审核',
         next: [0]
     },

@@ -1,17 +1,31 @@
-const systemLog = require("../model/systemLog");
-const users = require("../model/users");
-const fs = require('fs')
+// const systemLog = require("../model/systemLog");
+// const users = require("../model/users");
+const fs = require('fs');
+var osu = require("node-os-utils");
+var cpu = osu.cpu;
+var osCmd = osu.osCmd;
+var drive = osu.drive;
+var mem = osu.mem;
+
 
 /**
- * 请求操作映射表
+ * 获取中央处理器占用率
  * @returns {Promise<*|*>}
  */
-function chargeTypeChange(value) {
-  var chargeTypeGroup = {
-      "GET /api/v1/allSystemLog":"查询所有日志",
-      "GET /api/v1/allSystemLogDetail":"查询详细日志",
-  };
-  return chargeTypeGroup[value];
+ async function getCpuPercentage() {
+    try {
+    //   var data = "async";
+    //   cpu.usage().then((cpuPercentage) => {
+    //     console.log("中央处理器平均使用率:" + cpuPercentage); // 10.38
+    //     data = cpuPercentage;
+    //     return "data";
+    //   });
+        let cpuPromise=cpu.usage();
+        cpuPromise.then(value =>{console.log("first"+value);return value;})
+
+    } catch (e) {
+      return "获取中央处理器占用率失败";
+    }
 };
 
 /**
@@ -213,4 +227,5 @@ module.exports = {
   getAllSystemLog2,
   searchByCondition,
   showSystemLog,
+  getCpuPercentage
 };

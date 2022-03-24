@@ -2,9 +2,23 @@ const {
     getSystemLogDetail,
     getAllSystemLog2,
     searchByCondition,
-    showSystemLog
-  } = require("../service/systemLogService")
+    showSystemLog,
+    getCpuPercentage
+  } = require("../service/systemResourceService")
   const {SuccessModel, ErrorModel} = require('../utils/resultModel');
+
+  /**
+   * 查看cpu占用率
+   * @returns {Promise<ErrorModel|SuccessModel>}
+   */
+   async function getCpuPercentageController() {
+    try {
+      let data = await getCpuPercentage();
+      return new SuccessModel({msg: '获取cpu占用率成功', data:data});
+    } catch (e) {
+      return new ErrorModel({msg:e.message})
+    }
+  }
 
   /**
    * 查看测试系统日志
@@ -72,5 +86,6 @@ const {
   module.exports = {
     getSearchSystemLog,
     getAllSystemLogDetail,
-    showSystemLogController
+    showSystemLogController,
+    getCpuPercentageController
   }
