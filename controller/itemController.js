@@ -367,16 +367,20 @@ async function getRegionPaths({
         }
         //读取一次数据库，建立dict，key是region_id，value是区划树节点
         var regions = await modelRegion.find({}, { __v: 0 })
-        var dic = {}
-        regions.forEach(function (value) { dic[value.region_code] = value })
+        var dicCode = {}
+        var dicId = {}
+        regions.forEach(function (value) {
+            dicCode[value.region_code] = value
+            dicId[value['_id']] = value
+        })
         //计算路径
         var res = {}
         for (let i = 0; i < region_code.length; i++) {
             let regionPath = []
-            let node = dic[region_code[i]] ? dic[region_code[i]] : null
+            let node = dicCode[region_code[i]] ? dicCode[region_code[i]] : null
             while (node !== null) {
                 regionPath.unshift(node)
-                node = dic[node.parentId] ? dic[node.parentId] : null
+                node = dicId[node.parentId] ? dicId[node.parentId] : null
             }
             res[region_code[i]] = regionPath
         }
