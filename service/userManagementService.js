@@ -22,6 +22,7 @@ async function addUser (userInfo) {
 async function getUserList () {
   try {
     let res = await users.find({}, {
+      _id: 1,
       user_name: 1,
       password: 1,
       role_name: 1,
@@ -48,6 +49,7 @@ async function updateUser (user_name, password, role_name, account, new_account)
     let res = await users.updateOne({
       account: account
     }, {
+      _id: 1,
       user_name: user_name,
       password: password,
       role_name: role_name,
@@ -96,6 +98,7 @@ async function searchUser (searchValue) {
         }
       ]
     }, {
+      _id: 1,
       user_name: 1,
       password: 1,
       role_name: 1,
@@ -130,7 +133,6 @@ async function setActivation (account) {
       activation_status: 1
     })
     let tmp = res.activation_status === 1 ? 0 : 1;
-    console.log(tmp);
     await users.updateOne({
       account
     }, {
@@ -139,6 +141,7 @@ async function setActivation (account) {
     res = await users.findOne({
       account
     }, {
+      _id: 1,
       account: 1,
       activation_status: 1
     })
