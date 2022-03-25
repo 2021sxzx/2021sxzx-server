@@ -26,7 +26,7 @@ async function getUserList () {
       password: 1,
       role_name: 1,
       account: 1,
-
+      activation_status: 1
     })
     return res
   } catch (e) {
