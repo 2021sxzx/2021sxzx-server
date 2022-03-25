@@ -121,7 +121,7 @@ async function updateRole (role_name_old, role_name, role_describe) {
  *    isDeleted,
  *    data
  * }
- */ 
+ */
 async function deleteRole (role_name, role_describe) {
   try {
     const selectRoleMap = await users.find({

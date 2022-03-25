@@ -62,8 +62,8 @@ async function updateUser (user_name, password, role_name, account, new_account)
 
 /**
  * 删除角色
- * @param {*} account 
- * @returns 
+ * @param {*} account
+ * @returns
  */
 async function deleteUser (account) {
   try {
@@ -77,8 +77,8 @@ async function deleteUser (account) {
 }
 
 /**
- * 修改角色
- * @param {*} searchValue 
+ * 查找角色
+ * @param {*} searchValue
  * @returns 
  */
 // TODO (钟卓江=>林凯迪):原型上是对每个属性值分别查，不是混在一起查
@@ -91,6 +91,8 @@ async function searchUser (searchValue) {
           user_name: { $regex : reg }
         },{
           account: { $regex : reg }
+        }, {
+          role_name: { $regex : reg }
         }
       ]
     }, {
