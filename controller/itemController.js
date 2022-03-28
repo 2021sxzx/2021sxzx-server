@@ -4,7 +4,6 @@ const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
 const modelTask = require('../model/task')
 const itemStatus = require('../config/itemStatus')
-const userRank = require('../config/userRank')
 
 /**
  * 获取事项状态表
@@ -19,7 +18,7 @@ async function getItemStatusScheme() {
  * @returns 
  */
 async function getUserRankSchema() {
-    return new SuccessModel({ msg: '获取成功', data: userRank })
+    return new SuccessModel({ msg: '获取成功', data: {} })
 }
 
 /**
@@ -105,7 +104,7 @@ async function getItems({
             //只返回部分查询结果
             var dict = {}
             dict.data = await modelItem.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
-            dict.total = await modelItem.count()
+            dict.total = await modelItem.find(query).count()
             dict.page_size = page_size
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
@@ -436,7 +435,7 @@ async function getRegions({
             //只返回部分查询结果
             var dict = {}
             dict.data = await modelRegion.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
-            dict.total = await modelRegion.count()
+            dict.total = await modelRegion.find(query).count()
             dict.page_size = page_size
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
