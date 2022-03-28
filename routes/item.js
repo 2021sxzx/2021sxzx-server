@@ -10,6 +10,18 @@ function setStatusCode(res, data) {
     }
 }
 
+router.get('/v1/getItemStatusScheme', async (req, res, next) => {
+    let data = await itemController.getItemStatusScheme()
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/getUserRankSchema', async (req, res, next) => {
+    let data = await itemController.getUserRankSchema()
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 router.get('/v1/getRuleTree', async (req, res, next) => {
     let data = await itemController.getRuleTree()
     setStatusCode(res, data)

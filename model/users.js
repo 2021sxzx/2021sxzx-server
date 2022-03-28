@@ -1,4 +1,5 @@
 const mongoose = require("mongoose")
+const userRank = require('../config/userRank')
 
 // users表的定义
 const usersSchema = new mongoose.Schema({
@@ -33,7 +34,7 @@ const usersSchema = new mongoose.Schema({
   },
   user_rank: { //用户身份
     type: Number,
-    default: 0
+    default: userRank['Business'] //默认是业务员
   }
 })
 
