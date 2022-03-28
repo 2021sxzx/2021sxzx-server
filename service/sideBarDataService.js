@@ -13,7 +13,7 @@ class sideBarData {
       permissionIdentifier.map(async (item) => {
         const re = await sideBarMapPermission.find({
           permission_identifier: item.permission_identifier
-        })
+        });
         return re;
       })
     );
