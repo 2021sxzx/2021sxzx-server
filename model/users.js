@@ -33,7 +33,7 @@ const usersSchema = new mongoose.Schema({
   },
   user_rank: { //用户身份
     type: Number,
-    default: 0
+    default: 0 //默认是业务员
   }
 })
 

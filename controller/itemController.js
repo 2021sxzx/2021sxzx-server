@@ -3,6 +3,23 @@ const modelItem = require('../model/item')
 const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
 const modelTask = require('../model/task')
+const itemStatus = require('../config/itemStatus')
+
+/**
+ * 获取事项状态表
+ * @returns 
+ */
+async function getItemStatusScheme() {
+    return new SuccessModel({ msg: '获取成功', data: itemStatus })
+}
+
+/**
+ * 获取用户身份表
+ * @returns 
+ */
+async function getUserRankSchema() {
+    return new SuccessModel({ msg: '获取成功', data: {} })
+}
 
 /**
  * 获取规则树
@@ -83,24 +100,16 @@ async function getItems({
         release_start_time = (release_start_time !== null) ? release_start_time : 0
         release_end_time = (release_end_time !== null) ? release_end_time : 9999999999999
         query.release_time = { $gte: release_start_time, $lte: release_end_time }
-        var res = await modelItem.find(query, { __v: 0 })
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
-            if (page_size < res.length) {
-                var r = []
-                for (let i = 0; i < page_size; i++) {
-                    let index = page_size * page_num + i
-                    if (index >= res.length) break
-                    r.push(res[index])
-                }
-                var dict = {}
-                dict.data = r
-                dict.total = res.length
-                dict.page_size = page_size
-                dict.page_num = page_num
-                return new SuccessModel({ msg: '查询成功', data: dict })
-            }
+            var dict = {}
+            dict.data = await modelItem.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            dict.total = await modelItem.find(query).count()
+            dict.page_size = page_size
+            dict.page_num = page_num
+            return new SuccessModel({ msg: '查询成功', data: dict })
         }
+        var res = await modelItem.find(query, { __v: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -411,14 +420,8 @@ async function getRegions({
     page_num = null
 }) {
     try {
-        if (region_code !== null) {
-            //region_code查找唯一区划
-            var regions = await modelRegion.find({
-                region_code: { $in: region_code }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: regions })
-        }
         var query = {}
+        if (region_code !== null) query.region_code = { $in: region_code }
         if (region_name !== null) query.region_name = { $regex: region_name }
         if (region_level !== null) query.region_level = { $in: region_level }
         if (parentId !== null) query.parentId = { $in: parentId }
@@ -428,22 +431,16 @@ async function getRegions({
             codes.forEach(function (value) { parentid.push(value['_id']) })
             query.parentId = { $in: parentid }
         }
-        var regions = await modelRegion.find(query, { __v: 0 })
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
-            var r = []
-            for (let i = 0; i < page_size; i++) {
-                let index = page_size * page_num + i
-                if (index >= regions.length) break
-                r.push(regions[index])
-            }
             var dict = {}
-            dict.data = r
-            dict.total = regions.length
+            dict.data = await modelRegion.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            dict.total = await modelRegion.find(query).count()
             dict.page_size = page_size
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
         }
+        var regions = await modelRegion.find(query, { __v: 0 })
         return new SuccessModel({ msg: '查询成功', data: regions })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -872,7 +869,63 @@ async function updateRegions({
     }
 }
 
+/**
+ * 改变事项的状态
+ * @param {Array<Object>} items 待改变状态的事项（数组成员包含item_id和next_status属性）
+ * @returns 
+ */
+async function changeItemStatus({
+    items = null
+}) {
+    try {
+        if (items === null) {
+            throw new Error('调用changeItemStatus必须有array字段')
+        }
+        if (items.length && items.length <= 0) {
+            throw new Error('数组长度小于等于0')
+        }
+        var bulkOps = []
+        for (let i = 0, len = items.length; i < len; i++) {
+            //解构，默认null
+            var { item_id = null, next_status = null } = items[i]
+            if (item_id === null || next_status === null) {
+                throw new Error('调用changeItemStatus必须有item_id和next_status字段')
+            }
+            //查询事项现在的状态，判断能否变为next_status
+            var item = await modelItem.findOne({ item_id: item_id }, { __v: 0 })
+            if (item === null) {
+                throw new Error('item_id不存在: ' + item_id)
+            }
+            var keys = Object.keys(itemStatus)
+            for (let j = 0; j < keys.length; j++) {
+                var status = itemStatus[keys[j]]
+                if (status.id !== item.item_status) {
+                    if (j === keys.length - 1) throw new Error('itemStatus表和数据库中已有的事项状态对不上')
+                    continue
+                }
+                if (status.next_status.includes(next_status) === false) {
+                    throw new Error('事项所处状态无法变到指定状态: ' + item_id)
+                }
+                //加到数组中，后续一起更新
+                bulkOps.push({
+                    updateOne: {
+                        filter: { item_id: item_id },
+                        update: { item_status: next_status }
+                    }
+                })
+            }
+        }
+        //批量更新
+        var result = await modelItem.bulkWrite(bulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '更新失败', data: err.message })
+    }
+}
+
 module.exports = {
+    getItemStatusScheme,
+    getUserRankSchema,
     getRuleTree,
     getRegionTree,
     getItems,
