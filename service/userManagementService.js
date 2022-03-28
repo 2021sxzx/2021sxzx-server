@@ -1,5 +1,4 @@
 const users = require('../model/users')
-const roleMapPermission = require('../model/roleMapPermission')
 
 /**
  * 添加后台用户
@@ -8,8 +7,7 @@ const roleMapPermission = require('../model/roleMapPermission')
  */
 async function addUser (userInfo) {
   try {
-    let res = await users.create(userInfo)
-    return res
+    return await users.create(userInfo)
   } catch (e) {
     throw e.message
   }
@@ -21,7 +19,7 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    let res = await users.find({}, {
+    return await users.find({}, {
       _id: 1,
       user_name: 1,
       password: 1,
@@ -29,9 +27,8 @@ async function getUserList () {
       account: 1,
       activation_status: 1
     })
-    return res
   } catch (e) {
-    throw e.message 
+    throw e.message
   }
 }
 
@@ -46,17 +43,16 @@ async function getUserList () {
  */
 async function updateUser (user_name, password, role_name, account, new_account) {
   try {
-    let res = await users.updateOne({
+    return await users.updateOne({
       account: account
     }, {
-      _id: 1,
+      // _id: 1,
       user_name: user_name,
       password: password,
       role_name: role_name,
       account: new_account,
       activation_status: 1
     })
-    return res
   } catch (e) {
     throw e.message
   }
@@ -69,10 +65,9 @@ async function updateUser (user_name, password, role_name, account, new_account)
  */
 async function deleteUser (account) {
   try {
-    let res = await users.deleteOne({
+    return await users.deleteOne({
       account
     })
-    return res
   } catch (e) {
     throw e.message
   }
@@ -81,20 +76,20 @@ async function deleteUser (account) {
 /**
  * 查找角色
  * @param {*} searchValue
- * @returns 
+ * @returns
  */
 // TODO (钟卓江=>林凯迪):原型上是对每个属性值分别查，不是混在一起查
 async function searchUser (searchValue) {
   const reg = new RegExp(searchValue, 'i')
   try {
-    let res = await users.find({
+    return await users.find({
       $or: [
         {
-          user_name: { $regex : reg }
-        },{
-          account: { $regex : reg }
+          user_name: {$regex: reg}
         }, {
-          role_name: { $regex : reg }
+          account: {$regex: reg}
+        }, {
+          role_name: {$regex: reg}
         }
       ]
     }, {
@@ -105,7 +100,6 @@ async function searchUser (searchValue) {
       account: 1,
       activation_status: 1
     })
-    return res
   } catch (e) {
     throw e.message
   }
@@ -113,12 +107,11 @@ async function searchUser (searchValue) {
 
 async function isActivation (account) {
   try {
-    let res = await users.findOne({
+    return await users.findOne({
       account
     }, {
       activation_status: 1
-    })
-    return res;
+    });
   } catch {
     throw e.message
   }
@@ -145,7 +138,7 @@ async function setActivation (account) {
       account: 1,
       activation_status: 1
     })
-    
+
     return res
   } catch (e) {
     throw e.message
