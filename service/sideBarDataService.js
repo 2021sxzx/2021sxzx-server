@@ -69,10 +69,17 @@ class sideBarData {
     
     let sideBar_ = await Promise.all(
       sideBar_temp.map(async (item) => {
-        return {
+        let res = await this.onlyReturnChild(item.id)
+        // console.log(res);
+        return res.length === 0 ? {
           key: item.key,
           title: item.title,
           id: item.id
+        } : {
+          key: item.key,
+          title: item.title,
+          id: item.id,
+          children: res
         }
       })
     );
@@ -91,6 +98,24 @@ class sideBarData {
       id: parent.id,
       children: sideBar_,
     };
+  }
+
+  async onlyReturnChild (id) {
+    let sideBar_temp = await sideBar.find({
+      parent: id
+    });
+    
+    let sideBar_ = await Promise.all(
+      sideBar_temp.map(async (item) => {
+        return {
+          key: item.key,
+          title: item.title,
+          id: item.id
+        }
+      })
+    );
+
+    return sideBar_.length === 0 ? [] : sideBar_
   }
 }
 
