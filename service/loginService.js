@@ -36,7 +36,8 @@ async function authenticate(loginData) {
                         token: token,
                         expiresIn: 3600
                     },
-                    role_name: res.role_name
+                    role_name: res.role_name,
+                    _id: res._id
                 };
 
             } else {
