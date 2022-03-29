@@ -75,9 +75,9 @@ async function getRegionTree() {
  * @param {String} item_name 事项名称
  * @param {Array<String>} task_code 事项指南实施编码
  * @param {Array<Number>} item_status 事项状态
- * @param {Array<String>} item_rule_id 事项规则id
  * @param {Array<String>} rule_id 规则id
  * @param {Array<String>} region_code 区划编码
+ * @param {Array<String>} region_id 区划id
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns
@@ -92,6 +92,7 @@ async function getItems({
     item_status = null,
     rule_id = null,
     region_code = null,
+    region_id = null,
     page_size = null,
     page_num = null
 }) {
@@ -99,12 +100,10 @@ async function getItems({
         var query = {}
         if (item_name !== null) query.item_name = { $regex: item_name }
         if (task_code !== null) query.task_code = { $in: task_code }
-        else query.task_code = { $ne: 'null' }
         if (item_status !== null) query.item_status = { $in: item_status }
         if (rule_id !== null) query.rule_id = { $in: rule_id }
-        else query.rule_id = { $ne: 'null' }
         if (region_code !== null) query.region_code = { $in: region_code }
-        else query.region_code = { $ne: 'null' }
+        if (region_id !== null) query.region_id = { $in: region_id }
         create_start_time = (create_start_time !== null) ? create_start_time : 0
         create_end_time = (create_end_time !== null) ? create_end_time : 9999999999999
         query.create_time = { $gte: create_start_time, $lte: create_end_time }
@@ -717,7 +716,7 @@ async function getRules({
  * @param {String} region_code 区划编码
  * @param {String} region_name 区划名称
  * @param {String} region_level 区划等级
- * @param {String} parentCode 上级区划的区划编码（必须是已有的区划）
+ * @param {String} parentId 上级区划的_id（必须是已有的区划）
  * @returns
  */
 async function createRegion({
@@ -752,7 +751,7 @@ async function createRegion({
 
 /**
  * 删除区划
- * @param {Array<String>} regions 待删除的区划（用_id删除）
+ * @param {Array<String>} regions 待删除的区划
  * @returns
  */
 async function deleteRegions({
@@ -781,13 +780,12 @@ async function deleteRegions({
 
 /**
  * 更新区划
- * @param {Array<Object>} regions 待更新的区划（不更新的字段传null，记得传_id）
+ * @param {Array<Object>} regions 待更新的区划
  * @returns
  */
 async function updateRegions({
     regions = null
 }) {
-    var modifiedCount = 0
     try {
         if (regions === null) {
             throw new Error('请求体中需要一个regions属性，且该属性是一个数组')
@@ -795,6 +793,8 @@ async function updateRegions({
         if (regions.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        var regionBulkOps = []
+        var itemBulkOps = []
         for (let i = 0; i < regions.length; i++) {
             //解构，没有的字段默认是null
             let {
@@ -814,14 +814,33 @@ async function updateRegions({
             }
             //更新region（差量）
             let newData = {}
-            if (region_code !== null) newData.region_code = region_code
+            if (region_code !== null) {
+                let r = await modelRegion.findOne({ region_code: region_code }, { __v: 0 })
+                if (r !== null) {
+                    throw new Error('region_code已存在，更新失败: ' + region_code)
+                }
+                newData.region_code = region_code
+                itemBulkOps.push({
+                    updateMany: {
+                        filter: { region_id: _id },
+                        update: { region_code: region_code }
+                    }
+                })
+            }
             if (region_name !== null) newData.region_name = region_name
             if (region_level !== null) newData.region_level = region_level
             if (parentId !== null) newData.parentId = parentId
-            await modelRegion.updateOne({ _id: _id }, newData)
-            modifiedCount += 1
+            regionBulkOps.push({
+                updateOne: {
+                    filter: { _id: _id },
+                    update: newData
+                }
+            })
         }
-        return new SuccessModel({ msg: '更新成功', data: modifiedCount })
+        //批量更新
+        var result = await modelRegion.bulkWrite(regionBulkOps)
+        var result1 = await modelItem.bulkWrite(itemBulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
     }
