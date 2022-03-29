@@ -1,5 +1,5 @@
 const itemStatus = {
-    'NoBind': {
+    'WaitAudit': {
         id: 0,
         status_name: '未提交审核',
         next_status: [1]
