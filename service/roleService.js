@@ -29,7 +29,7 @@ async function addRole (role_name, role_describe, permission_identifier_array) {
     // })
 
     // 往权限角色关联表里面添加关联
-
+    
     permission_identifier_array.forEach((item) => {
       roleMapPermission.create({
         role_name: role_name,
