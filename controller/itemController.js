@@ -3,6 +3,8 @@ const modelItem = require('../model/item')
 const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
 const modelTask = require('../model/task')
+const modelUserRank = require('../model/userRank')
+const modelUsers = require('../model/users')
 const itemStatus = require('../config/itemStatus')
 
 /**
@@ -18,7 +20,16 @@ async function getItemStatusScheme() {
  * @returns 
  */
 async function getUserRankSchema() {
-    return new SuccessModel({ msg: '获取成功', data: {} })
+    try {
+        var ranks = await modelUserRank.find({}, { _id: 0, __v: 0 })
+        var result = {}
+        for (let i = 0; i < ranks.length; i++) {
+            result[ranks[i].eng_name] = ranks[i]
+        }
+        return new SuccessModel({ msg: '获取成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取失败', data: err.message })
+    }
 }
 
 /**
@@ -61,12 +72,12 @@ async function getRegionTree() {
  * @param {Number} create_end_time 事项创建时间的终止时间
  * @param {Number} release_start_time 事项发布时间的起始时间
  * @param {Number} release_end_time 事项发布时间的终止时间
- * @param {Array<String>} item_id 事项id
+ * @param {String} item_name 事项名称
  * @param {Array<String>} task_code 事项指南实施编码
  * @param {Array<Number>} item_status 事项状态
- * @param {Array<String>} item_rule_id 事项规则id
  * @param {Array<String>} rule_id 规则id
  * @param {Array<String>} region_code 区划编码
+ * @param {Array<String>} region_id 区划id
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns
@@ -76,24 +87,23 @@ async function getItems({
     create_end_time = null,
     release_start_time = null,
     release_end_time = null,
-    item_id = null,
+    item_name = null,
     task_code = null,
     item_status = null,
     rule_id = null,
     region_code = null,
+    region_id = null,
     page_size = null,
     page_num = null
 }) {
     try {
         var query = {}
-        if (item_id !== null) query.item_id = { $in: item_id }
+        if (item_name !== null) query.item_name = { $regex: item_name }
         if (task_code !== null) query.task_code = { $in: task_code }
-        else query.task_code = { $ne: 'null' }
         if (item_status !== null) query.item_status = { $in: item_status }
         if (rule_id !== null) query.rule_id = { $in: rule_id }
-        else query.rule_id = { $ne: 'null' }
         if (region_code !== null) query.region_code = { $in: region_code }
-        else query.region_code = { $ne: 'null' }
+        if (region_id !== null) query.region_id = { $in: region_id }
         create_start_time = (create_start_time !== null) ? create_start_time : 0
         create_end_time = (create_end_time !== null) ? create_end_time : 9999999999999
         query.create_time = { $gte: create_start_time, $lte: create_end_time }
@@ -449,7 +459,7 @@ async function getRegions({
 
 /**
  * 创建事项
- * @param {Array<Object>} items 待创建的事项（可以传三个字段，事项指南编码、规则id和区划编码）
+ * @param {Array<Object>} items 待创建的事项（传三个字段，事项指南编码、规则id和区划编码）
  * @returns
  */
 async function createItems({
@@ -459,27 +469,9 @@ async function createItems({
         if (items === null) {
             throw new Error('至少需要items属性，且该属性是一个数组')
         }
-        if (items.length <= 0) {
+        if (!items.length || items.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
-        //检查桩
-        var stakes = await modelItem.find({
-            task_code: 'null',
-            rule_id: 'null',
-            region_code: 'null'
-        }, { _id: 0, __v: 0 })
-        if (stakes.length !== 1) {
-            await createItemStake()
-            stakes = await modelItem.find({
-                task_code: 'null',
-                rule_id: 'null',
-                region_code: 'null'
-            }, { _id: 0, __v: 0 })
-        }
-        //暂时删除桩
-        var stake = stakes[0]
-        await modelItem.deleteOne({ item_id: stake.item_id })
-        var maxValue = parseInt(stake.item_id)
         //遍历数组创建事项
         var newData = []
         for (let i = 0; i < items.length; i++) {
@@ -489,27 +481,23 @@ async function createItems({
                 rule_id = null,
                 region_code = null
             } = items[i]
+            if (task_code === null || rule_id === null || region_code === null) {
+                throw new Error('task_code、rule_id和region_code必须同时存在')
+            }
+            let task = await modelTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
+            if (task === null) {
+                throw new Error('task_code不存在: ' + task_code)
+            }
             newData.push({
-                item_id: maxValue.toString(),
-                task_code: (task_code !== null) ? task_code : '',
-                rule_id: (rule_id !== null) ? rule_id : '',
-                region_code: (region_code !== null) ? region_code : ''
+                item_name: task.task_name,
+                task_code: task_code,
+                rule_id: rule_id,
+                region_code: region_code
             })
             maxValue = maxValue + 1
         }
         //批量创建
         var result = await modelItem.create(newData)
-        //创建桩
-        try {
-            await modelItem.create({
-                item_id: maxValue.toString(),
-                task_code: 'null',
-                rule_id: 'null',
-                region_code: 'null'
-            })
-        } catch (e) {
-            return new SuccessModel({ msg: '创建事项成功', data: result })
-        }
         //返回结果
         return new SuccessModel({ msg: '创建事项成功', data: result })
     } catch (err) {
@@ -518,45 +506,8 @@ async function createItems({
 }
 
 /**
- * 创建item表的桩（非外部接口）
- */
-async function createItemStake() {
-    try {
-        //先删除全部桩
-        await modelItem.deleteMany({
-            task_code: 'null',
-            rule_id: 'null',
-            region_code: 'null'
-        })
-        //计算桩的item_id
-        var items = await modelItem.find({
-            task_code: { $ne: 'null' },
-            rule_id: { $ne: 'null' },
-            region_code: { $ne: 'null' }
-        }, { _id: 0, __v: 0 })
-        var maxValue = 0
-        for (let i = 0; i < items.length; i++) {
-            var num = parseInt(items[i].item_id)
-            if (maxValue <= num) {
-                maxValue = num
-            }
-        }
-        maxValue = maxValue + 1
-        //创建桩
-        await modelItem.create({
-            item_id: maxValue.toString(),
-            task_code: 'null',
-            rule_id: 'null',
-            region_code: 'null'
-        })
-    } catch (err) {
-        throw new Error(err.message)
-    }
-}
-
-/**
  * 删除事项
- * @param {Array<String>} items 待删除的事项（_id）
+ * @param {Array<String>} items 待删除的事项
  * @returns
  */
 async function deleteItems({
@@ -566,7 +517,7 @@ async function deleteItems({
         if (items === null) {
             throw new Error('需要items字段，且该字段是一个数组')
         }
-        if (items.length <= 0) {
+        if (!items.length || items.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
         for (let i = 0; i < items.length; i++) {
@@ -586,13 +537,12 @@ async function deleteItems({
 
 /**
  * 更新事项
- * @param {Array<Object} items 待更新的事项（不更新的字段传null，记得传_id）
+ * @param {Array<Object} items 待更新的事项
  * @returns
  */
 async function updateItems({
     items = null
 }) {
-    var modifiedCount = 0
     try {
         if (items === null) {
             throw new Error('请求体中需要一个items属性，且该属性是一个数组')
@@ -600,6 +550,7 @@ async function updateItems({
         if (items.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        var bulkOps = []
         for (let i = 0; i < items.length; i++) {
             let {
                 _id = null,
@@ -620,10 +571,16 @@ async function updateItems({
             if (task_code !== null) newData.task_code = task_code
             if (rule_id !== null) newData.rule_id = rule_id
             if (region_code !== null) newData.region_code = region_code
-            await modelItem.updateOne({ _id: _id }, newData)
-            modifiedCount += 1
+            bulkOps.push({
+                updateOne: {
+                    filter: { _id: _id },
+                    update: newData
+                }
+            })
         }
-        return new SuccessModel({ msg: '更新成功', data: modifiedCount })
+        //批量更新
+        var result = await modelItem.bulkWrite(bulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
     }
@@ -759,7 +716,7 @@ async function getRules({
  * @param {String} region_code 区划编码
  * @param {String} region_name 区划名称
  * @param {String} region_level 区划等级
- * @param {String} parentCode 上级区划的区划编码（必须是已有的区划）
+ * @param {String} parentId 上级区划的_id（必须是已有的区划）
  * @returns
  */
 async function createRegion({
@@ -794,7 +751,7 @@ async function createRegion({
 
 /**
  * 删除区划
- * @param {Array<String>} regions 待删除的区划（用_id删除）
+ * @param {Array<String>} regions 待删除的区划
  * @returns
  */
 async function deleteRegions({
@@ -823,13 +780,12 @@ async function deleteRegions({
 
 /**
  * 更新区划
- * @param {Array<Object>} regions 待更新的区划（不更新的字段传null，记得传_id）
+ * @param {Array<Object>} regions 待更新的区划
  * @returns
  */
 async function updateRegions({
     regions = null
 }) {
-    var modifiedCount = 0
     try {
         if (regions === null) {
             throw new Error('请求体中需要一个regions属性，且该属性是一个数组')
@@ -837,6 +793,8 @@ async function updateRegions({
         if (regions.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        var regionBulkOps = []
+        var itemBulkOps = []
         for (let i = 0; i < regions.length; i++) {
             //解构，没有的字段默认是null
             let {
@@ -856,14 +814,33 @@ async function updateRegions({
             }
             //更新region（差量）
             let newData = {}
-            if (region_code !== null) newData.region_code = region_code
+            if (region_code !== null) {
+                let r = await modelRegion.findOne({ region_code: region_code }, { __v: 0 })
+                if (r !== null) {
+                    throw new Error('region_code已存在，更新失败: ' + region_code)
+                }
+                newData.region_code = region_code
+                itemBulkOps.push({
+                    updateMany: {
+                        filter: { region_id: _id },
+                        update: { region_code: region_code }
+                    }
+                })
+            }
             if (region_name !== null) newData.region_name = region_name
             if (region_level !== null) newData.region_level = region_level
             if (parentId !== null) newData.parentId = parentId
-            await modelRegion.updateOne({ _id: _id }, newData)
-            modifiedCount += 1
+            regionBulkOps.push({
+                updateOne: {
+                    filter: { _id: _id },
+                    update: newData
+                }
+            })
         }
-        return new SuccessModel({ msg: '更新成功', data: modifiedCount })
+        //批量更新
+        var result = await modelRegion.bulkWrite(regionBulkOps)
+        var result1 = await modelItem.bulkWrite(itemBulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
     }
@@ -875,14 +852,27 @@ async function updateRegions({
  * @returns 
  */
 async function changeItemStatus({
+    user_id = null,
     items = null
 }) {
     try {
-        if (items === null) {
-            throw new Error('调用changeItemStatus必须有array字段')
+        if (user_id === null || items === null) {
+            throw new Error('调用changeItemStatus必须有user_id和items字段')
         }
-        if (items.length && items.length <= 0) {
-            throw new Error('数组长度小于等于0')
+        if (!items.length || items.length <= 0) {
+            throw new Error('不是数组或数组长度小于等于0')
+        }
+        //确认用户身份
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('用户不存在')
+        }
+        var userRank = await modelUserRank.findOne({ id: user.user_rank }, { _id: 0, __v: 0 })
+        //确认用户可操作事项状态
+        var can_operate = userRank.can_operate
+        if (userRank.can_operate_temp[user_id]) {
+            //针对某个用户修改过权限
+            can_operate = userRank.can_operate_temp[user_id]
         }
         var bulkOps = []
         for (let i = 0, len = items.length; i < len; i++) {
@@ -891,11 +881,12 @@ async function changeItemStatus({
             if (item_id === null || next_status === null) {
                 throw new Error('调用changeItemStatus必须有item_id和next_status字段')
             }
-            //查询事项现在的状态，判断能否变为next_status
+            //查询事项现在的状态
             var item = await modelItem.findOne({ item_id: item_id }, { __v: 0 })
             if (item === null) {
                 throw new Error('item_id不存在: ' + item_id)
             }
+            //判断能否变为next_status
             var keys = Object.keys(itemStatus)
             for (let j = 0; j < keys.length; j++) {
                 var status = itemStatus[keys[j]]
@@ -905,6 +896,9 @@ async function changeItemStatus({
                 }
                 if (status.next_status.includes(next_status) === false) {
                     throw new Error('事项所处状态无法变到指定状态: ' + item_id)
+                }
+                if (can_operate.includes(status.id) === false) {
+                    throw new Error('该用户无法修改状态为\"' + status.name + '\"的事项')
                 }
                 //加到数组中，后续一起更新
                 bulkOps.push({
@@ -923,6 +917,103 @@ async function changeItemStatus({
     }
 }
 
+/**
+ * 更新用户身份
+ * @param {Array<Object>} user_rank 待更新的用户身份
+ * @returns 
+ */
+async function updateUserRank({
+    user_rank = null
+}) {
+    try {
+        if (user_rank === null) {
+            throw new Error('调用updateUserRank需要user_rank数组')
+        }
+        if (!user_rank.length || user_rank.length <= 0) {
+            throw new Error('不是数组或数组长度小于等于0')
+        }
+        //更新用户身份
+        var bulkOps = []
+        for (let i = 0; i < user_rank.length; i++) {
+            var {
+                id = null,
+                cn_name = null,
+                can_see = null,
+                can_operate = null
+            } = user_rank[i]
+            if (id === null) {
+                throw new Error('缺少id')
+            }
+            var newData = {}
+            if (cn_name !== null) newData.cn_name = cn_name
+            if (can_see !== null) newData.can_see = can_see
+            if (can_operate !== null) newData.can_operate = can_operate
+            bulkOps.push({
+                updateOne: {
+                    filter: { id: id },
+                    update: newData
+                }
+            })
+        }
+        //批量更新
+        var result = await modelUserRank.bulkWrite(bulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '更新失败', data: err.message })
+    }
+}
+
+async function changeUserRankTemporary({
+    array = null
+}) {
+    try {
+        if (array === null) {
+            throw new Error('调用changeUserRankTemporary需要array字段')
+        }
+        if (!array.length || array.lengt <= 0) {
+            throw new Error('不是数组或数组长度小于等于0')
+        }
+        var userRank = await modelUserRank.find({}, { _id: 0, __v: 0 })
+        var needChange = {}
+        for (let i = 0; i < array.length; i++) {
+            var {
+                user_id = null,
+                can_see_temp = null,
+                can_operate_temp = null
+            } = array[i]
+            var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+            if (user === null) {
+                throw new Error('用户不存在')
+            }
+            for (let j = 0; j < userRank.length; j++) {
+                if (userRank[j].id === user.user_rank) {
+                    needChange[userRank[j].id] = j
+                    if (can_see_temp !== null) userRank[j]._doc.can_see_temp[user_id] = can_see_temp
+                    if (can_operate_temp !== null) userRank[j]._doc.can_operate_temp[user_id] = can_operate_temp
+                    break
+                }
+            }
+        }
+        var bulkOps = []
+        var keys = Object.keys(needChange)
+        for (let i = 0; i < keys.length; i++) {
+            bulkOps.push({
+                updateOne: {
+                    filter: { id: keys[i] },
+                    update: {
+                        can_see_temp: userRank[needChange[keys[i]]]._doc.can_see_temp,
+                        can_operate_temp: userRank[needChange[keys[i]]]._doc.can_operate_temp
+                    }
+                }
+            })
+        }
+        var result = await modelUserRank.bulkWrite(bulkOps)
+        return new SuccessModel({ msg: '修改成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '修改失败', data: err.message })
+    }
+}
+
 module.exports = {
     getItemStatusScheme,
     getUserRankSchema,
@@ -932,6 +1023,7 @@ module.exports = {
     createItems,
     deleteItems,
     updateItems,
+    changeItemStatus,
     getRules,
     createRules,
     deleteRules,
