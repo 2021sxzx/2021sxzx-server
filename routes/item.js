@@ -130,4 +130,10 @@ router.post('/v1/getItemGuide', async (req, res, next) => {
     res.json(data)
 })
 
+router.post('/v1/getItemGuides', async (req, res, next) => {
+    let data = await itemController.getItemGuides(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 module.exports = router
