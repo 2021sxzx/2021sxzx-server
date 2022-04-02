@@ -984,7 +984,7 @@ async function changeItemStatus({
                 throw new Error('调用changeItemStatus必须有item_id和next_status字段')
             }
             //查询事项现在的状态
-            var item = await modelItem.findOne({ item_id: item_id }, { __v: 0 })
+            var item = await modelItem.findOne({ _id: item_id }, { __v: 0 })
             if (item === null) {
                 throw new Error('item_id不存在: ' + item_id)
             }
@@ -1005,7 +1005,7 @@ async function changeItemStatus({
                 //加到数组中，后续一起更新
                 bulkOps.push({
                     updateOne: {
-                        filter: { item_id: item_id },
+                        filter: { _id: item_id },
                         update: { item_status: next_status }
                     }
                 })
