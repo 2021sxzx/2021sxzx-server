@@ -268,7 +268,7 @@ async function deleteRules({
         //检查是否有事项指南与规则绑定
         var items = await modelItem.find({ rule_id: { $in: rules } }, { __v: 0 })
         if (items.length > 0) {
-            return new ErrorModel({ msg: '删除规则失败，有与其绑定的事项还未处理', data: items })
+            return new SuccessModel({ msg: '删除规则失败，有与其绑定的事项还未处理', data: {code: 999, items: items} })
         }
         //批量删除
         var result = await modelRule.deleteMany({ rule_id: { $in: rules } })
@@ -397,10 +397,10 @@ async function getItemGuides({
             throw new Error('page_size和page_num需要一起传')
         }
         if (page_size !== null && page_num !== null) {
-            var result = await modelTempTask.find({ task_status: task_status }, { task_code: 1 }).skip(page_size * page_num).limit(page_size)
+            var result = await modelTempTask.find({ task_status: task_status }, { task_code: 1, task_name: 1 }).skip(page_size * page_num).limit(page_size)
             return new SuccessModel({ msg: '查询成功', data: result })
         }
-        var result = await modelTempTask.find({ task_status: task_status }, { task_code: 1 })
+        var result = await modelTempTask.find({ task_status: task_status }, { task_code: 1, task_name: 1 })
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -866,13 +866,19 @@ async function deleteRegions({
         if (regions.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
-        //判断region_code的合法性
+        //判断region_id的合法性
         for (let i = 0; i < regions.length; i++) {
             var rs = await modelRegion.findOne({ _id: regions[i] }, { __v: 0 })
             if (rs === null) {
-                throw new Error('region_code不存在: ' + regions[i])
+                throw new Error('region_id不存在: ' + regions[i])
             }
         }
+        //检查是否有事项指南与区划绑定
+        var items = await modelItem.find({ region_id: { $in: regions } }, { __v: 0 })
+        if (items.length > 0) {
+            return new SuccessModel({ msg: '删除区划失败，有与其绑定的事项还未处理', data: {code: 999, items: items} })
+        }
+        //批量删除
         await modelRegion.deleteMany({ _id: { $in: regions } })
         return new SuccessModel({ msg: '删除成功' })
     } catch (err) {
@@ -1009,6 +1015,7 @@ async function changeItemStatus({
                         update: { item_status: next_status }
                     }
                 })
+                break
             }
         }
         //批量更新
