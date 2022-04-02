@@ -977,6 +977,7 @@ async function changeItemStatus({
             can_operate = userRank.can_operate_temp[user_id]
         }
         var bulkOps = []
+        var itemStatus = await modelItemStatus.find({}, { _id: 0, __v: 0 })
         for (let i = 0, len = items.length; i < len; i++) {
             //解构，默认null
             var { item_id = null, next_status = null } = items[i]
@@ -989,11 +990,10 @@ async function changeItemStatus({
                 throw new Error('item_id不存在: ' + item_id)
             }
             //判断能否变为next_status
-            var keys = Object.keys(itemStatus)
-            for (let j = 0; j < keys.length; j++) {
-                var status = itemStatus[keys[j]]
+            for (let j = 0; j < itemStatus.length; j++) {
+                var status = itemStatus[j]
                 if (status.id !== item.item_status) {
-                    if (j === keys.length - 1) throw new Error('itemStatus表和数据库中已有的事项状态对不上')
+                    if (j === itemStatus.length - 1) throw new Error('itemStatus表和数据库中已有的事项状态对不上')
                     continue
                 }
                 if (status.next_status.includes(next_status) === false) {
