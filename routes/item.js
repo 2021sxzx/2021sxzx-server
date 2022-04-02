@@ -58,6 +58,12 @@ router.post('/v1/updateItems', async (req, res, next) => {
     res.json(data)
 })
 
+router.post('/v1/changeItemStatus', async (req, res, next) => {
+    let data = await itemController.changeItemStatus(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 router.post('/v1/getRules', async (req, res, next) => {
     let data = await itemController.getRules(req.body)
     setStatusCode(res, data)
