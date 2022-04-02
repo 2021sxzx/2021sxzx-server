@@ -6,14 +6,23 @@ const modelTask = require('../model/task')
 const modelTempTask = require('../model/tempTasks')
 const modelUserRank = require('../model/userRank')
 const modelUsers = require('../model/users')
-const itemStatus = require('../config/itemStatus')
+const modelItemStatus = require('../model/itemStatus')
 
 /**
  * 获取事项状态表
  * @returns 
  */
 async function getItemStatusScheme() {
-    return new SuccessModel({ msg: '获取成功', data: itemStatus })
+    try {
+        var status = await modelItemStatus.find({}, { _id: 0, __v: 0 })
+        var result = {}
+        for (let i = 0; i < status.length; i++) {
+            result[status[i].eng_name] = status[i]
+        }
+        return new SuccessModel({ msg: '获取成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取失败', data: err.message })
+    }
 }
 
 /**
@@ -257,7 +266,7 @@ async function deleteRules({
             }
         }
         //检查是否有事项指南与规则绑定
-        var items = await modelItem.find({ rule_id: { $in: rules }}, { __v: 0 })
+        var items = await modelItem.find({ rule_id: { $in: rules } }, { __v: 0 })
         if (items.length > 0) {
             return new ErrorModel({ msg: '删除规则失败，有与其绑定的事项还未处理', data: items })
         }
