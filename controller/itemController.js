@@ -524,16 +524,19 @@ async function createItems({
                 region_id = null
             } = items[i]
             if (task_code === null || rule_id === null || region_code === null || region_id === null) {
-                throw new Error('task_code、rule_id和region_code必须同时存在')
+                throw new Error('task_code、rule_id、region_code和region_id必须同时存在')
             }
+            //检查task_code的合法性
             let task = await modelTempTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
             if (task === null) {
                 throw new Error('task_code不存在: ' + task_code)
             }
+            //检查rule_id的合法性
             let rule = await modelRule.exists({ rule_id: rule_id })
             if (rule === null) {
                 throw new Error('rule_id不存在: ' + rule_id)
             }
+            //检查region_code和region_id的合法性
             let region = await modelRegion.findOne({ region_code: region_code })
             if (region === null) {
                 throw new Error('region_code不存在: ' + region_code)
@@ -615,6 +618,7 @@ async function updateItems({
         var bulkOps = []
         var taskBulkOps = []
         for (let i = 0; i < items.length; i++) {
+            //解构，默认null
             let {
                 _id = null,
                 task_code = null,
@@ -628,7 +632,7 @@ async function updateItems({
             //判断_id的合法性
             let item = await modelItem.exists({ _id: _id })
             if (item === null) {
-                throw new Error('_id错误: ' + _id)
+                throw new Error('_id不存在: ' + _id)
             }
             //更新item（差量）
             var newData = {}
@@ -667,10 +671,11 @@ async function updateItems({
                 if (region === null) {
                     throw new Error('region_code不存在')
                 }
-                if (region.region_id !== region_id) {
+                if (region._id !== region_id) {
                     throw new Error('region_code和region_id不匹配')
                 }
                 newData.region_code = region_code
+                newData.region_id = region_id
             }
             bulkOps.push({
                 updateOne: {
