@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const {
-    getAllSystemLogDetail,
-    getSearchSystemLog,
-    showSystemLogController,
-    getCpuPercentageController
+    getCpuPercentageController,
+    getMemoryController,
+    getDiskController
   } = require("../controller/systemResourceController")
 
 function setStatusCode(res,data) {
@@ -15,44 +14,39 @@ function setStatusCode(res,data) {
   }
 }
 
-/* 系统日志相关的路由处理. */
+/* 资源管理相关的路由处理. */
 
 /**
  * 获取cpu占用率
  */
  router.get('/v1/showCpuPercentage', async (req,res,next) => {
     let data = await getCpuPercentageController()
+    // data="type:"+Object.prototype.toString.call(data)
     setStatusCode(res,data)
     res.json(data)
+    // res.json(Object.prototype.toString.call(data))
   })
 
 /**
- * show系统日志的获取
+ * 获取内存占用率
  */
- router.get('/v1/show', async (req,res,next) => {
-  let data = await showSystemLogController()
+ router.get('/v1/showMemory', async (req,res,next) => {
+  let data = await getMemoryController()
+  // data="type:"+Object.prototype.toString.call(data)
   setStatusCode(res,data)
   res.json(data)
+  // res.json(Object.prototype.toString.call(data))
 })
 
 /**
- * 系统日志的获取
+ * 获取磁盘占用率
  */
- router.get('/v1/log', async (req,res,next) => {
-  let data = await getAllSystemLogDetail()
+ router.get('/v1/showDisk', async (req,res,next) => {
+  let data = await getDiskController()
+  // data="type:"+Object.prototype.toString.call(data)
   setStatusCode(res,data)
   res.json(data)
+  // res.json(Object.prototype.toString.call(data))
 })
-
-/**
- * 搜索功能
- */
-router.post('/v1/searchLog',async (req,res,next) => {
-  let searchData = req.body
-  let data = await getSearchSystemLog(searchData)
-  setStatusCode(res,data)
-  res.json(data)
-})
-
 
 module.exports = router;
