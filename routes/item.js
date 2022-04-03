@@ -10,6 +10,18 @@ function setStatusCode(res, data) {
     }
 }
 
+router.get('/v1/getItemStatusScheme', async (req, res, next) => {
+    let data = await itemController.getItemStatusScheme()
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/getUserRankSchema', async (req, res, next) => {
+    let data = await itemController.getUserRankSchema()
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 router.get('/v1/getRuleTree', async (req, res, next) => {
     let data = await itemController.getRuleTree()
     setStatusCode(res, data)
@@ -42,6 +54,12 @@ router.post('/v1/deleteItems', async (req, res, next) => {
 
 router.post('/v1/updateItems', async (req, res, next) => {
     let data = await itemController.updateItems(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/changeItemStatus', async (req, res, next) => {
+    let data = await itemController.changeItemStatus(req.body)
     setStatusCode(res, data)
     res.json(data)
 })
@@ -114,6 +132,12 @@ router.post('/v1/getChildRegionsByRuleAndRegion', async (req, res, next) => {
 
 router.post('/v1/getItemGuide', async (req, res, next) => {
     let data = await itemController.getItemGuide(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/getItemGuides', async (req, res, next) => {
+    let data = await itemController.getItemGuides(req.body)
     setStatusCode(res, data)
     res.json(data)
 })

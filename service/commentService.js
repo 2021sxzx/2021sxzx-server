@@ -1,6 +1,6 @@
 const comment = require("../model/comment")
 const item = require("../model/item")
-const itemRule = require("../model/itemRule")
+// const itemRule = require("../model/itemRule")
 const task = require("../model/task")
 const rule = require("../model/rule")
 
@@ -132,15 +132,15 @@ async function getTask(item_id){
  * @param item_id 事项编码
  * @returns {Promise<*>}
  */
-async function getItemRule(item_id) {
-  try {
-    let itemData = await getItem(item_id)
-    let data = await itemRule.find({item_rule_id: itemData.item_rule_id})
-    return data[0]
-  } catch (e) {
-    return e.message
-  }
-}
+// async function getItemRule(item_id) {
+//   try {
+//     let itemData = await getItem(item_id)
+//     let data = await itemRule.find({item_rule_id: itemData.item_rule_id})
+//     return data[0]
+//   } catch (e) {
+//     return e.message
+//   }
+// }
 
 /**
  * 查找事项的方法

@@ -21,5 +21,5 @@ const ruleSchema = new mongoose.Schema({
     }
 })
 
-const rule = mongoose.model('rule', ruleSchema, 'rule')
+const rule = mongoose.model('rule', ruleSchema, 'tempRule')
 module.exports = rule

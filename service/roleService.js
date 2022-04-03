@@ -29,7 +29,7 @@ async function addRole (role_name, role_describe, permission_identifier_array) {
     // })
 
     // 往权限角色关联表里面添加关联
-
+    
     permission_identifier_array.forEach((item) => {
       roleMapPermission.create({
         role_name: role_name,
@@ -121,7 +121,7 @@ async function updateRole (role_name_old, role_name, role_describe) {
  *    isDeleted,
  *    data
  * }
- */ 
+ */
 async function deleteRole (role_name, role_describe) {
   try {
     const selectRoleMap = await users.find({

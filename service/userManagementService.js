@@ -1,5 +1,4 @@
 const users = require('../model/users')
-const roleMapPermission = require('../model/roleMapPermission')
 
 /**
  * 添加后台用户
@@ -8,8 +7,12 @@ const roleMapPermission = require('../model/roleMapPermission')
  */
 async function addUser (userInfo) {
   try {
-    let res = await users.create(userInfo)
-    return res
+    const res = await users.find(userInfo);
+    console.log(!res);
+    if (!!res) {
+      return;
+    }
+    return await users.create(userInfo)
   } catch (e) {
     throw e.message
   }
@@ -21,16 +24,16 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    let res = await users.find({}, {
+    return await users.find({}, {
+      _id: 1,
       user_name: 1,
       password: 1,
       role_name: 1,
       account: 1,
-
+      activation_status: 1
     })
-    return res
   } catch (e) {
-    throw e.message 
+    throw e.message
   }
 }
 
@@ -45,16 +48,16 @@ async function getUserList () {
  */
 async function updateUser (user_name, password, role_name, account, new_account) {
   try {
-    let res = await users.updateOne({
+    return await users.updateOne({
       account: account
     }, {
+      // _id: 1,
       user_name: user_name,
       password: password,
       role_name: role_name,
       account: new_account,
       activation_status: 1
     })
-    return res
   } catch (e) {
     throw e.message
   }
@@ -62,45 +65,46 @@ async function updateUser (user_name, password, role_name, account, new_account)
 
 /**
  * 删除角色
- * @param {*} account 
- * @returns 
+ * @param {*} account
+ * @returns
  */
 async function deleteUser (account) {
   try {
-    let res = await users.deleteOne({
+    return await users.deleteOne({
       account
     })
-    return res
   } catch (e) {
     throw e.message
   }
 }
 
 /**
- * 修改角色
- * @param {*} searchValue 
- * @returns 
+ * 查找角色
+ * @param {*} searchValue
+ * @returns
  */
 // TODO (钟卓江=>林凯迪):原型上是对每个属性值分别查，不是混在一起查
 async function searchUser (searchValue) {
   const reg = new RegExp(searchValue, 'i')
   try {
-    let res = await users.find({
+    return await users.find({
       $or: [
         {
-          user_name: { $regex : reg }
-        },{
-          account: { $regex : reg }
+          user_name: {$regex: reg}
+        }, {
+          account: {$regex: reg}
+        }, {
+          role_name: {$regex: reg}
         }
       ]
     }, {
+      _id: 1,
       user_name: 1,
       password: 1,
       role_name: 1,
       account: 1,
       activation_status: 1
     })
-    return res
   } catch (e) {
     throw e.message
   }
@@ -108,12 +112,11 @@ async function searchUser (searchValue) {
 
 async function isActivation (account) {
   try {
-    let res = await users.findOne({
+    return await users.findOne({
       account
     }, {
       activation_status: 1
-    })
-    return res;
+    });
   } catch {
     throw e.message
   }
@@ -128,7 +131,6 @@ async function setActivation (account) {
       activation_status: 1
     })
     let tmp = res.activation_status === 1 ? 0 : 1;
-    console.log(tmp);
     await users.updateOne({
       account
     }, {
@@ -137,10 +139,11 @@ async function setActivation (account) {
     res = await users.findOne({
       account
     }, {
+      _id: 1,
       account: 1,
       activation_status: 1
     })
-    
+
     return res
   } catch (e) {
     throw e.message

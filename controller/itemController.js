@@ -3,6 +3,44 @@ const modelItem = require('../model/item')
 const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
 const modelTask = require('../model/task')
+const modelTempTask = require('../model/tempTasks')
+const modelUserRank = require('../model/userRank')
+const modelUsers = require('../model/users')
+const modelItemStatus = require('../model/itemStatus')
+
+/**
+ * 获取事项状态表
+ * @returns 
+ */
+async function getItemStatusScheme() {
+    try {
+        var status = await modelItemStatus.find({}, { _id: 0, __v: 0 })
+        var result = {}
+        for (let i = 0; i < status.length; i++) {
+            result[status[i].eng_name] = status[i]
+        }
+        return new SuccessModel({ msg: '获取成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取失败', data: err.message })
+    }
+}
+
+/**
+ * 获取用户身份表
+ * @returns 
+ */
+async function getUserRankSchema() {
+    try {
+        var ranks = await modelUserRank.find({}, { _id: 0, __v: 0 })
+        var result = {}
+        for (let i = 0; i < ranks.length; i++) {
+            result[ranks[i].eng_name] = ranks[i]
+        }
+        return new SuccessModel({ msg: '获取成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取失败', data: err.message })
+    }
+}
 
 /**
  * 获取规则树
@@ -44,12 +82,12 @@ async function getRegionTree() {
  * @param {Number} create_end_time 事项创建时间的终止时间
  * @param {Number} release_start_time 事项发布时间的起始时间
  * @param {Number} release_end_time 事项发布时间的终止时间
- * @param {Array<String>} item_id 事项id
+ * @param {String} item_name 事项名称
  * @param {Array<String>} task_code 事项指南实施编码
  * @param {Array<Number>} item_status 事项状态
- * @param {Array<String>} item_rule_id 事项规则id
  * @param {Array<String>} rule_id 规则id
  * @param {Array<String>} region_code 区划编码
+ * @param {Array<String>} region_id 区划id
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns
@@ -59,48 +97,42 @@ async function getItems({
     create_end_time = null,
     release_start_time = null,
     release_end_time = null,
-    item_id = null,
+    item_name = null,
     task_code = null,
     item_status = null,
     rule_id = null,
     region_code = null,
+    region_id = null,
     page_size = null,
     page_num = null
 }) {
     try {
         var query = {}
-        if (item_id !== null) query.item_id = { $in: item_id }
+        if (item_name !== null) query.item_name = { $regex: item_name }
         if (task_code !== null) query.task_code = { $in: task_code }
-        else query.task_code = { $ne: 'null' }
         if (item_status !== null) query.item_status = { $in: item_status }
         if (rule_id !== null) query.rule_id = { $in: rule_id }
-        else query.rule_id = { $ne: 'null' }
         if (region_code !== null) query.region_code = { $in: region_code }
-        else query.region_code = { $ne: 'null' }
+        if (region_id !== null) query.region_id = { $in: region_id }
         create_start_time = (create_start_time !== null) ? create_start_time : 0
         create_end_time = (create_end_time !== null) ? create_end_time : 9999999999999
         query.create_time = { $gte: create_start_time, $lte: create_end_time }
         release_start_time = (release_start_time !== null) ? release_start_time : 0
         release_end_time = (release_end_time !== null) ? release_end_time : 9999999999999
         query.release_time = { $gte: release_start_time, $lte: release_end_time }
-        var res = await modelItem.find(query, { __v: 0 })
+        if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
+            throw new Error('page_size和page_num需要一起传')
+        }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
-            if (page_size < res.length) {
-                var r = []
-                for (let i = 0; i < page_size; i++) {
-                    let index = page_size * page_num + i
-                    if (index >= res.length) break
-                    r.push(res[index])
-                }
-                var dict = {}
-                dict.data = r
-                dict.total = res.length
-                dict.page_size = page_size
-                dict.page_num = page_num
-                return new SuccessModel({ msg: '查询成功', data: dict })
-            }
+            var dict = {}
+            dict.data = await modelItem.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            dict.total = await modelItem.find(query).count()
+            dict.page_size = page_size
+            dict.page_num = page_num
+            return new SuccessModel({ msg: '查询成功', data: dict })
         }
+        var res = await modelItem.find(query, { __v: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -226,26 +258,21 @@ async function deleteRules({
         if (rules.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
-        // var needDelete = [] //需要删除的规则树节点的规则id
         for (let i = 0; i < rules.length; i++) {
             //判断rule_id的合法性
             let rule = await modelRule.findOne({ rule_id: rules[i] }, { _id: 0, __v: 0 })
             if (rule === null || rule.rule_name === 'null') {
                 throw new Error('rule_id错误: ' + rules[i])
             }
-            // var node = rule  //规则树节点
-            // while (true) {
-            //     needDelete.push(node.rule_id)
-            //     let brothers = await modelRule.find({ parentId: node.parentId }, { _id: 0, __v: 0 })
-            //     if (brothers.length > 1) break    //父节点有其他子节点，不需要删除
-            //     let parent = await modelRule.findOne({ rule_id: node.parentId }, { _id: 0, __v: 0 })
-            //     node = parent
-            // }
+        }
+        //检查是否有事项指南与规则绑定
+        var items = await modelItem.find({ rule_id: { $in: rules } }, { __v: 0 })
+        if (items.length > 0) {
+            return new SuccessModel({ msg: '删除规则失败，有与其绑定的事项还未处理', data: {code: 999, items: items} })
         }
         //批量删除
-        // await modelRule.deleteMany({ rule_id: { $in: needDelete } })
-        await modelRule.deleteMany({ rule_id: { $in: rules } })
-        return new SuccessModel({ msg: '删除规则成功' })
+        var result = await modelRule.deleteMany({ rule_id: { $in: rules } })
+        return new SuccessModel({ msg: '删除规则成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '删除规则失败', data: err.message })
     }
@@ -343,8 +370,38 @@ async function getItemGuide({
         if (task_code === null) {
             throw new Error('需要task_code字段')
         }
-        var res = await modelTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
+        var res = await modelTempTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
+    } catch (err) {
+        return new ErrorModel({ msg: '查询失败', data: err.message })
+    }
+}
+
+/**
+ * 获取事项指南，只返回task_code，仅用于获取已绑定或未绑定规则的事项指南
+ * @param {Number} task_status 事项指南状态（0或者1）
+ * @param {Number} page_size 页大小
+ * @param {Number} page_num 页码
+ * @returns 
+ */
+async function getItemGuides({
+    task_status = null,
+    page_size = null,
+    page_num = null
+}) {
+    try {
+        if (task_status === null) {
+            throw new Error('需要task_status')
+        }
+        if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
+            throw new Error('page_size和page_num需要一起传')
+        }
+        if (page_size !== null && page_num !== null) {
+            var result = await modelTempTask.find({ task_status: task_status }, { task_code: 1, task_name: 1 }).skip(page_size * page_num).limit(page_size)
+            return new SuccessModel({ msg: '查询成功', data: result })
+        }
+        var result = await modelTempTask.find({ task_status: task_status }, { task_code: 1, task_name: 1 })
+        return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
     }
@@ -367,16 +424,20 @@ async function getRegionPaths({
         }
         //读取一次数据库，建立dict，key是region_id，value是区划树节点
         var regions = await modelRegion.find({}, { __v: 0 })
-        var dic = {}
-        regions.forEach(function (value) { dic[value.region_code] = value })
+        var dicCode = {}
+        var dicId = {}
+        regions.forEach(function (value) {
+            dicCode[value.region_code] = value
+            dicId[value['_id']] = value
+        })
         //计算路径
         var res = {}
         for (let i = 0; i < region_code.length; i++) {
             let regionPath = []
-            let node = dic[region_code[i]] ? dic[region_code[i]] : null
+            let node = dicCode[region_code[i]] ? dicCode[region_code[i]] : null
             while (node !== null) {
                 regionPath.unshift(node)
-                node = dic[node.parentId] ? dic[node.parentId] : null
+                node = dicId[node.parentId] ? dicId[node.parentId] : null
             }
             res[region_code[i]] = regionPath
         }
@@ -407,14 +468,8 @@ async function getRegions({
     page_num = null
 }) {
     try {
-        if (region_code !== null) {
-            //region_code查找唯一区划
-            var regions = await modelRegion.find({
-                region_code: { $in: region_code }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: regions })
-        }
         var query = {}
+        if (region_code !== null) query.region_code = { $in: region_code }
         if (region_name !== null) query.region_name = { $regex: region_name }
         if (region_level !== null) query.region_level = { $in: region_level }
         if (parentId !== null) query.parentId = { $in: parentId }
@@ -424,22 +479,19 @@ async function getRegions({
             codes.forEach(function (value) { parentid.push(value['_id']) })
             query.parentId = { $in: parentid }
         }
-        var regions = await modelRegion.find(query, { __v: 0 })
+        if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
+            throw new Error('page_size和page_num需要一起传')
+        }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
-            var r = []
-            for (let i = 0; i < page_size; i++) {
-                let index = page_size * page_num + i
-                if (index >= regions.length) break
-                r.push(regions[index])
-            }
             var dict = {}
-            dict.data = r
-            dict.total = regions.length
+            dict.data = await modelRegion.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            dict.total = await modelRegion.find(query).count()
             dict.page_size = page_size
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
         }
+        var regions = await modelRegion.find(query, { __v: 0 })
         return new SuccessModel({ msg: '查询成功', data: regions })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -448,7 +500,7 @@ async function getRegions({
 
 /**
  * 创建事项
- * @param {Array<Object>} items 待创建的事项（可以传三个字段，事项指南编码、规则id和区划编码）
+ * @param {Array<Object>} items 待创建的事项（传三个字段，事项指南编码、规则id和区划编码）
  * @returns
  */
 async function createItems({
@@ -458,27 +510,9 @@ async function createItems({
         if (items === null) {
             throw new Error('至少需要items属性，且该属性是一个数组')
         }
-        if (items.length <= 0) {
+        if (!items.length || items.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
-        //检查桩
-        var stakes = await modelItem.find({
-            task_code: 'null',
-            rule_id: 'null',
-            region_code: 'null'
-        }, { _id: 0, __v: 0 })
-        if (stakes.length !== 1) {
-            await createItemStake()
-            stakes = await modelItem.find({
-                task_code: 'null',
-                rule_id: 'null',
-                region_code: 'null'
-            }, { _id: 0, __v: 0 })
-        }
-        //暂时删除桩
-        var stake = stakes[0]
-        await modelItem.deleteOne({ item_id: stake.item_id })
-        var maxValue = parseInt(stake.item_id)
         //遍历数组创建事项
         var newData = []
         for (let i = 0; i < items.length; i++) {
@@ -486,29 +520,40 @@ async function createItems({
             let {
                 task_code = null,
                 rule_id = null,
-                region_code = null
+                region_code = null,
+                region_id = null
             } = items[i]
+            if (task_code === null || rule_id === null || region_code === null || region_id === null) {
+                throw new Error('task_code、rule_id、region_code和region_id必须同时存在')
+            }
+            //检查task_code的合法性
+            let task = await modelTempTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
+            if (task === null) {
+                throw new Error('task_code不存在: ' + task_code)
+            }
+            //检查rule_id的合法性
+            let rule = await modelRule.exists({ rule_id: rule_id })
+            if (rule === null) {
+                throw new Error('rule_id不存在: ' + rule_id)
+            }
+            //检查region_code和region_id的合法性
+            let region = await modelRegion.findOne({ region_code: region_code })
+            if (region === null) {
+                throw new Error('region_code不存在: ' + region_code)
+            }
+            if (region._id !== region_id) {
+                throw new Error('region_code和region_id不匹配: ' + region_code + '\t' + region_id)
+            }
             newData.push({
-                item_id: maxValue.toString(),
-                task_code: (task_code !== null) ? task_code : '',
-                rule_id: (rule_id !== null) ? rule_id : '',
-                region_code: (region_code !== null) ? region_code : ''
+                item_name: task.task_name,
+                task_code: task_code,
+                rule_id: rule_id,
+                region_code: region_code,
+                region_id: region_id
             })
-            maxValue = maxValue + 1
         }
         //批量创建
         var result = await modelItem.create(newData)
-        //创建桩
-        try {
-            await modelItem.create({
-                item_id: maxValue.toString(),
-                task_code: 'null',
-                rule_id: 'null',
-                region_code: 'null'
-            })
-        } catch (e) {
-            return new SuccessModel({ msg: '创建事项成功', data: result })
-        }
         //返回结果
         return new SuccessModel({ msg: '创建事项成功', data: result })
     } catch (err) {
@@ -517,45 +562,8 @@ async function createItems({
 }
 
 /**
- * 创建item表的桩（非外部接口）
- */
-async function createItemStake() {
-    try {
-        //先删除全部桩
-        await modelItem.deleteMany({
-            task_code: 'null',
-            rule_id: 'null',
-            region_code: 'null'
-        })
-        //计算桩的item_id
-        var items = await modelItem.find({
-            task_code: { $ne: 'null' },
-            rule_id: { $ne: 'null' },
-            region_code: { $ne: 'null' }
-        }, { _id: 0, __v: 0 })
-        var maxValue = 0
-        for (let i = 0; i < items.length; i++) {
-            var num = parseInt(items[i].item_id)
-            if (maxValue <= num) {
-                maxValue = num
-            }
-        }
-        maxValue = maxValue + 1
-        //创建桩
-        await modelItem.create({
-            item_id: maxValue.toString(),
-            task_code: 'null',
-            rule_id: 'null',
-            region_code: 'null'
-        })
-    } catch (err) {
-        throw new Error(err.message)
-    }
-}
-
-/**
  * 删除事项
- * @param {Array<String>} items 待删除的事项（_id）
+ * @param {Array<String>} items 待删除的事项
  * @returns
  */
 async function deleteItems({
@@ -565,19 +573,28 @@ async function deleteItems({
         if (items === null) {
             throw new Error('需要items字段，且该字段是一个数组')
         }
-        if (items.length <= 0) {
+        if (!items.length || items.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        var updateTasks = []
         for (let i = 0; i < items.length; i++) {
             //判断item_id的合法性
             let item = await modelItem.findOne({ _id: items[i] }, { __v: 0 })
-            if (item === null || item.task_code === 'null' || item.rule_id === 'null' || item.region_code === 'null') {
+            if (item === null) {
                 throw new Error('_id错误: ' + items[i])
             }
+            //检查对应事项指南的状态是否需要更改
+            let count = await modelItem.find({ task_code: item.task_code, _id: { $ne: item._id } }).count()
+            if (count <= 0) {
+                //对应事项指南的状态改为未绑定
+                updateTasks.push(item.task_code)
+            }
         }
+        //批量更新
+        await modelTempTask.updateMany({ task_code: { $in: updateTasks } }, { task_status: 0 })
         //批量删除
-        await modelRule.deleteMany({ _id: { $in: items } })
-        return new SuccessModel({ msg: '删除成功' })
+        var result = await modelItem.deleteMany({ _id: { $in: items } })
+        return new SuccessModel({ msg: '删除成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '删除失败', data: err.message })
     }
@@ -585,13 +602,12 @@ async function deleteItems({
 
 /**
  * 更新事项
- * @param {Array<Object} items 待更新的事项（不更新的字段传null，记得传_id）
+ * @param {Array<Object} items 待更新的事项
  * @returns
  */
 async function updateItems({
     items = null
 }) {
-    var modifiedCount = 0
     try {
         if (items === null) {
             throw new Error('请求体中需要一个items属性，且该属性是一个数组')
@@ -599,30 +615,79 @@ async function updateItems({
         if (items.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        var bulkOps = []
+        var taskBulkOps = []
         for (let i = 0; i < items.length; i++) {
+            //解构，默认null
             let {
                 _id = null,
                 task_code = null,
                 rule_id = null,
-                region_code = null
+                region_code = null,
+                region_id = null
             } = items[i]
             if (_id === null) {
                 throw new Error('更新事项信息需要传_id')
             }
             //判断_id的合法性
-            let item = await modelItem.findOne({ _id: _id }, { __v: 0 })
-            if (item === null || item.task_code === 'null' || item.rule_id === 'null' || item.region_code === 'null') {
-                throw new Error('_id错误: ' + _id)
+            let item = await modelItem.exists({ _id: _id })
+            if (item === null) {
+                throw new Error('_id不存在: ' + _id)
             }
             //更新item（差量）
             var newData = {}
-            if (task_code !== null) newData.task_code = task_code
-            if (rule_id !== null) newData.rule_id = rule_id
-            if (region_code !== null) newData.region_code = region_code
-            await modelItem.updateOne({ _id: _id }, newData)
-            modifiedCount += 1
+            if (task_code !== null) {
+                //检查task_code的合法性
+                let task = await modelTempTask.exists({ task_code: task_code })
+                if (task === null) {
+                    throw new Error('task_code不存在: ' + task_code)
+                }
+                //检查是否需要更改对应事项指南的状态
+                let count = await modelItem.find({ task_code: task_code }).count()
+                if (count <= 1) {
+                    taskBulkOps.push({
+                        updateOne: {
+                            filter: { task_code: task_code },
+                            update: { task_status: 0 }
+                        }
+                    })
+                }
+                newData.task_code = task_code
+            }
+            if (rule_id !== null) {
+                //检查rule_id的合法性
+                let rule = await modelRule.exists({ rule_id: rule_id })
+                if (rule === null) {
+                    throw new Error('rule_id不存在: ' + rule_id)
+                }
+                newData.rule_id = rule_id
+            }
+            if (region_code !== null && region_id === null || region_code === null && region_id !== null) {
+                throw new Error('更改事项所属区划的时候需要同时传region_code和region_id')
+            }
+            if (region_code !== null && region_id !== null) {
+                //检查region_code的合法性
+                let region = await modelRegion.findOne({ region_code: region_code }, { __v: 0 })
+                if (region === null) {
+                    throw new Error('region_code不存在')
+                }
+                if (region._id !== region_id) {
+                    throw new Error('region_code和region_id不匹配')
+                }
+                newData.region_code = region_code
+                newData.region_id = region_id
+            }
+            bulkOps.push({
+                updateOne: {
+                    filter: { _id: _id },
+                    update: newData
+                }
+            })
         }
-        return new SuccessModel({ msg: '更新成功', data: modifiedCount })
+        //批量更新
+        var result1 = await modelTempTask.bulkWrite(taskBulkOps)
+        var result = await modelItem.bulkWrite(bulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
     }
@@ -650,43 +715,45 @@ async function getChildRegionsByRuleAndRegion({
         //保存结果
         var result = []
         //先判断该区划本身是否有匹配的事项
-        var res = await modelItem.find({
+        var res = await modelItem.exists({
             rule_id: rule_id,
             region_code: region_code
-        }, { _id: 0, __v: 0 })
+        })
         //有事项haveItem是1，否则是0
         region._doc.haveItem = 0
-        if (res.length > 0) {
+        if (res !== null) {
             region._doc.haveItem = 1
         }
         result.push(region._doc)
         //找出该区划的下级区划
         var childRegions = await modelRegion.find({ parentId: region['_id'] }, { __v: 0 })
-        childRegions.forEach(async function (value) {
+        for (let i = 0; i < childRegions.length; i++) {
+            var value = childRegions[i]
             //遍历区划，检查该区划包括其全部下级区划在内是否存在rule_id对应的事项
             var regionCodes = []
             var q = []
-            q.push(value)
+            q.push(value['_id'])
+            regionCodes.push(value.region_code)
             while (q.length > 0) {
-                let node = q.shift()
-                regionCodes.push(node.region_code)
-                let children = await modelRegion.find({ parentId: node['_id'] }, { __v: 0 })
-                if (children.length > 0) {
-                    q.push.apply(q, children)
+                let children = await modelRegion.find({ parentId: { $in: q } }, { __v: 0 })
+                q = []
+                for (let j = 0; j < children.length; j++) {
+                    q.push(children[j]['_id'])
+                    regionCodes.push(children[j].region_code)
                 }
             }
             //找出匹配的事项
-            var res = await modelItem.find({
+            var res = await modelItem.exists({
                 rule_id: rule_id,
                 region_code: { $in: regionCodes }
-            }, { _id: 0, __v: 0 })
+            })
             //子区划中有事项的haveItem是1，否则是0
             value._doc.haveItem = 0
-            if (res.length > 0) {
+            if (res !== null) {
                 value._doc.haveItem = 1
             }
             result.push(value._doc)
-        })
+        }
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -756,23 +823,23 @@ async function getRules({
  * @param {String} region_code 区划编码
  * @param {String} region_name 区划名称
  * @param {String} region_level 区划等级
- * @param {String} parentCode 上级区划的区划编码（必须是已有的区划）
+ * @param {String} parentId 上级区划的_id（必须是已有的区划）
  * @returns
  */
 async function createRegion({
     region_code = null,
     region_name = null,
     region_level = null,
-    parentCode = null
+    parentId = null
 }) {
     try {
-        if (region_code === null || region_name === null || region_level === null || parentCode === null) {
+        if (region_code === null || region_name === null || region_level === null || parentId === null) {
             throw new Error('创建区划的时候必须包括全部字段的信息，包括region_code、region_name、region_level和parentCode')
         }
         //创建区划
-        var parent = await modelRegion.findOne({ region_code: parentCode }, { __v: 0 })
+        var parent = await modelRegion.findOne({ _id: parentId }, { __v: 0 })
         if (parent === null) {
-            throw new Error('parentCode不存在: ' + parentCode)
+            throw new Error('parentId不存在: ' + parentId)
         }
         if (parent.region_level + 1 !== region_level) {
             throw new Error('region_level错误，上级区划的region_level是' + parent.region_level)
@@ -781,7 +848,7 @@ async function createRegion({
             region_code: region_code,
             region_name: region_name,
             region_level: region_level,
-            parentId: parent['_id']
+            parentId: parentId
         })
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
@@ -791,7 +858,7 @@ async function createRegion({
 
 /**
  * 删除区划
- * @param {Array<String>} regions 待删除的区划（用_id删除）
+ * @param {Array<String>} regions 待删除的区划
  * @returns
  */
 async function deleteRegions({
@@ -804,13 +871,19 @@ async function deleteRegions({
         if (regions.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
-        //判断region_code的合法性
+        //判断region_id的合法性
         for (let i = 0; i < regions.length; i++) {
             var rs = await modelRegion.findOne({ _id: regions[i] }, { __v: 0 })
             if (rs === null) {
-                throw new Error('region_code不存在: ' + regions[i])
+                throw new Error('region_id不存在: ' + regions[i])
             }
         }
+        //检查是否有事项指南与区划绑定
+        var items = await modelItem.find({ region_id: { $in: regions } }, { __v: 0 })
+        if (items.length > 0) {
+            return new SuccessModel({ msg: '删除区划失败，有与其绑定的事项还未处理', data: {code: 999, items: items} })
+        }
+        //批量删除
         await modelRegion.deleteMany({ _id: { $in: regions } })
         return new SuccessModel({ msg: '删除成功' })
     } catch (err) {
@@ -820,13 +893,12 @@ async function deleteRegions({
 
 /**
  * 更新区划
- * @param {Array<Object>} regions 待更新的区划（不更新的字段传null，记得传_id）
+ * @param {Array<Object>} regions 待更新的区划
  * @returns
  */
 async function updateRegions({
     regions = null
 }) {
-    var modifiedCount = 0
     try {
         if (regions === null) {
             throw new Error('请求体中需要一个regions属性，且该属性是一个数组')
@@ -834,6 +906,8 @@ async function updateRegions({
         if (regions.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        var regionBulkOps = []
+        var itemBulkOps = []
         for (let i = 0; i < regions.length; i++) {
             //解构，没有的字段默认是null
             let {
@@ -853,26 +927,217 @@ async function updateRegions({
             }
             //更新region（差量）
             let newData = {}
-            if (region_code !== null) newData.region_code = region_code
+            if (region_code !== null) {
+                let r = await modelRegion.findOne({ region_code: region_code }, { __v: 0 })
+                if (r !== null) {
+                    throw new Error('region_code已存在，更新失败: ' + region_code)
+                }
+                newData.region_code = region_code
+                itemBulkOps.push({
+                    updateMany: {
+                        filter: { region_id: _id },
+                        update: { region_code: region_code }
+                    }
+                })
+            }
             if (region_name !== null) newData.region_name = region_name
             if (region_level !== null) newData.region_level = region_level
             if (parentId !== null) newData.parentId = parentId
-            await modelRegion.updateOne({ _id: _id }, newData)
-            modifiedCount += 1
+            regionBulkOps.push({
+                updateOne: {
+                    filter: { _id: _id },
+                    update: newData
+                }
+            })
         }
-        return new SuccessModel({ msg: '更新成功', data: modifiedCount })
+        //批量更新
+        var result = await modelRegion.bulkWrite(regionBulkOps)
+        var result1 = await modelItem.bulkWrite(itemBulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
     }
 }
 
+/**
+ * 改变事项的状态
+ * @param {Array<Object>} items 待改变状态的事项（数组成员包含item_id和next_status属性）
+ * @returns 
+ */
+async function changeItemStatus({
+    user_id = null,
+    items = null
+}) {
+    try {
+        if (user_id === null || items === null) {
+            throw new Error('调用changeItemStatus必须有user_id和items字段')
+        }
+        if (!items.length || items.length <= 0) {
+            throw new Error('不是数组或数组长度小于等于0')
+        }
+        //确认用户身份
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('用户不存在')
+        }
+        var userRank = await modelUserRank.findOne({ id: user.user_rank }, { _id: 0, __v: 0 })
+        //确认用户可操作事项状态
+        var can_operate = userRank.can_operate
+        if (userRank.can_operate_temp[user_id]) {
+            //针对某个用户修改过权限
+            can_operate = userRank.can_operate_temp[user_id]
+        }
+        var bulkOps = []
+        var itemStatus = await modelItemStatus.find({}, { _id: 0, __v: 0 })
+        for (let i = 0, len = items.length; i < len; i++) {
+            //解构，默认null
+            var { item_id = null, next_status = null } = items[i]
+            if (item_id === null || next_status === null) {
+                throw new Error('调用changeItemStatus必须有item_id和next_status字段')
+            }
+            //查询事项现在的状态
+            var item = await modelItem.findOne({ _id: item_id }, { __v: 0 })
+            if (item === null) {
+                throw new Error('item_id不存在: ' + item_id)
+            }
+            //判断能否变为next_status
+            for (let j = 0; j < itemStatus.length; j++) {
+                var status = itemStatus[j]
+                if (status.id !== item.item_status) {
+                    if (j === itemStatus.length - 1) throw new Error('itemStatus表和数据库中已有的事项状态对不上')
+                    continue
+                }
+                if (status.next_status.includes(next_status) === false) {
+                    throw new Error('事项所处状态无法变到指定状态: ' + item_id)
+                }
+                if (can_operate.includes(status.id) === false) {
+                    throw new Error('该用户无法修改状态为\"' + status.name + '\"的事项')
+                }
+                //加到数组中，后续一起更新
+                bulkOps.push({
+                    updateOne: {
+                        filter: { _id: item_id },
+                        update: { item_status: next_status }
+                    }
+                })
+                break
+            }
+        }
+        //批量更新
+        var result = await modelItem.bulkWrite(bulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '更新失败', data: err.message })
+    }
+}
+
+/**
+ * 更新用户身份
+ * @param {Array<Object>} user_rank 待更新的用户身份
+ * @returns 
+ */
+async function updateUserRank({
+    user_rank = null
+}) {
+    try {
+        if (user_rank === null) {
+            throw new Error('调用updateUserRank需要user_rank数组')
+        }
+        if (!user_rank.length || user_rank.length <= 0) {
+            throw new Error('不是数组或数组长度小于等于0')
+        }
+        //更新用户身份
+        var bulkOps = []
+        for (let i = 0; i < user_rank.length; i++) {
+            var {
+                id = null,
+                cn_name = null,
+                can_see = null,
+                can_operate = null
+            } = user_rank[i]
+            if (id === null) {
+                throw new Error('缺少id')
+            }
+            var newData = {}
+            if (cn_name !== null) newData.cn_name = cn_name
+            if (can_see !== null) newData.can_see = can_see
+            if (can_operate !== null) newData.can_operate = can_operate
+            bulkOps.push({
+                updateOne: {
+                    filter: { id: id },
+                    update: newData
+                }
+            })
+        }
+        //批量更新
+        var result = await modelUserRank.bulkWrite(bulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '更新失败', data: err.message })
+    }
+}
+
+async function changeUserRankTemporary({
+    array = null
+}) {
+    try {
+        if (array === null) {
+            throw new Error('调用changeUserRankTemporary需要array字段')
+        }
+        if (!array.length || array.lengt <= 0) {
+            throw new Error('不是数组或数组长度小于等于0')
+        }
+        var userRank = await modelUserRank.find({}, { _id: 0, __v: 0 })
+        var needChange = {}
+        for (let i = 0; i < array.length; i++) {
+            var {
+                user_id = null,
+                can_see_temp = null,
+                can_operate_temp = null
+            } = array[i]
+            var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+            if (user === null) {
+                throw new Error('用户不存在')
+            }
+            for (let j = 0; j < userRank.length; j++) {
+                if (userRank[j].id === user.user_rank) {
+                    needChange[userRank[j].id] = j
+                    if (can_see_temp !== null) userRank[j]._doc.can_see_temp[user_id] = can_see_temp
+                    if (can_operate_temp !== null) userRank[j]._doc.can_operate_temp[user_id] = can_operate_temp
+                    break
+                }
+            }
+        }
+        var bulkOps = []
+        var keys = Object.keys(needChange)
+        for (let i = 0; i < keys.length; i++) {
+            bulkOps.push({
+                updateOne: {
+                    filter: { id: keys[i] },
+                    update: {
+                        can_see_temp: userRank[needChange[keys[i]]]._doc.can_see_temp,
+                        can_operate_temp: userRank[needChange[keys[i]]]._doc.can_operate_temp
+                    }
+                }
+            })
+        }
+        var result = await modelUserRank.bulkWrite(bulkOps)
+        return new SuccessModel({ msg: '修改成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '修改失败', data: err.message })
+    }
+}
+
 module.exports = {
+    getItemStatusScheme,
+    getUserRankSchema,
     getRuleTree,
     getRegionTree,
     getItems,
     createItems,
     deleteItems,
     updateItems,
+    changeItemStatus,
     getRules,
     createRules,
     deleteRules,
@@ -885,4 +1150,5 @@ module.exports = {
     getRegionPaths,
     getChildRegionsByRuleAndRegion,
     getItemGuide,
+    getItemGuides
 }

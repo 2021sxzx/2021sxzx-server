@@ -14,6 +14,9 @@ async function authenticate(loginData) {
         if (res !== null) {
             // Compare password
             if (password === res.password) {
+                if (res.activation_status !== 1) {
+                    return ({ message: '该号码未被激活，请重试.', code: 403 });
+                }
                 const token = jwt.sign({
                     account: res.account,
                     user_rank: res.user_rank
@@ -33,7 +36,8 @@ async function authenticate(loginData) {
                         token: token,
                         expiresIn: 3600
                     },
-                    role_name: res.role_name
+                    role_name: res.role_name,
+                    _id: res._id
                 };
 
             } else {
