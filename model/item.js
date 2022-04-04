@@ -2,7 +2,7 @@ const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 // comment表的定义
 const itemSchema = new mongoose.Schema({
-    item_id: {       // 事项编码
+    item_name: {     //事项名称
         type: String,
         required: true
     },
@@ -20,21 +20,21 @@ const itemSchema = new mongoose.Schema({
     },
     task_code: { // 事项指南编码
         type: String,
-        default: ''
-    },
-    item_rule_id: {  // 事项规则id
-        type: String,
-        default: ''
+        required: true
     },
     rule_id: {  //规则id
         type: String,
-        default: ''
+        required: true
+    },
+    region_code: {    //区划编码
+        type: String,
+        required: true
     },
     region_id: {    //区划id
         type: String,
-        default: ''
+        required: true
     }
 })
 
-const item = mongoose.model('item', itemSchema, 'item')
+const item = mongoose.model('item', itemSchema, 'tempItems')
 module.exports = item

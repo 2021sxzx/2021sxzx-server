@@ -5,7 +5,7 @@ const roleMapPermission = require('../model/roleMapPermission');
 const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
 class sideBarData {
-  async   getSideBarList (role_name) {
+  async getSideBarList (role_name) {
     let permissionIdentifier = await roleMapPermission.find({
       role_name: role_name
     });
@@ -13,10 +13,11 @@ class sideBarData {
       permissionIdentifier.map(async (item) => {
         const re = await sideBarMapPermission.find({
           permission_identifier: item.permission_identifier
-        })
+        });
         return re;
       })
     );
+    
     const permissionList = temp.flat(1);
     let parentArr_temp = await Promise.all(
       permissionList.map(async (item) => {
@@ -49,7 +50,7 @@ class sideBarData {
           }
           return false;
         })
-        return childTree
+        return childTree;
       })
     )
 
@@ -65,12 +66,20 @@ class sideBarData {
     let sideBar_temp = await sideBar.find({
       parent: id
     });
+    
     let sideBar_ = await Promise.all(
       sideBar_temp.map(async (item) => {
-        return {
+        let res = await this.onlyReturnChild(item.id)
+        // console.log(res);
+        return res.length === 0 ? {
           key: item.key,
           title: item.title,
           id: item.id
+        } : {
+          key: item.key,
+          title: item.title,
+          id: item.id,
+          children: res
         }
       })
     );
@@ -89,6 +98,24 @@ class sideBarData {
       id: parent.id,
       children: sideBar_,
     };
+  }
+
+  async onlyReturnChild (id) {
+    let sideBar_temp = await sideBar.find({
+      parent: id
+    });
+    
+    let sideBar_ = await Promise.all(
+      sideBar_temp.map(async (item) => {
+        return {
+          key: item.key,
+          title: item.title,
+          id: item.id
+        }
+      })
+    );
+
+    return sideBar_.length === 0 ? [] : sideBar_
   }
 }
 

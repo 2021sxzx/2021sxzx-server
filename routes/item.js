@@ -10,6 +10,18 @@ function setStatusCode(res, data) {
     }
 }
 
+router.get('/v1/getItemStatusScheme', async (req, res, next) => {
+    let data = await itemController.getItemStatusScheme()
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/getUserRankSchema', async (req, res, next) => {
+    let data = await itemController.getUserRankSchema()
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 router.get('/v1/getRuleTree', async (req, res, next) => {
     let data = await itemController.getRuleTree()
     setStatusCode(res, data)
@@ -30,6 +42,24 @@ router.post('/v1/getItems', async (req, res, next) => {
 
 router.post('/v1/createItems', async (req, res, next) => {
     let data = await itemController.createItems(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/deleteItems', async (req, res, next) => {
+    let data = await itemController.deleteItems(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/updateItems', async (req, res, next) => {
+    let data = await itemController.updateItems(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/changeItemStatus', async (req, res, next) => {
+    let data = await itemController.changeItemStatus(req.body)
     setStatusCode(res, data)
     res.json(data)
 })
@@ -64,32 +94,26 @@ router.post('/v1/updateRules', async (req, res, next) => {
     res.json(data)
 })
 
-// router.post('/v1/getItemRules', async (req, res, next) => {
-//     let data = await itemController.getItemRules(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
-
-// router.post('/v1/createItemRules', async (req, res, next) => {
-//     let data = await itemController.createItemRules(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
-
-// router.post('/v1/deleteItemRules', async (req, res, next) => {
-//     let data = await itemController.deleteItemRules(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
-
-// router.post('/v1/updateItemRules', async (req, res, next) => {
-//     let data = await itemController.updateItemRules(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
-
 router.post('/v1/getRegions', async (req, res, next) => {
     let data = await itemController.getRegions(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/createRegion', async (req, res, next) => {
+    let data = await itemController.createRegion(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/deleteRegions', async (req, res, next) => {
+    let data = await itemController.deleteRegions(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/updateRegions', async (req, res, next) => {
+    let data = await itemController.updateRegions(req.body)
     setStatusCode(res, data)
     res.json(data)
 })
@@ -108,6 +132,12 @@ router.post('/v1/getChildRegionsByRuleAndRegion', async (req, res, next) => {
 
 router.post('/v1/getItemGuide', async (req, res, next) => {
     let data = await itemController.getItemGuide(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/getItemGuides', async (req, res, next) => {
+    let data = await itemController.getItemGuides(req.body)
     setStatusCode(res, data)
     res.json(data)
 })

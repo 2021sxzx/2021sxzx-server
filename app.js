@@ -5,9 +5,6 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
-const jwt = require('jsonwebtoken');
-
-
 const usersRouter = require('./routes/users');
 const commentRouter = require("./routes/comment")
 const systemLogRouter = require("./routes/systemLog")
@@ -25,8 +22,8 @@ const systemBasicRouter=require('./routes/systemBasic.js')
 
 const { MONGO_CONFIG } = require("./config/db") //数据库的配置信息
 
-const mongoose = require("mongoose");
-const systemFailure = require('./model/systemFailure');
+const mongoose = require("mongoose")
+// const systemFailure = require("./model/systemFailure")
 // const rule = require("./model/rule")
 // const itemRule = require("./model/itemRule")
 // const item = require("./model/item")
@@ -108,7 +105,6 @@ app.use(function (req, res, next) {
   next(createError(404));
 });
 
-console.log(123)
 // error handler
 app.use(function (err, req, res, next) {
   // set locals, only providing error in development
