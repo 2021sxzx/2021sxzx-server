@@ -425,7 +425,11 @@ async function getItemGuides({
             throw new Error('page_size和page_num需要一起传')
         }
         if (page_size !== null && page_num !== null) {
-            var result = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1 }).skip(page_size * page_num).limit(page_size)
+            var result = {}
+            result.data = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1 }).skip(page_size * page_num).limit(page_size)
+            result.total = await modelTempTask.find(query).count()
+            result.page_size = page_size
+            result.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: result })
         }
         var result = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1 })
