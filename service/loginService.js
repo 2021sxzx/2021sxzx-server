@@ -27,7 +27,6 @@ async function authenticate(loginData) {
                 }
 
                 let refresh_token = generate_refresh_token(64);
-
                 let refresh_token_maxage = new Date() + jwt_refresh_expiration;
 
                 const token = jwt.sign({
