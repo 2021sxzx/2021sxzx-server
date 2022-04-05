@@ -455,6 +455,7 @@ async function createItemGuide({
     apply_content = null,
     ckbllc = null,
     wsbllc = null,
+    mobile_applt_website = null,
     submit_documents = null,
     zxpt = null,
     qr_code = null
@@ -481,6 +482,7 @@ async function createItemGuide({
         if (apply_content !== null) newData.apply_content = apply_content
         if (ckbllc !== null) newData.ckbllc = ckbllc
         if (wsbllc !== null) newData.wsbllc = wsbllc
+        if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) newData.qr_code = qr_code
@@ -541,6 +543,7 @@ async function updateItemGuide({
     apply_content = null,
     ckbllc = null,
     wsbllc = null,
+    mobile_applt_website = null,
     submit_documents = null,
     zxpt = null,
     qr_code = null
@@ -569,6 +572,7 @@ async function updateItemGuide({
         if (apply_content !== null) newData.apply_content = apply_content
         if (ckbllc !== null) newData.ckbllc = ckbllc
         if (wsbllc !== null) newData.wsbllc = wsbllc
+        if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) newData.qr_code = qr_code
@@ -1205,6 +1209,15 @@ async function changeItemStatus({
                         update: { item_status: next_status }
                     }
                 })
+                //如果是转到审核通过状态，就更新一下事项的发布时间
+                if (status.eng_name === 'Success') {
+                    bulkOps.push({
+                        updateOne: {
+                            filter: { _id: item_id },
+                            update: { release_time: Date.now() }
+                        }
+                    })
+                }
                 break
             }
         }

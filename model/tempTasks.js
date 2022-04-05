@@ -1,6 +1,10 @@
 const mongoose = require('mongoose')
 
 const tempTaskSchema = new mongoose.Schema({
+    create_time: {            //事项指南创建时间
+        type: Number,
+        default: Date.now(),
+    },
     task_status: {            //事项指南状态，0是未绑定规则，1是已绑定规则
         type: Number,
         default: 0,
@@ -85,7 +89,10 @@ const tempTaskSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
-    // mobile_applt_website: String,   //移动端办理地址
+    mobile_applt_website: {   //移动端办理地址
+        type: String,
+        default: '',
+    },
     // link_way: String,               //咨询方式
     submit_documents: {       //提交材料
         type: [{
