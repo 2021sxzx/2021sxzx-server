@@ -406,6 +406,7 @@ async function getItemGuide({
 /**
  * 获取事项指南，只返回task_code、task_name和task_status
  * @param {Number} task_status 事项指南状态（0或者1）
+ * @param {String} task_code 事项指南编码
  * @param {String} task_name 事项指南名称（用于模糊匹配）
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
@@ -413,6 +414,7 @@ async function getItemGuide({
  */
 async function getItemGuides({
     task_status = null,
+    task_code = null,
     task_name = null,
     page_size = null,
     page_num = null
@@ -420,6 +422,7 @@ async function getItemGuides({
     try {
         var query = {}
         if (task_status !== null) query.task_status = task_status
+        if (task_code !== null) query.task_code = task_code
         if (task_name !== null) query.task_name = { $regex: task_name }
         if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
             throw new Error('page_size和page_num需要一起传')
