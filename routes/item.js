@@ -142,4 +142,22 @@ router.post('/v1/getItemGuides', async (req, res, next) => {
     res.json(data)
 })
 
+router.post('/v1/createItemGuide', async (req, res, next) => {
+    let data = await itemController.createItemGuide(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/deleteItemGuides', async (req, res, next) => {
+    let data = await itemController.deleteItemGuides(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/updateItemGuide', async (req, res, next) => {
+    let data = await itemController.updateItemGuide(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 module.exports = router
