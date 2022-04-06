@@ -1,4 +1,7 @@
 const { ErrorModel, SuccessModel } = require('../utils/resultModel')
+const formidable = require('formidable')
+const path = require('path')
+const fs = require('fs')
 const modelItem = require('../model/item')
 const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
@@ -519,12 +522,35 @@ async function createItemGuide({
         if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
-        if (qr_code !== null) newData.qr_code = qr_code
+        if (qr_code !== null) {
+            var path = await saveImageWrapper(qr_code, task_code)
+            newData.qr_code = path
+        }
         var result = await modelTempTask.create(newData)
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '创建失败', data: err.message })
     }
+}
+
+async function saveImageWrapper(image, name) {
+    return new Promise(function (resolve, reject) {
+        var form = new formidable.IncomingForm()
+        form.encoding = 'utf-8'
+        form.uploadDir = path.join(__dirname, '../upload/itemGuideQRCode')
+        form.keepExtensions = true
+        form.parse(image, function (err, fields, files) {
+            if (err) {
+                reject(err)
+            }
+            var filename = files.the_file.name
+            var nameArray = filename.split('.')
+            var type = nameArray[nameArray.length - 1]
+            var newPath = path.join(form.uploadDir, '/' + name + '.' + type)
+            fs.renameSync(files.the_file.path, newPath)
+            resolve(newPath)
+        })
+    })
 }
 
 /**
