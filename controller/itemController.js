@@ -444,7 +444,24 @@ async function getItemGuides({
 
 /**
  * 创建事项指南
- * @param {*} param0 
+ * @param {String} task_code 事项指南编码
+ * @param {String} task_name 事项指南名称
+ * @param {String} wsyy 已开通的网上办理方式
+ * @param {Array<Number>} service_object_type 服务对象类型
+ * @param {String} conditions 办理条件
+ * @param {Array<Object>} legal_basis 法律法规依据
+ * @param {Number} legal_period 法定期限
+ * @param {String} legal_period_type 法定期限单位
+ * @param {Number} promised_period 承诺期限
+ * @param {String} promised_period_type 承诺期限单位
+ * @param {Array<Object>} windows 办事窗口
+ * @param {String} apply_content 申请内容
+ * @param {String} ckbllc 窗口办理流程
+ * @param {String} wsbllc 网上办理流程
+ * @param {String} mobile_applt_website 移动端办理地址
+ * @param {Array<Object>} submit_documents 提交材料
+ * @param {String} zxpt 咨询平台
+ * @param {String} qr_code 二维码
  * @returns 
  */
 async function createItemGuide({
@@ -478,7 +495,17 @@ async function createItemGuide({
         }
         if (task_name !== null) newData.task_name = task_name
         if (wsyy !== null) newData.wsyy = wsyy
-        if (service_object_type !== null) newData.service_object_type = service_object_type
+        if (service_object_type !== null) {
+            let str = ''
+            for (let i = 0; i < service_object_type.length; i++) {
+                if (str === '') {
+                    str += service_object_type[i].toString()
+                } else {
+                    str += ',' + service_object_type[i].toString()
+                }
+            }
+            newData.service_object_type = str
+        }
         if (conditions !== null) newData.conditions = conditions
         if (legal_basis !== null) newData.legal_basis = legal_basis
         if (legal_period !== null) newData.legal_period = legal_period
@@ -532,7 +559,24 @@ async function deleteItemGuides({
 
 /**
  * 更新事项指南
- * @param {*} param0 
+ * @param {String} task_code 事项指南编码
+ * @param {String} task_name 事项指南名称
+ * @param {String} wsyy 已开通的网上办理方式
+ * @param {Array<Number>} service_object_type 服务对象类型
+ * @param {String} conditions 办理条件
+ * @param {Array<Object>} legal_basis 法律法规依据
+ * @param {Number} legal_period 法定期限
+ * @param {String} legal_period_type 法定期限单位
+ * @param {Number} promised_period 承诺期限
+ * @param {String} promised_period_type 承诺期限单位
+ * @param {Array<Object>} windows 办事窗口
+ * @param {String} apply_content 申请内容
+ * @param {String} ckbllc 窗口办理流程
+ * @param {String} wsbllc 网上办理流程
+ * @param {String} mobile_applt_website 移动端办理地址
+ * @param {Array<Object>} submit_documents 提交材料
+ * @param {String} zxpt 咨询平台
+ * @param {String} qr_code 二维码
  * @returns 
  */
 async function updateItemGuide({
