@@ -1,5 +1,4 @@
 const { ErrorModel, SuccessModel } = require('../utils/resultModel')
-const formidable = require('formidable')
 const path = require('path')
 const fs = require('fs')
 const modelItem = require('../model/item')
@@ -525,12 +524,11 @@ async function createItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            // var path = await saveImageWrapper(qr_code, task_code)
-            var filePath = path.join(__dirname, '../upload/itemGuideQRCode', task_code + '.png')
+            var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
-            var dataBuffer = new Buffer(base64Data, 'base64')
+            var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = filePath
+            newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.create(newData)
@@ -538,26 +536,6 @@ async function createItemGuide({
     } catch (err) {
         return new ErrorModel({ msg: '创建失败', data: err.message })
     }
-}
-
-function saveImageWrapper(image, name) {
-    return new Promise(function (resolve, reject) {
-        var form = new formidable.IncomingForm()
-        form.encoding = 'utf-8'
-        form.uploadDir = path.join(__dirname, '../upload/itemGuideQRCode')
-        form.keepExtensions = true
-        form.parse(image, function (err, fields, files) {
-            if (err) {
-                reject(err)
-            }
-            var filename = files.the_file.name
-            var nameArray = filename.split('.')
-            var type = nameArray[nameArray.length - 1]
-            var newPath = path.join(form.uploadDir, '/' + name + '.' + type)
-            fs.renameSync(files.the_file.path, newPath)
-            resolve(newPath)
-        })
-    })
 }
 
 /**
@@ -681,8 +659,11 @@ async function updateItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var path = await saveImageWrapper(qr_code, task_code)
-            newData.qr_code = path
+            var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
+            var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+            var dataBuffer = Buffer.from(base64Data, 'base64')
+            fs.writeFileSync(filePath, dataBuffer)
+            newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
