@@ -1,21 +1,56 @@
-const userDepartment = require('../model/departmentMapUser');
+const departmentMapUser = require('../model/departmentMapUser');
+const department = require('../model/department');
 
 class userDepartmentService {
   // 添加处室
-  addDepartment () {
+  async addDepartment () {
 
   }
 
   // 删除处室
-  deleteDepartment () {
+  async deleteDepartment () {
 
   }
 
   // 更新处室名称
-  updateDepartment () {
+  async updateDepartment (department_name, new_department_name) {
+    await department.updateMany({
+      department_name: department_name
+    }, {
+      department_name: new_department_name
+    });
 
+    await departmentMapUser.updateMany({
+      department_name: department_name
+    }, {
+      department_name: new_department_name
+    });
+    const res = await department.find({
+      department_name: new_department_name
+    }, {
+      department_name: 1,
+      department_id: 1
+    });
+    return res;
   }
-  // 
+
+  // 列出所有处室
+  async listAllDepartment () {
+    const res = await department.find({}, {
+      department_name: 1,
+      department_id: 1
+    });
+    return res;
+  }
+
+  // 根据账户来查找处室
+  async findDepartmentByAccount (account, user_name) {
+    const res = await departmentMapUser.findOne({
+      account: account,
+      user_name: user_name
+    });
+    return res.department_name;
+  }
 }
 
 module.exports = new userDepartmentService();
