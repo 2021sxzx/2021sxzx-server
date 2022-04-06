@@ -1,5 +1,7 @@
 const express = require('express')
 const router = express.Router()
+// const multer = require('multer')
+// const { uuid } = require('systeminformation')
 const itemController = require('../controller/itemController')
 
 function setStatusCode(res, data) {
@@ -9,6 +11,18 @@ function setStatusCode(res, data) {
         res.statusCode = 404
     }
 }
+
+// var storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, path)
+//     },
+//     filename: function (req, file, cb) {
+//         var extension = file.originalname.substring(file.originalname.lastIndexOf('.') + 1).toLowerCase()
+//         var filename = uuid.v1() + '.' + extension
+//         cb(null, filename)
+//     }
+// })
+// var upload = multer({ storage: storage })
 
 router.get('/v1/getItemStatusScheme', async (req, res, next) => {
     let data = await itemController.getItemStatusScheme()
