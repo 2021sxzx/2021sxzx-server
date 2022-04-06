@@ -111,6 +111,10 @@ const tempTaskSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    zzzd: {                   //自助终端
+        type: String,
+        default: '',
+    }
 })
 
 const tempTasks = mongoose.model('tempTasks', tempTaskSchema, 'tempTasks')
