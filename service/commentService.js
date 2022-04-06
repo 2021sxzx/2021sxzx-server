@@ -12,7 +12,7 @@ const rule = require("../model/rule")
 async function saveComment(commentData) {
   try {
     let res = await comment.create(commentData)
-    return res;
+    return res
   } catch (e) {
     throw new Error(e.message)
   }
@@ -24,27 +24,27 @@ async function saveComment(commentData) {
  * @param score
  * @returns {Promise<*>}
  */
-async function getAllUserComment({pageNum , score}) {
+async function getAllUserComment({pageNum, score}) {
   try {
     if(pageNum == 0){
       if(score !== 0) {
-        let res = await comment.find({score:{$eq:score}}).lean()
-        return res;
+        let res = await comment.find({score: {$eq: score}}).lean()
+        return res
       } else {
         let res = await comment.find().lean()
-        return res;
+        return res
       }
     } else {
       if(score !== 0) {
-        let res = await comment.find({score:{$eq:score}}).skip((pageNum-1)*10).limit(pageNum*10).lean()
-        return res;
+        let res = await comment.find({score: {$eq: score}}).skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
+        return res
       } else {
-        let res = await comment.find().skip((pageNum-1)*10).limit(pageNum*10).lean()
-        return res;
+        let res = await comment.find().skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
+        return res
       }
     }
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
@@ -54,10 +54,10 @@ async function getAllUserComment({pageNum , score}) {
  */
 async function getAllUserComment2() {
   try {
-    let res = await comment.find();
-    return res;
+    let res = await comment.find()
+    return res
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
@@ -72,13 +72,13 @@ async function getCommentParam() {
         $group: {
           _id: '$score',
           count: {
-            $sum: 1,
+            $sum: 1
           },
         },
       },
       {
-        $sort:{
-          _id:1
+        $sort: {
+          _id: 1
         }
       }
     ])
@@ -93,7 +93,7 @@ async function getCommentParam() {
     })
     let count = await getCommentTotal()
     avgScore /= count
-    let res3 = {totalNum:count,avgScore:avgScore,scoreInfo:res2}
+    let res3 = {totalNum: count, avgScore: avgScore, scoreInfo: res2}
     return res3
   } catch (e) {
     throw new Error(e.message)
@@ -164,7 +164,7 @@ async function getItem(item_id){
 async function getRule(item_id) {
   try {
     let itemRuleData = await getItemRule(item_id)
-    let data = await rule.find({rule_id:itemRuleData.rule_id})
+    let data = await rule.find({rule_id: itemRuleData.rule_id})
     return data[0]
   } catch (e) {
     return e.message
@@ -202,7 +202,7 @@ async function getCommentDetail({pageNum,score}) {
  * @param typeData
  * @returns {Promise<*>}
  */
-async function searchByCondition({startTime,endTime,score,type,typeData}) {
+async function searchByCondition({startTime, endTime, score, type, typeData}) {
   try {
     let condition = {}
     condition.pageNum = 0
@@ -252,7 +252,6 @@ async function searchByCondition({startTime,endTime,score,type,typeData}) {
     return e.message
   }
 }
-
 
 module.exports = {
   saveComment,

@@ -1,9 +1,7 @@
 const {
-    getSystemLogDetail,
-    getAllSystemLog2,
-    searchByCondition,
-    showSystemLog,
-    getCpuPercentage
+    getCpuPercentage,
+    getMemory,
+    getDisk
   } = require("../service/systemResourceService")
   const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -14,78 +12,41 @@ const {
    async function getCpuPercentageController() {
     try {
       let data = await getCpuPercentage();
+      // return data;
       return new SuccessModel({msg: '获取cpu占用率成功', data:data});
     } catch (e) {
       return new ErrorModel({msg:e.message})
     }
   }
 
-  /**
-   * 查看测试系统日志
+    /**
+   * 查看内存信息
    * @returns {Promise<ErrorModel|SuccessModel>}
    */
-   async function showSystemLogController() {
-    try {
-      let data = await showSystemLog();
-      return new SuccessModel({msg: '获取系统日志成功', data:data});
-    } catch (e) {
-      return new ErrorModel({msg:e.message})
+     async function getMemoryController() {
+      try {
+        let data = await getMemory();
+        return new SuccessModel({msg: '获取内存信息成功', data:data});
+      } catch (e) {
+        return new ErrorModel({msg:e.message})
+      }
     }
-  }
 
-  /**
-   * 获取系统日志(不包括操作人)
+   /**
+   * 查看磁盘信息
    * @returns {Promise<ErrorModel|SuccessModel>}
    */
-  async function getSystemLog2() {
-    try {
-      let data = await getAllSystemLog2();
-      return new SuccessModel({msg: '获取系统日志成功', data:data});
-    } catch (e) {
-      return new ErrorModel({msg:e.message})
+     async function getDiskController() {
+      try {
+        let data = await getDisk();
+        return new SuccessModel({msg: '获取磁盘信息成功', data:data});
+      } catch (e) {
+        return new ErrorModel({msg:e.message})
+      }
     }
-  }
-
-  /**
-   * 获取系统日志(包括操作人)
-   * @returns {Promise<ErrorModel|SuccessModel>}
-   */
-  async function getAllSystemLogDetail() {
-    try {
-      let data = await getSystemLogDetail();
-      return new SuccessModel({msg: '获取系统日志成功', data:data});
-    } catch (e) {
-      return new ErrorModel({msg:e.message})
-    }
-  }
-
-  /**
-   * 根据条件搜索日志
-   * @param searchData
-   * @returns {Promise<ErrorModel|SuccessModel>}
-   */
-  async function getSearchSystemLog(searchData) {
-    let {myself,today,thisWeek} = searchData
-    if(!myself) {
-      myself = false
-    }
-    if(!today) {
-      today = false;
-    }
-    if(!thisWeek) {
-      thisWeek = false
-    }
-    try {
-      let data = await searchByCondition({myself,today,thisWeek})
-      return new SuccessModel({msg: '查询成功', data:data});
-    } catch (e) {
-      return new ErrorModel({msg:e.message})
-    }
-  }
 
   module.exports = {
-    getSearchSystemLog,
-    getAllSystemLogDetail,
-    showSystemLogController,
-    getCpuPercentageController
+    getCpuPercentageController,
+    getMemoryController,
+    getDiskController
   }
