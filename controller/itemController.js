@@ -488,7 +488,7 @@ async function createItemGuide({
         var newData = {}
         if (task_code !== null) {
             let task = await modelTempTask.exists({ task_code: task_code })
-            if (task !== null) {
+            if (task === false) {
                 throw new Error('事项指南编码已存在')
             }
             newData.task_code = task_code
@@ -545,7 +545,7 @@ async function deleteItemGuides({
         //检查task_code的合法性
         for (let i = 0; i < task_code.length; i++) {
             var task = await modelTempTask.exists({ task_code: task_code[i] })
-            if (task === null) {
+            if (task === false) {
                 throw new Error('task_code不存在: ' + task_code[i])
             }
         }
@@ -605,7 +605,7 @@ async function updateItemGuide({
         }
         if (task_code !== null) {
             let task = await modelTempTask.exists({ task_code: task_code })
-            if (task === null) {
+            if (task === false) {
                 throw new Error('事项指南编码不存在')
             }
         }
@@ -752,7 +752,7 @@ async function createItems({
             }
             //检查rule_id的合法性
             let rule = await modelRule.exists({ rule_id: rule_id })
-            if (rule === null) {
+            if (rule === false) {
                 throw new Error('rule_id不存在: ' + rule_id)
             }
             //检查region_code和region_id的合法性
@@ -850,7 +850,7 @@ async function updateItems({
             }
             //判断_id的合法性
             let item = await modelItem.exists({ _id: _id })
-            if (item === null) {
+            if (item === false) {
                 throw new Error('_id不存在: ' + _id)
             }
             //更新item（差量）
@@ -858,7 +858,7 @@ async function updateItems({
             if (task_code !== null) {
                 //检查task_code的合法性
                 let task = await modelTempTask.exists({ task_code: task_code })
-                if (task === null) {
+                if (task === false) {
                     throw new Error('task_code不存在: ' + task_code)
                 }
                 //检查是否需要更改对应事项指南的状态
@@ -876,7 +876,7 @@ async function updateItems({
             if (rule_id !== null) {
                 //检查rule_id的合法性
                 let rule = await modelRule.exists({ rule_id: rule_id })
-                if (rule === null) {
+                if (rule === false) {
                     throw new Error('rule_id不存在: ' + rule_id)
                 }
                 newData.rule_id = rule_id
@@ -940,7 +940,7 @@ async function getChildRegionsByRuleAndRegion({
         })
         //有事项haveItem是1，否则是0
         region._doc.haveItem = 0
-        if (res !== null) {
+        if (res === true) {
             region._doc.haveItem = 1
         }
         result.push(region._doc)
@@ -976,7 +976,7 @@ async function getChildRegionsByRuleAndRegion({
             })
             //子区划中有事项的haveItem是1，否则是0
             value._doc.haveItem = 0
-            if (res !== null) {
+            if (res === true) {
                 value._doc.haveItem = 1
             }
             result.push(value._doc)
