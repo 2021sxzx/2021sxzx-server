@@ -465,6 +465,7 @@ async function getItemGuides({
  * @param {Array<Object>} submit_documents 提交材料
  * @param {String} zxpt 咨询平台
  * @param {String} qr_code 二维码
+ * @param {String} zzzd 自助终端
  * @returns 
  */
 async function createItemGuide({
@@ -485,7 +486,8 @@ async function createItemGuide({
     mobile_applt_website = null,
     submit_documents = null,
     zxpt = null,
-    qr_code = null
+    qr_code = null,
+    zzzd = null
 }) {
     try {
         var newData = {}
@@ -526,6 +528,7 @@ async function createItemGuide({
             var path = await saveImageWrapper(qr_code, task_code)
             newData.qr_code = path
         }
+        if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.create(newData)
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
@@ -586,6 +589,7 @@ async function deleteItemGuides({
 /**
  * 更新事项指南
  * @param {String} task_code 事项指南编码
+ * @param {String} new_task_code 新的事项指南编码
  * @param {String} task_name 事项指南名称
  * @param {String} wsyy 已开通的网上办理方式
  * @param {Array<Number>} service_object_type 服务对象类型
@@ -603,10 +607,12 @@ async function deleteItemGuides({
  * @param {Array<Object>} submit_documents 提交材料
  * @param {String} zxpt 咨询平台
  * @param {String} qr_code 二维码
+ * @param {String} zzzd 自助终端
  * @returns 
  */
 async function updateItemGuide({
     task_code = null,
+    new_task_code = null,
     task_name = null,
     wsyy = null,
     service_object_type = null,
@@ -623,7 +629,8 @@ async function updateItemGuide({
     mobile_applt_website = null,
     submit_documents = null,
     zxpt = null,
-    qr_code = null
+    qr_code = null,
+    zzzd = null
 }) {
     try {
         if (task_code === null) {
@@ -636,9 +643,26 @@ async function updateItemGuide({
             }
         }
         var newData = {}
+        if (new_task_code !== null) {
+            let task = await modelTempTask.exists({ task_code: new_task_code })
+            if (task === true) {
+                throw new Error('存在相同的事项指南编码，不能重复: ' + new_task_code)
+            }
+            newData.task_code = new_task_code
+        }
         if (task_name !== null) newData.task_name = task_name
         if (wsyy !== null) newData.wsyy = wsyy
-        if (service_object_type !== null) newData.service_object_type = service_object_type
+        if (service_object_type !== null) {
+            let str = ''
+            for (let i = 0; i < service_object_type.length; i++) {
+                if (str === '') {
+                    str += service_object_type[i].toString()
+                } else {
+                    str += ',' + service_object_type[i].toString()
+                }
+            }
+            newData.service_object_type = str
+        }
         if (conditions !== null) newData.conditions = conditions
         if (legal_basis !== null) newData.legal_basis = legal_basis
         if (legal_period !== null) newData.legal_period = legal_period
@@ -652,7 +676,11 @@ async function updateItemGuide({
         if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
-        if (qr_code !== null) newData.qr_code = qr_code
+        if (qr_code !== null) {
+            var path = await saveImageWrapper(qr_code, task_code)
+            newData.qr_code = path
+        }
+        if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
