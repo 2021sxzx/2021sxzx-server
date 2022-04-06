@@ -2,7 +2,7 @@ const mongoose = require("mongoose")
 
 // comment表的定义
 const userDepartmentSchema = new mongoose.Schema({
-  idc:{  // 用户的证件号码
+  account:{  // 用户的证件号码
     type:String,
     required:true
   },

@@ -19,6 +19,8 @@ const sideBarRouter = require('./routes/sideBar');
 const permissionRouter = require('./routes/permission');
 const systemFailureRouter = require('./routes/systemFailure')
 const systemBasicRouter = require('./routes/systemBasic.js')
+const department = require('./model/department');
+const departmentMapUser = require('./model/departmentMapUser');
 
 const { validate_jwt } = require('./utils/validateJwt');
 
