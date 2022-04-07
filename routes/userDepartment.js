@@ -16,7 +16,7 @@ function wrap(handler) {
 }
 
 router.get('/test2', async (req, res) => {
-  const k = await userDepartmentService.updateDepartment("办公室2", "办公室");
+  const k = await userDepartmentService.addDepartment("办公室2");
   res.json(k);
 })
 

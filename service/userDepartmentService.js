@@ -1,15 +1,36 @@
 const departmentMapUser = require('../model/departmentMapUser');
 const department = require('../model/department');
+const { users } = require('systeminformation');
+const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
 class userDepartmentService {
   // 添加处室
-  async addDepartment () {
-
+  async addDepartment (department_name) {
+    await department.create({
+      department_name,
+      department_id: 0,
+      subordinate_department: null
+    });
+    const res = await department.findOne({
+      department_name
+    }, {
+      department_name: 1
+    })
+    return new SuccessModel({
+      msg: '添加成功',
+      data: res
+    });
   }
 
   // 删除处室
-  async deleteDepartment () {
-
+  async deleteDepartment (department_name) {
+    const res = await department.deleteOne({
+      department_name
+    });
+    return new SuccessModel({
+      msg: '删除处室成功',
+      data: res
+    });
   }
 
   // 更新处室名称
@@ -31,16 +52,21 @@ class userDepartmentService {
       department_name: 1,
       department_id: 1
     });
-    return res;
+    return new SuccessModel({
+      msg: '更新处室成功',
+      data: res
+    });
   }
 
   // 列出所有处室
   async listAllDepartment () {
     const res = await department.find({}, {
-      department_name: 1,
-      department_id: 1
+      department_name: 1
     });
-    return res;
+    return new SuccessModel({
+      msg: '返回数据成功',
+      data: res
+    });
   }
 
   // 根据账户来查找处室
@@ -66,6 +92,24 @@ class userDepartmentService {
       user_name
     });
     return res;
+  }
+
+  async deleteUserAndDepartment (account) {
+    const res = await departmentMapUser.deleteOne({
+      account
+    })
+    return res;
+  }
+
+  async searchDepartment (searchValue) {
+    const reg = new RegExp(searchValue, 'i');
+    const res = await users.find({
+      department_name: {$regex: reg}
+    });
+    return new SuccessModel({
+      msg: '搜索成功',
+      data: res
+    });
   }
 }
 

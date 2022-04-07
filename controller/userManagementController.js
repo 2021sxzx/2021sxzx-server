@@ -64,7 +64,7 @@ async function returnUserList () {
         if (!item['department_name']) {
           item['department_name'] = cal;
         }
-        console.log(item.department_name)
+        // console.log(item.department_name)
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -112,7 +112,7 @@ async function updateUserAndReturnList (user_name, password, role_name, account,
           password: item.password,
           activation_status: item.activation_status,
           department_name: cal
-      }
+        }
       })
     )
     return new SuccessModel({
@@ -131,8 +131,9 @@ async function updateUserAndReturnList (user_name, password, role_name, account,
  */
 async function deleteUserAndReturnList (account) {
   try {
-    await deleteUser(account)
-    const res = await getUserList()
+    await deleteUser(account);
+    await userDepartmentService.deleteUserAndDepartment(account);
+    const res = await getUserList();
     return new SuccessModel({
       msg: '删除成功',
       data: res
