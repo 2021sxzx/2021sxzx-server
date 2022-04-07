@@ -447,13 +447,17 @@ async function getItemGuides({
         }
         if (page_size !== null && page_num !== null) {
             var result = {}
-            result.data = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1, create_time: 1 }).skip(page_size * page_num).limit(page_size)
+            result.data = await modelTempTask.find(query, {
+                task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
+            }).skip(page_size * page_num).limit(page_size)
             result.total = await modelTempTask.find(query).count()
             result.page_size = page_size
             result.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: result })
         }
-        var result = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1, create_time: 1 })
+        var result = await modelTempTask.find(query, {
+            task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
+        })
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
