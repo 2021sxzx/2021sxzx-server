@@ -24,7 +24,7 @@ const tempTaskSchema = new mongoose.Schema({
     },
     service_object_type: {    //服务对象类型
         type: String,
-        required: true,
+        // required: true,
     },
     conditions: {             //办理条件（申请条件）
         type: String,
@@ -42,19 +42,19 @@ const tempTaskSchema = new mongoose.Schema({
     // approval_conditions: Array,     //审批条件
     legal_period: {           //法定期限
         type: Number,
-        required: true,
+        // required: true,
     },
     legal_period_type: {      //法定期限单位
         type: String,
-        required: true,
+        // required: true,
     },
     promised_period: {        //承诺期限
         type: Number,
-        required: true,
+        // required: true,
     },
     promised_period_type: {   //承诺期限单位
         type: String,
-        required: true,
+        // required: true,
     },
     // apply_time: String,             //申请时限
     // accept_time_sp: String,         //办理时限说明

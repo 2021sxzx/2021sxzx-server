@@ -489,7 +489,27 @@ async function createItemGuide({
     zzzd = null
 }) {
     try {
-        var newData = {}
+        var newData = {
+            task_code: null,
+            task_name: null,
+            wsyy: null,
+            service_object_type: null,
+            conditions: null,
+            legal_basis: null,
+            legal_period: null,
+            legal_period_type: null,
+            promised_period: null,
+            promised_period_type: null,
+            windows: null,
+            apply_content: null,
+            ckbllc: null,
+            wsbllc: null,
+            mobile_applt_website: null,
+            submit_documents: null,
+            zxpt: null,
+            qr_code: null,
+            zzzd: null
+        }
         if (task_code !== null) {
             let task = await modelTempTask.exists({ task_code: task_code })
             if (task === true) {
@@ -524,11 +544,12 @@ async function createItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
-            var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
-            var dataBuffer = Buffer.from(base64Data, 'base64')
-            fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
+            // var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
+            // var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+            // var dataBuffer = Buffer.from(base64Data, 'base64')
+            // fs.writeFileSync(filePath, dataBuffer)
+            // newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.create(newData)
@@ -624,7 +645,27 @@ async function updateItemGuide({
                 throw new Error('事项指南编码不存在')
             }
         }
-        var newData = {}
+        var newData = {
+            task_code: null,
+            task_name: null,
+            wsyy: null,
+            service_object_type: null,
+            conditions: null,
+            legal_basis: null,
+            legal_period: null,
+            legal_period_type: null,
+            promised_period: null,
+            promised_period_type: null,
+            windows: null,
+            apply_content: null,
+            ckbllc: null,
+            wsbllc: null,
+            mobile_applt_website: null,
+            submit_documents: null,
+            zxpt: null,
+            qr_code: null,
+            zzzd: null
+        }
         if (new_task_code !== null) {
             let task = await modelTempTask.exists({
                 task_code: { $in: new_task_code, $ne: task_code }
@@ -661,11 +702,12 @@ async function updateItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
-            var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
-            var dataBuffer = Buffer.from(base64Data, 'base64')
-            fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
+            // var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
+            // var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+            // var dataBuffer = Buffer.from(base64Data, 'base64')
+            // fs.writeFileSync(filePath, dataBuffer)
+            // newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
