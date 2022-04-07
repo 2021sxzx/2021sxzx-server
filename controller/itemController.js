@@ -121,6 +121,8 @@ async function getRegionTree() {
  * @param {Array<String>} rule_id 规则id
  * @param {Array<String>} region_code 区划编码
  * @param {Array<String>} region_id 区划id
+ * @param {String} creator_name 创建人名字
+ * @param {String} department_name 部门名称
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns
@@ -136,6 +138,8 @@ async function getItems({
     rule_id = null,
     region_code = null,
     region_id = null,
+    creator_name = null,
+    department_name = null,
     page_size = null,
     page_num = null
 }) {
@@ -147,6 +151,8 @@ async function getItems({
         if (rule_id !== null) query.rule_id = { $in: rule_id }
         if (region_code !== null) query.region_code = { $in: region_code }
         if (region_id !== null) query.region_id = { $in: region_id }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         create_start_time = (create_start_time !== null) ? create_start_time : 0
         create_end_time = (create_end_time !== null) ? create_end_time : 9999999999999
         query.create_time = { $gte: create_start_time, $lte: create_end_time }
@@ -426,6 +432,10 @@ async function getItemGuide({
  * @param {Number} task_status 事项指南状态（0或者1）
  * @param {String} task_code 事项指南编码
  * @param {String} task_name 事项指南名称（用于模糊匹配）
+ * @param {String} creator_name 创建人名字
+ * @param {String} department_name 部门名称
+ * @param {Number} start_time 创建时间的起始时间
+ * @param {Number} end_time 创建时间的终止时间
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns 
@@ -434,6 +444,10 @@ async function getItemGuides({
     task_status = null,
     task_code = null,
     task_name = null,
+    creator_name = null,
+    department_name = null,
+    start_time = null,
+    end_time = null,
     page_size = null,
     page_num = null
 }) {
@@ -442,6 +456,11 @@ async function getItemGuides({
         if (task_status !== null) query.task_status = task_status
         if (task_code !== null) query.task_code = task_code
         if (task_name !== null) query.task_name = { $regex: task_name }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        var start = (start_time !== null) ? start_time : 0
+        var end = (end_time !== null) ? end_time : 9999999999999
+        query.create_time = { $gte: start, $lte: end }
         if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
             throw new Error('page_size和page_num需要一起传')
         }
@@ -794,6 +813,10 @@ async function getRegionPaths({
  * @param {Array<Number>} region_level 区划等级
  * @param {Array<String>} parentId 上级区划id
  * @param {Array<String>} parentCode 上级区划编码（如果和parentId一起传的话就优先使用这个）
+ * @param {String} creator_name 创建人名称
+ * @param {String} department_name 部门名称
+ * @param {Number} start_time 创建时间的起始时间
+ * @param {Number} end_time 创建时间的终止时间
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns
@@ -804,6 +827,10 @@ async function getRegions({
     region_level = null,
     parentId = null,
     parentCode = null,
+    creator_name = null,
+    department_name = null,
+    start_time = null,
+    end_time = null,
     page_size = null,
     page_num = null
 }) {
@@ -819,6 +846,11 @@ async function getRegions({
             codes.forEach(function (value) { parentid.push(value['_id']) })
             query.parentId = { $in: parentid }
         }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        var start = (start_time !== null) ? start_time : 0
+        var end = (end_time !== null) ? end_time : 9999999999999
+        query.create_time = { $gte: start, $lte: end }
         if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
             throw new Error('page_size和page_num需要一起传')
         }
@@ -1200,41 +1232,17 @@ async function getRules({
     end_time = null
 }) {
     try {
-        //rule_id用于准确查询
-        if (rule_id !== null) {
-            var res = await modelRule.find({
-                rule_id: { $in: rule_id },
-                rule_name: { $ne: 'null' }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        //rule_name用于模糊查询
-        if (rule_name !== null) {
-            let start = (start_time !== null) ? start_time : 0
-            let end = (end_time !== null) ? end_time : 9999999999999
-            var res = await modelRule.find({
-                rule_name: { $regex: rule_name },
-                create_time: { $gte: start, $lte: end }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        //parentId用于查找子规则
-        if (parentId !== null) {
-            let start = (start_time !== null) ? start_time : 0
-            let end = (end_time !== null) ? end_time : 9999999999999
-            var res = await modelRule.find({
-                parentId: { $in: parentId },
-                create_time: { $gte: start, $lte: end }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        //只根据创建时间查询，或者全量查询
+        var query = {}
+        if (rule_id !== null) query.rule_id = { $in: rule_id }
+        if (rule_name !== null) query.rule_name = { $regex: rule_name }
+        else query.rule_name = { $ne: 'null' }
+        if (parentId !== null) query.parentId = { $in: parentId }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
-        var res = await modelRule.find({
-            rule_name: { $ne: 'null' },
-            create_time: { $gte: start, $lte: end }
-        }, { __v: 0 })
+        query.create_time = { $gte: start, $lte: end }
+        var res = await modelRule.find(query, { __v: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
