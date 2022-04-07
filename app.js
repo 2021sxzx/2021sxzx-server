@@ -19,6 +19,9 @@ const sideBarRouter = require('./routes/sideBar');
 const permissionRouter = require('./routes/permission');
 const systemFailureRouter = require('./routes/systemFailure')
 const systemBasicRouter = require('./routes/systemBasic.js')
+const userDepartmentRouter = require('./routes/userDepartment');
+const department = require('./model/department');
+const departmentMapUser = require('./model/departmentMapUser');
 
 const { validate_jwt } = require('./utils/validateJwt');
 
@@ -79,6 +82,7 @@ app.use('/api', roleRouter)
 app.use('/api', permissionRouter)
 app.use('/api', systemFailureRouter)
 app.use('/api', systemBasicRouter)
+app.use('/api', userDepartmentRouter)
 //app.use('/api', verifyRouter)
 
 // catch 404 and forward to error handler

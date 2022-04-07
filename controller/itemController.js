@@ -1,5 +1,4 @@
 const { ErrorModel, SuccessModel } = require('../utils/resultModel')
-const formidable = require('formidable')
 const path = require('path')
 const fs = require('fs')
 const modelItem = require('../model/item')
@@ -21,8 +20,8 @@ async function initialize() {
     //初始化区划树
     var regions = await modelRegion.find({}, { __v: 0 })
     for (let i = 0, len = regions.length; i < len; i++) {
-        regionCodeDic[regions[i].region_code] = regions[i]
-        regionIdDic[regions[i]._id] = regions[i]
+        regionCodeDic[regions[i].region_code] = regions[i]._doc
+        regionIdDic[regions[i]._id] = regions[i]._doc
         regionIdDic[regions[i]._id].children = []
     }
     //初始化区划树节点的children数组
@@ -36,7 +35,7 @@ async function initialize() {
     }
     //初始化规则树
     var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
-    rules.forEach(function (value) { ruleDic[value.rule_id] = value })
+    rules.forEach(function (value) { ruleDic[value.rule_id] = value._doc })
     console.log('Initialize done!!!')
 }
 initialize()
@@ -432,13 +431,13 @@ async function getItemGuides({
         }
         if (page_size !== null && page_num !== null) {
             var result = {}
-            result.data = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1 }).skip(page_size * page_num).limit(page_size)
+            result.data = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1, create_time: 1 }).skip(page_size * page_num).limit(page_size)
             result.total = await modelTempTask.find(query).count()
             result.page_size = page_size
             result.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: result })
         }
-        var result = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1 })
+        var result = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1, create_time: 1 })
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -490,10 +489,30 @@ async function createItemGuide({
     zzzd = null
 }) {
     try {
-        var newData = {}
+        var newData = {
+            task_code: null,
+            task_name: null,
+            wsyy: null,
+            service_object_type: null,
+            conditions: null,
+            legal_basis: null,
+            legal_period: null,
+            legal_period_type: null,
+            promised_period: null,
+            promised_period_type: null,
+            windows: null,
+            apply_content: null,
+            ckbllc: null,
+            wsbllc: null,
+            mobile_applt_website: null,
+            submit_documents: null,
+            zxpt: null,
+            qr_code: null,
+            zzzd: null
+        }
         if (task_code !== null) {
             let task = await modelTempTask.exists({ task_code: task_code })
-            if (task === false) {
+            if (task === true) {
                 throw new Error('事项指南编码已存在')
             }
             newData.task_code = task_code
@@ -525,8 +544,12 @@ async function createItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var path = await saveImageWrapper(qr_code, task_code)
-            newData.qr_code = path
+            // var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
+            // var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+            // var dataBuffer = Buffer.from(base64Data, 'base64')
+            // fs.writeFileSync(filePath, dataBuffer)
+            // newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.create(newData)
@@ -534,26 +557,6 @@ async function createItemGuide({
     } catch (err) {
         return new ErrorModel({ msg: '创建失败', data: err.message })
     }
-}
-
-async function saveImageWrapper(image, name) {
-    return new Promise(function (resolve, reject) {
-        var form = new formidable.IncomingForm()
-        form.encoding = 'utf-8'
-        form.uploadDir = path.join(__dirname, '../upload/itemGuideQRCode')
-        form.keepExtensions = true
-        form.parse(image, function (err, fields, files) {
-            if (err) {
-                reject(err)
-            }
-            var filename = files.the_file.name
-            var nameArray = filename.split('.')
-            var type = nameArray[nameArray.length - 1]
-            var newPath = path.join(form.uploadDir, '/' + name + '.' + type)
-            fs.renameSync(files.the_file.path, newPath)
-            resolve(newPath)
-        })
-    })
 }
 
 /**
@@ -642,9 +645,31 @@ async function updateItemGuide({
                 throw new Error('事项指南编码不存在')
             }
         }
-        var newData = {}
+        var newData = {
+            task_code: null,
+            task_name: null,
+            wsyy: null,
+            service_object_type: null,
+            conditions: null,
+            legal_basis: null,
+            legal_period: null,
+            legal_period_type: null,
+            promised_period: null,
+            promised_period_type: null,
+            windows: null,
+            apply_content: null,
+            ckbllc: null,
+            wsbllc: null,
+            mobile_applt_website: null,
+            submit_documents: null,
+            zxpt: null,
+            qr_code: null,
+            zzzd: null
+        }
         if (new_task_code !== null) {
-            let task = await modelTempTask.exists({ task_code: new_task_code })
+            let task = await modelTempTask.exists({
+                task_code: { $in: new_task_code, $ne: task_code }
+            })
             if (task === true) {
                 throw new Error('存在相同的事项指南编码，不能重复: ' + new_task_code)
             }
@@ -677,8 +702,12 @@ async function updateItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var path = await saveImageWrapper(qr_code, task_code)
-            newData.qr_code = path
+            // var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
+            // var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+            // var dataBuffer = Buffer.from(base64Data, 'base64')
+            // fs.writeFileSync(filePath, dataBuffer)
+            // newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
@@ -788,6 +817,7 @@ async function createItems({
         }
         //遍历数组创建事项
         var newData = []
+        var bulkOps = []
         for (let i = 0; i < items.length; i++) {
             //解构，没有传的字段默认是null
             let {
@@ -824,9 +854,20 @@ async function createItems({
                 region_code: region_code,
                 region_id: region_id
             })
+            //修改对应事项指南的状态
+            if (task.task_status === 0) {
+                bulkOps.push({
+                    updateOne: {
+                        filter: { task_code: task_code },
+                        update: { task_status: 1 }
+                    }
+                })
+            }
         }
         //批量创建
         var result = await modelItem.create(newData)
+        //批量更新
+        var result1 = await modelTempTask.bulkWrite(bulkOps)
         //返回结果
         return new SuccessModel({ msg: '创建事项成功', data: result })
     } catch (err) {
@@ -1000,14 +1041,42 @@ async function getChildRegionsByRuleAndRegion({
         result.push(region._doc)
         //找出该区划的下级区划
         // var childRegions = await modelRegion.find({ parentId: region['_id'] }, { __v: 0 })
+        // const funA = function (value, rule_id) {
+        //     return new Promise(async function (resolve, reject) {
+        //         try {
+        //             //遍历区划，检查该区划包括其全部下级区划在内是否存在rule_id对应的事项
+        //             var regionCodes = []
+        //             var q = []
+        //             q.push(value._id)
+        //             regionCodes.push(value.region_code)
+        //             while (q.length > 0) {
+        //                 let children = await modelRegion.find({ parentId: { $in: q } }, { __v: 0 })
+        //                 q = []
+        //                 for (let i = 0, len = children.length; i < len; i++) {
+        //                     q.push(children[i]._id)
+        //                     regionCodes.push(children[i].region_code)
+        //                 }
+        //             }
+        //             //找出匹配的事项
+        //             var res = await modelItem.exists({
+        //                 rule_id: rule_id,
+        //                 region_code: { $in: regionCodes }
+        //             })
+        //             resolve(res)
+        //         } catch (e) {
+        //             reject(e.message)
+        //         }
+        //     })
+        // }
         var childRegions = regionIdDic[region._id].children
         for (let i = 0; i < childRegions.length; i++) {
-            var value = childRegions[i]
+            // var value = childRegions[i]
+            var value = regionIdDic[childRegions[i]]
             //遍历区划，检查该区划包括其全部下级区划在内是否存在rule_id对应的事项
             var regionCodes = []
             var q = []
             q.push(value._id)
-            // regionCodes.push(value.region_code)
+            regionCodes.push(value.region_code)
             while (q.length > 0) {
                 // let children = await modelRegion.find({ parentId: { $in: q } }, { __v: 0 })
                 // q = []
@@ -1029,14 +1098,34 @@ async function getChildRegionsByRuleAndRegion({
                 region_code: { $in: regionCodes }
             })
             //子区划中有事项的haveItem是1，否则是0
-            value._doc.haveItem = 0
+            // value._doc.haveItem = 0
+            // if (res === true) {
+            //     value._doc.haveItem = 1
+            // }
+            // result.push(value._doc)
+            value.haveItem = 0
             if (res === true) {
-                value._doc.haveItem = 1
+                value.haveItem = 1
             }
-            result.push(value._doc)
+            result.push(value)
         }
+        // var promiseList = []
+        // for (let i = 0; i < childRegions.length; i++) {
+        //     var value = childRegions[i]
+        //     promiseList.push(funA(value, rule_id))
+        // }
+        // var res = await Promise.all(promiseList)
+        // for (let i = 0; i < childRegions.length; i++) {
+        //     var value = childRegions[i]
+        //     value._doc.haveItem = 0
+        //     if (res[i] === true) {
+        //         value._doc.haveItem = 1
+        //     }
+        //     result.push(value._doc)
+        // }
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
+        console.log(err.message)
         return new ErrorModel({ msg: '查询失败', data: err.message })
     }
 }
@@ -1132,9 +1221,6 @@ async function createRegion({
             region_level: region_level,
             parentId: parentId
         })
-        //dicCode和dicId数据过时
-        dicCode.status = 0
-        dicId.status = 0
         //返回创建结果
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
@@ -1171,9 +1257,6 @@ async function deleteRegions({
         }
         //批量删除
         await modelRegion.deleteMany({ _id: { $in: regions } })
-        //dicCode和dicId数据过时
-        dicCode.status = 0
-        dicId.status = 0
         //返回结果
         return new SuccessModel({ msg: '删除成功' })
     } catch (err) {
@@ -1243,9 +1326,6 @@ async function updateRegions({
         //批量更新
         var result = await modelRegion.bulkWrite(regionBulkOps)
         var result1 = await modelItem.bulkWrite(itemBulkOps)
-        //dicCode和dicId数据过时
-        dicCode.status = 0
-        dicId.status = 0
         //返回结果
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {

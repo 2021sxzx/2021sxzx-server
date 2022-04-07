@@ -8,8 +8,8 @@ const users = require('../model/users')
 async function addUser (userInfo) {
   try {
     const res = await users.find(userInfo);
-    console.log(!res);
-    if (!!res) {
+    // console.log(!res);
+    if (!res) {
       return;
     }
     return await users.create(userInfo)
