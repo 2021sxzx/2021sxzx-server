@@ -51,6 +51,22 @@ class userDepartmentService {
     });
     return res.department_name;
   }
+
+  // 添加初始处室数据为办公室
+  async addUserAndDepartmentInitial (account, user_name) {
+    const date = new Date().getTime();
+    await departmentMapUser.create({
+      account,
+      user_name,
+      join_time: date,
+      department_name: '办公室'
+    })
+    const res = await departmentMapUser.findOne({
+      account,
+      user_name
+    });
+    return res;
+  }
 }
 
 module.exports = new userDepartmentService();

@@ -20,7 +20,9 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
  */
 async function addUserAndReturnList (userInfo) {
   try {
-    await addUser(userInfo)
+    await addUser(userInfo);
+    await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name);
+    
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
@@ -28,7 +30,7 @@ async function addUserAndReturnList (userInfo) {
         if (!item['department_name']) {
           item['department_name'] = cal;
         }
-        console.log(item.department_name)
+
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -37,7 +39,7 @@ async function addUserAndReturnList (userInfo) {
           password: item.password,
           activation_status: item.activation_status,
           department_name: cal
-      }
+        }
       })
     )
     return new SuccessModel({
@@ -45,7 +47,7 @@ async function addUserAndReturnList (userInfo) {
       data: res_
     })
   } catch (e) {
-    return new ErrorModel({msg: e.message})
+    return new ErrorModel({msg: e.message});
   }
 }
 
