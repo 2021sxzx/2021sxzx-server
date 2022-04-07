@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userDepartmentController = require('../controller/userDepartmentController');
+const { ErrorModel } = require('../utils/resultModel');
 
 function wrap(handler) {
   return async (req, res, next) => {
@@ -8,7 +9,7 @@ function wrap(handler) {
       await handler(req, res, next);
     } catch (e) {
       throw new ErrorModel({
-        msg: "获取侧边栏失败",
+        msg: "操作失败",
         data: e.message
       });
     }

@@ -24,6 +24,12 @@ class userDepartmentService {
 
   // 删除处室
   async deleteDepartment (department_name) {
+    const isEmpty = await departmentMapUser.findOne({
+      department_name
+    });
+    if (!!isEmpty) {
+      return;
+    }
     const res = await department.deleteOne({
       department_name
     });
@@ -103,8 +109,10 @@ class userDepartmentService {
 
   async searchDepartment (searchValue) {
     const reg = new RegExp(searchValue, 'i');
-    const res = await users.find({
+    const res = await department.find({
       department_name: {$regex: reg}
+    }, {
+      department_name: 1
     });
     return new SuccessModel({
       msg: '搜索成功',
