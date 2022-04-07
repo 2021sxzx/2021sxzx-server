@@ -258,7 +258,12 @@ async function createRules({
             await modelRule.create({
                 rule_id: maxRuleId.toString(),
                 rule_name: 'null',
-                parentId: ''
+                parentId: '',
+                creator: {
+                    id: 'null',
+                    name: 'null',
+                    department_name: 'null'
+                }
             })
         } catch (e) {
             return new SuccessModel({ msg: '创建规则成功', data: res })
@@ -290,7 +295,12 @@ async function createRuleStake() {
         await modelRule.create({
             rule_id: maxRuleId.toString(),
             rule_name: 'null',
-            parentId: ''
+            parentId: '',
+            creator: {
+                id: 'null',
+                name: 'null',
+                department_name: 'null'
+            }
         })
     } catch (err) {
         throw new Error('联系管理员检查数据库的rule表，确保rule_name为null的桩存在且rule_id是最大值')
