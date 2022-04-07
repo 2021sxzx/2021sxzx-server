@@ -1,6 +1,6 @@
-const userDepartmentService = require('../service/userDepartmentService');
 const express = require('express');
 const router = express.Router();
+const userDepartmentController = require('../controller/userDepartmentController');
 
 function wrap(handler) {
   return async (req, res, next) => {
@@ -15,9 +15,10 @@ function wrap(handler) {
   };
 }
 
-router.get('/test2', async (req, res) => {
-  const k = await userDepartmentService.addDepartment("办公室2");
-  res.json(k);
-})
+router.post('/v1/Department', wrap(userDepartmentController.addDepartmentCallback));
+router.delete('/v1/Department', wrap(userDepartmentController.deleteDepartmentCallback));
+router.patch('/v1/Department', wrap(userDepartmentController.updateDepartmentCallback));
+router.get('/v1/Department', wrap(userDepartmentController.listAllDepartmentCallback));
+router.get('/v1/searchDepartment', wrap(userDepartmentController.searchDepartmentCallback));
 
 module.exports = router;
