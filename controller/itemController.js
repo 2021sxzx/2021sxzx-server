@@ -431,13 +431,13 @@ async function getItemGuides({
         }
         if (page_size !== null && page_num !== null) {
             var result = {}
-            result.data = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1 }).skip(page_size * page_num).limit(page_size)
+            result.data = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1, create_time: 1 }).skip(page_size * page_num).limit(page_size)
             result.total = await modelTempTask.find(query).count()
             result.page_size = page_size
             result.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: result })
         }
-        var result = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1 })
+        var result = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1, create_time: 1 })
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -626,7 +626,9 @@ async function updateItemGuide({
         }
         var newData = {}
         if (new_task_code !== null) {
-            let task = await modelTempTask.exists({ task_code: new_task_code })
+            let task = await modelTempTask.exists({
+                task_code: { $in: new_task_code, $ne: task_code }
+            })
             if (task === true) {
                 throw new Error('存在相同的事项指南编码，不能重复: ' + new_task_code)
             }
@@ -773,6 +775,7 @@ async function createItems({
         }
         //遍历数组创建事项
         var newData = []
+        var bulkOps = []
         for (let i = 0; i < items.length; i++) {
             //解构，没有传的字段默认是null
             let {
@@ -809,9 +812,20 @@ async function createItems({
                 region_code: region_code,
                 region_id: region_id
             })
+            //修改对应事项指南的状态
+            if (task.task_status === 0) {
+                bulkOps.push({
+                    updateOne: {
+                        filter: { task_code: task_code },
+                        update: { task_status: 1 }
+                    }
+                })
+            }
         }
         //批量创建
         var result = await modelItem.create(newData)
+        //批量更新
+        var result1 = await modelTempTask.bulkWrite(bulkOps)
         //返回结果
         return new SuccessModel({ msg: '创建事项成功', data: result })
     } catch (err) {
@@ -1165,9 +1179,6 @@ async function createRegion({
             region_level: region_level,
             parentId: parentId
         })
-        //dicCode和dicId数据过时
-        dicCode.status = 0
-        dicId.status = 0
         //返回创建结果
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
@@ -1204,9 +1215,6 @@ async function deleteRegions({
         }
         //批量删除
         await modelRegion.deleteMany({ _id: { $in: regions } })
-        //dicCode和dicId数据过时
-        dicCode.status = 0
-        dicId.status = 0
         //返回结果
         return new SuccessModel({ msg: '删除成功' })
     } catch (err) {
@@ -1276,9 +1284,6 @@ async function updateRegions({
         //批量更新
         var result = await modelRegion.bulkWrite(regionBulkOps)
         var result1 = await modelItem.bulkWrite(itemBulkOps)
-        //dicCode和dicId数据过时
-        dicCode.status = 0
-        dicId.status = 0
         //返回结果
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
