@@ -117,10 +117,10 @@ async function getCommentTotal() {
  * @param item_id 事项编码
  * @returns {Promise<*>}
  */
-async function getTask(item_id){
+async function getTask(task_code){
   try {
-    let itemData = await getItem(item_id)
-    let data = await task.find({task_code: itemData.task_code},{ _id: 1, task_code: 1, task_name: 1})
+    let data = await task.find({task_code: task_code},{ _id: 1, task_code: 1, task_name: 1})
+    console.log(task_code);
     return data[0]
   } catch (e) {
     return e.message
@@ -161,10 +161,9 @@ async function getItem(item_id){
  * @param item_id 事项编码
  * @returns {Promise<*>}
  */
-async function getRule(item_id) {
+async function getRule(rule_id) {
   try {
-    let itemRuleData = await getItemRule(item_id)
-    let data = await rule.find({rule_id: itemRuleData.rule_id})
+    let data = await rule.find({rule_id: rule_id})
     return data[0]
   } catch (e) {
     return e.message
@@ -180,12 +179,12 @@ async function getCommentDetail({pageNum,score}) {
     let commentArr = await getAllUserComment({pageNum, score})
     for(let i=0;i<commentArr.length;i++) {
       let item_id = commentArr[i].item_id
-      let ruleData = await getRule(item_id)
-      let task = await getTask(item_id)
-      let item_rule = await getItemRule(item_id)
+      let item = await getItem(item_id)
+      console.log(item.task_code);
+      let ruleData = await getRule(item.rule_id)
+      let task = await getTask(item.task_code)
       commentArr[i].rule = ruleData
       commentArr[i].task = task
-      commentArr[i].item_rule = item_rule
     }
     return commentArr
   } catch (e) {

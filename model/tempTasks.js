@@ -114,6 +114,20 @@ const tempTaskSchema = new mongoose.Schema({
     zzzd: {                   //自助终端
         type: String,
         default: '',
+    },
+    creator: {      //创建人
+        id: {
+            type: String,
+            required: true
+        },
+        name: {
+            type: String,
+            required: true
+        },
+        department_name: {
+            type: String,
+            required: true
+        }
     }
 })
 

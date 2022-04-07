@@ -9,6 +9,7 @@ const modelTempTask = require('../model/tempTasks')
 const modelUserRank = require('../model/userRank')
 const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
+const modelDepartmentMapUsers = require('../model/departmentMapUser')
 
 //仅用于getRegionPaths函数，避免并发时重复创建导致内存占用临时骤增
 var regionCodeDic = {}
@@ -177,14 +178,24 @@ async function getItems({
  * @returns
  */
 async function createRules({
+    user_id = null,
     rules = null
 }) {
     try {
-        if (rules === null) {
-            throw new Error('请求体中需要一个rules属性，且该属性是一个数组')
+        if (user_id === null || rules === null) {
+            throw new Error('请求体中需要user_id和rules')
         }
         if (rules.length <= 0) {
             throw new Error('数组长度小于等于0')
+        }
+        //检查user_id
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在: ' + user_id)
+        }
+        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
+        if (department === null) {
+            throw new Error('用户没有所属部门')
         }
         //检查桩
         var stakes = await modelRule.find({ rule_name: 'null' }, { _id: 0, __v: 0 })
@@ -217,7 +228,12 @@ async function createRules({
             arr.push({
                 rule_id: rules[i].rule_id,
                 rule_name: rules[i].rule_name,
-                parentId: rules[i].parentId
+                parentId: rules[i].parentId,
+                creator: {
+                    id: user_id,
+                    name: user.user_name,
+                    department_name: department.department_name
+                }
             })
         }
         var result = await modelRule.create(arr)
@@ -431,13 +447,17 @@ async function getItemGuides({
         }
         if (page_size !== null && page_num !== null) {
             var result = {}
-            result.data = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1, create_time: 1 }).skip(page_size * page_num).limit(page_size)
+            result.data = await modelTempTask.find(query, {
+                task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
+            }).skip(page_size * page_num).limit(page_size)
             result.total = await modelTempTask.find(query).count()
             result.page_size = page_size
             result.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: result })
         }
-        var result = await modelTempTask.find(query, { task_status: 1, task_code: 1, task_name: 1, create_time: 1 })
+        var result = await modelTempTask.find(query, {
+            task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
+        })
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -468,6 +488,7 @@ async function getItemGuides({
  * @returns 
  */
 async function createItemGuide({
+    user_id = null,
     task_code = null,
     task_name = null,
     wsyy = null,
@@ -489,6 +510,18 @@ async function createItemGuide({
     zzzd = null
 }) {
     try {
+        //检查user_id
+        if (user_id === null) {
+            throw new Error('需要user_id')
+        }
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在: ' + user_id)
+        }
+        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
+        if (department === null) {
+            throw new Error('用户没有所属部门')
+        }
         var newData = {
             task_code: null,
             task_name: null,
@@ -508,7 +541,12 @@ async function createItemGuide({
             submit_documents: null,
             zxpt: null,
             qr_code: null,
-            zzzd: null
+            zzzd: null,
+            creator: {
+                id: user_id,
+                name: user.user_name,
+                department_name: department.department_name
+            }
         }
         if (task_code !== null) {
             let task = await modelTempTask.exists({ task_code: task_code })
@@ -806,14 +844,24 @@ async function getRegions({
  * @returns
  */
 async function createItems({
+    user_id = null,
     items = null
 }) {
     try {
-        if (items === null) {
-            throw new Error('至少需要items属性，且该属性是一个数组')
+        if (user_id === null || items === null) {
+            throw new Error('需要user_id和items')
         }
         if (!items.length || items.length <= 0) {
             throw new Error('数组长度小于等于0')
+        }
+        //检查user_id
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在: ' + user_id)
+        }
+        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
+        if (department === null) {
+            throw new Error('用户没有所属部门')
         }
         //遍历数组创建事项
         var newData = []
@@ -852,7 +900,12 @@ async function createItems({
                 task_code: task_code,
                 rule_id: rule_id,
                 region_code: region_code,
-                region_id: region_id
+                region_id: region_id,
+                creator: {
+                    id: user_id,
+                    name: user.user_name,
+                    department_name: department.department_name
+                }
             })
             //修改对应事项指南的状态
             if (task.task_status === 0) {
@@ -1197,14 +1250,27 @@ async function getRules({
  * @returns
  */
 async function createRegion({
+    user_id = null,
     region_code = null,
     region_name = null,
     region_level = null,
     parentId = null
 }) {
     try {
+        if (user_id === null) {
+            throw new Error('需要user_id')
+        }
         if (region_code === null || region_name === null || region_level === null || parentId === null) {
             throw new Error('创建区划的时候必须包括全部字段的信息，包括region_code、region_name、region_level和parentCode')
+        }
+        //检查user_id
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在: ' + user_id)
+        }
+        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
+        if (department === null) {
+            throw new Error('用户没有所属部门')
         }
         //检查region_level和parentId的合法性
         var parent = await modelRegion.findOne({ _id: parentId }, { __v: 0 })
@@ -1219,7 +1285,12 @@ async function createRegion({
             region_code: region_code,
             region_name: region_name,
             region_level: region_level,
-            parentId: parentId
+            parentId: parentId,
+            creator: {
+                id: user_id,
+                name: user.user_name,
+                department_name: department.department_name
+            }
         })
         //返回创建结果
         return new SuccessModel({ msg: '创建成功', data: result })
