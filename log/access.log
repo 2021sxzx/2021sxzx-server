@@ -2675,3 +2675,5 @@ zyk ::1 - - [2022-03-08T08:11:22.916Z] "GET /api/v1/allComment HTTP/1.1" 200 282
 ::ffff:127.0.0.1 - - [07/Apr/2022:04:55:50 +0000] "GET /api/test2 HTTP/1.1" 200 120 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [07/Apr/2022:04:56:31 +0000] "GET /api/test2 HTTP/1.1" 200 216 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [07/Apr/2022:04:57:52 +0000] "GET /api/test2 HTTP/1.1" 200 65 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [07/Apr/2022:08:33:10 +0000] "POST /api/v1/getRules HTTP/1.1" 404 70 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [07/Apr/2022:08:34:36 +0000] "POST /api/v1/getRules HTTP/1.1" 200 25241 "-" "PostmanRuntime/7.29.0"

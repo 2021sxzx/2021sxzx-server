@@ -1220,6 +1220,8 @@ async function getChildRegionsByRuleAndRegion({
  * @param {Array<String>} rule_id 规则id
  * @param {String} rule_name 规则名称，用于模糊查询
  * @param {Array<String>} parentId 父规则id
+ * @param {String} creator_name 创建人名字
+ * @param {String} department_name 部门名称
  * @param {Number} start_time 规则创建时间的起始时间
  * @param {Number} end_time 规则创建时间的终止时间
  * @returns
@@ -1228,6 +1230,8 @@ async function getRules({
     rule_id = null,
     rule_name = null,
     parentId = null,
+    creator_name = null,
+    department_name = null,
     start_time = null,
     end_time = null
 }) {
