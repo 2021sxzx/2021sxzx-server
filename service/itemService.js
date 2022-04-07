@@ -5,11 +5,14 @@ var regionCodeDic = { status: 0, data: {} }
 var regionIdDic = { status: 0, data: {} }
 var ruleDic = { status: 0, data: {} }
 
-var promiseList = []
+var updateRegion = []
+var updateRule = []
 
-function updateData() {
+function updateRegionData() {
     return new Promise(async function (resolve, reject) {
         try {
+            regionCodeDic.status = 0
+            regionIdDic.status = 0
             //初始化区划树
             var regions = await modelRegion.find({}, { __v: 0 })
             for (let i = 0, len = regions.length; i < len; i++) {
@@ -29,6 +32,18 @@ function updateData() {
             //区划树完成
             regionCodeDic.status = 1
             regionIdDic.status = 1
+            console.log('Get Region Tree !!!')
+            resolve()
+        } catch (err) {
+            reject(err.message)
+        }
+    })
+}
+
+function updateRuleData() {
+    return new Promise(async function (resolve, reject) {
+        try {
+            ruleDic.status = 0
             //初始化规则树
             var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
             for (let i = 0, len = rules.length; i < len; i++) {
@@ -46,7 +61,7 @@ function updateData() {
             }
             //规则树完成
             ruleDic.status = 1
-            console.log('Get Region Tree And Rule Tree !!!')
+            console.log('Get Rule Tree !!!')
             resolve()
         } catch (err) {
             reject(err.message)
@@ -62,13 +77,15 @@ async function getRegionCodeDic() {
         }
         //当前内存中的不可用，需要等待更新
         //检查是否正在更新
-        if (promiseList.length > 0) {
-            var result = await Promise.all(promiseList)
+        if (updateRegion.length > 0) {
+            var result = await Promise.all(updateRegion)
+            updateRegion = []
             return regionCodeDic.data
         }
         //创建一个更新任务
-        promiseList.push(updateData())
-        var result = await Promise.all(promiseList)
+        updateRegion.push(updateRegionData())
+        var result = await Promise.all(updateRegion)
+        updateRegion = []
         return regionCodeDic.data
     } catch (err) {
         console.log(err.message)
@@ -84,16 +101,55 @@ async function getRegionIdDic() {
         }
         //当前内存中的不可用，需要等待更新
         //检查是否正在更新
-        if (promiseList.length > 0) {
-            var result = await Promise.all(promiseList)
+        if (updateRegion.length > 0) {
+            var result = await Promise.all(updateRegion)
+            updateRegion = []
             return regionIdDic.data
         }
         //创建一个更新任务
-        promiseList.push(updateData())
-        var result = await Promise.all(promiseList)
+        updateRegion.push(updateRegionData())
+        var result = await Promise.all(updateRegion)
+        updateRegion = []
         return regionIdDic.data
     } catch (err) {
         console.log(err.message)
         return null
     }
 }
+
+async function getRuleDic() {
+    try {
+        //当前内存中的ruleDic可用
+        if (ruleDic.status === 1) {
+            return ruleDic.data
+        }
+        //当前内存中的不可用，需要等待更新
+        //检查是否正在更新
+        if (updateRule.length > 0) {
+            var result = await Promise.all(updateRule)
+            updateRule = []
+            return ruleDic.data
+        }
+        //创建一个更新任务
+        updateRule.push(updateRuleData())
+        var result = await Promise.all(updateRule)
+        updateRule = []
+        return ruleDic.data
+    } catch (err) {
+        console.log(err.message)
+        return null
+    }
+}
+
+async function updateRegion() {
+    regionCodeDic.status = 0
+    regionIdDic.status = 0
+    updateRegion.push(updateRegionData())
+}
+
+async function updateRule() {
+    regionCodeDic.status = 0
+    regionIdDic.status = 0
+    updateRule.push(updateRuleData())
+}
+
