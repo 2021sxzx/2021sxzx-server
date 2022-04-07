@@ -2666,3 +2666,6 @@ zyk ::1 - - [2022-03-08T08:11:22.916Z] "GET /api/v1/allComment HTTP/1.1" 200 282
 ::ffff:127.0.0.1 - - [07/Apr/2022:03:05:06 +0000] "POST /api/v1/createItemGuide HTTP/1.1" 404 70 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [07/Apr/2022:03:05:15 +0000] "POST /api/v1/deleteItemGuides HTTP/1.1" 200 59 "-" "PostmanRuntime/7.29.0"
 >>>>>>> 35220f0059f19829918085420c85715b31defdde
+::ffff:127.0.0.1 - - [07/Apr/2022:03:32:46 +0000] "POST /api/v1/user HTTP/1.1" 200 1503 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [07/Apr/2022:03:36:50 +0000] "POST /api/v1/user HTTP/1.1" 200 1503 "-" "PostmanRuntime/7.29.0"
+::ffff:127.0.0.1 - - [07/Apr/2022:03:39:44 +0000] "POST /api/v1/user HTTP/1.1" 200 1682 "-" "PostmanRuntime/7.29.0"

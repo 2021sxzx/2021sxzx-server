@@ -22,7 +22,7 @@ async function addUserAndReturnList (userInfo) {
   try {
     await addUser(userInfo);
     await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name);
-    
+
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
@@ -73,7 +73,7 @@ async function returnUserList () {
           password: item.password,
           activation_status: item.activation_status,
           department_name: cal
-      }
+        }
       })
     )
     return new SuccessModel({
