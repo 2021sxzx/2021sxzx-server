@@ -24,7 +24,7 @@ function setStatusCode(res,data) {
 router.post('/v1/comment',async (req,res,next) => {
   let commentData = req.body;
   commentData.create_time = Date.now()
-  let data = await saveUserComment(commentData);
+  let data = await saveUserComment(commentData)
   setStatusCode(res, data)
   res.json(data)
 })
@@ -63,4 +63,4 @@ router.get('/v1/commentParam',async (req,res,next) => {
   setStatusCode(res,data)
   res.json(data)
 })
-module.exports = router;
+module.exports = router

@@ -18,8 +18,22 @@ const ruleSchema = new mongoose.Schema({
     create_time: {  // 创建时间
         type: Number,
         default: Date.now()
+    },
+    creator: {      //创建人
+        id: {
+            type: String,
+            required: true
+        },
+        name: {
+            type: String,
+            required: true
+        },
+        department_name: {
+            type: String,
+            required: true
+        }
     }
 })
 
-const rule = mongoose.model('rule', ruleSchema, 'rule')
+const rule = mongoose.model('rule', ruleSchema, 'tempRule')
 module.exports = rule

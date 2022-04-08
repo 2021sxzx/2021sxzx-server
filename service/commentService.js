@@ -1,6 +1,6 @@
 const comment = require("../model/comment")
 const item = require("../model/item")
-const itemRule = require("../model/itemRule")
+// const itemRule = require("../model/itemRule")
 const task = require("../model/task")
 const rule = require("../model/rule")
 
@@ -12,7 +12,7 @@ const rule = require("../model/rule")
 async function saveComment(commentData) {
   try {
     let res = await comment.create(commentData)
-    return res;
+    return res
   } catch (e) {
     throw new Error(e.message)
   }
@@ -24,27 +24,27 @@ async function saveComment(commentData) {
  * @param score
  * @returns {Promise<*>}
  */
-async function getAllUserComment({pageNum , score}) {
+async function getAllUserComment({pageNum, score}) {
   try {
     if(pageNum == 0){
       if(score !== 0) {
-        let res = await comment.find({score:{$eq:score}}).lean()
-        return res;
+        let res = await comment.find({score: {$eq: score}}).lean()
+        return res
       } else {
         let res = await comment.find().lean()
-        return res;
+        return res
       }
     } else {
       if(score !== 0) {
-        let res = await comment.find({score:{$eq:score}}).skip((pageNum-1)*10).limit(pageNum*10).lean()
-        return res;
+        let res = await comment.find({score: {$eq: score}}).skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
+        return res
       } else {
-        let res = await comment.find().skip((pageNum-1)*10).limit(pageNum*10).lean()
-        return res;
+        let res = await comment.find().skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
+        return res
       }
     }
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
@@ -54,10 +54,10 @@ async function getAllUserComment({pageNum , score}) {
  */
 async function getAllUserComment2() {
   try {
-    let res = await comment.find();
-    return res;
+    let res = await comment.find()
+    return res
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
@@ -72,13 +72,13 @@ async function getCommentParam() {
         $group: {
           _id: '$score',
           count: {
-            $sum: 1,
+            $sum: 1
           },
         },
       },
       {
-        $sort:{
-          _id:1
+        $sort: {
+          _id: 1
         }
       }
     ])
@@ -93,7 +93,7 @@ async function getCommentParam() {
     })
     let count = await getCommentTotal()
     avgScore /= count
-    let res3 = {totalNum:count,avgScore:avgScore,scoreInfo:res2}
+    let res3 = {totalNum: count, avgScore: avgScore, scoreInfo: res2}
     return res3
   } catch (e) {
     throw new Error(e.message)
@@ -117,10 +117,10 @@ async function getCommentTotal() {
  * @param item_id 事项编码
  * @returns {Promise<*>}
  */
-async function getTask(item_id){
+async function getTask(task_code){
   try {
-    let itemData = await getItem(item_id)
-    let data = await task.find({task_code: itemData.task_code},{ _id: 1, task_code: 1, task_name: 1})
+    let data = await task.find({task_code: task_code},{ _id: 1, task_code: 1, task_name: 1})
+    console.log(task_code);
     return data[0]
   } catch (e) {
     return e.message
@@ -132,15 +132,15 @@ async function getTask(item_id){
  * @param item_id 事项编码
  * @returns {Promise<*>}
  */
-async function getItemRule(item_id) {
-  try {
-    let itemData = await getItem(item_id)
-    let data = await itemRule.find({item_rule_id: itemData.item_rule_id})
-    return data[0]
-  } catch (e) {
-    return e.message
-  }
-}
+// async function getItemRule(item_id) {
+//   try {
+//     let itemData = await getItem(item_id)
+//     let data = await itemRule.find({item_rule_id: itemData.item_rule_id})
+//     return data[0]
+//   } catch (e) {
+//     return e.message
+//   }
+// }
 
 /**
  * 查找事项的方法
@@ -161,10 +161,9 @@ async function getItem(item_id){
  * @param item_id 事项编码
  * @returns {Promise<*>}
  */
-async function getRule(item_id) {
+async function getRule(rule_id) {
   try {
-    let itemRuleData = await getItemRule(item_id)
-    let data = await rule.find({rule_id:itemRuleData.rule_id})
+    let data = await rule.find({rule_id: rule_id})
     return data[0]
   } catch (e) {
     return e.message
@@ -180,12 +179,12 @@ async function getCommentDetail({pageNum,score}) {
     let commentArr = await getAllUserComment({pageNum, score})
     for(let i=0;i<commentArr.length;i++) {
       let item_id = commentArr[i].item_id
-      let ruleData = await getRule(item_id)
-      let task = await getTask(item_id)
-      let item_rule = await getItemRule(item_id)
+      let item = await getItem(item_id)
+      console.log(item.task_code);
+      let ruleData = await getRule(item.rule_id)
+      let task = await getTask(item.task_code)
       commentArr[i].rule = ruleData
       commentArr[i].task = task
-      commentArr[i].item_rule = item_rule
     }
     return commentArr
   } catch (e) {
@@ -202,7 +201,7 @@ async function getCommentDetail({pageNum,score}) {
  * @param typeData
  * @returns {Promise<*>}
  */
-async function searchByCondition({startTime,endTime,score,type,typeData}) {
+async function searchByCondition({startTime, endTime, score, type, typeData}) {
   try {
     let condition = {}
     condition.pageNum = 0
@@ -252,7 +251,6 @@ async function searchByCondition({startTime,endTime,score,type,typeData}) {
     return e.message
   }
 }
-
 
 module.exports = {
   saveComment,

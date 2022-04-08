@@ -1,9 +1,23 @@
 const {
     getSystemLogDetail,
     getAllSystemLog2,
-    searchByCondition
+    searchByCondition,
+    showSystemLog
   } = require("../service/systemLogService")
   const {SuccessModel, ErrorModel} = require('../utils/resultModel');
+
+  /**
+   * 查看测试系统日志
+   * @returns {Promise<ErrorModel|SuccessModel>}
+   */
+   async function showSystemLogController() {
+    try {
+      let data = await showSystemLog();
+      return new SuccessModel({msg: '获取系统日志成功', data:data});
+    } catch (e) {
+      return new ErrorModel({msg:e.message})
+    }
+  }
 
   /**
    * 获取系统日志(不包括操作人)
@@ -57,5 +71,6 @@ const {
 
   module.exports = {
     getSearchSystemLog,
-    getAllSystemLogDetail
+    getAllSystemLogDetail,
+    showSystemLogController
   }

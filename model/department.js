@@ -6,6 +6,10 @@ const departmentSchema = new mongoose.Schema({
     type:String,
     required:true
   },
+  department_id: { // 部门名称对应的id
+    type: Number,
+    require: true
+  },
   subordinate_departments:{   //下属部门
     type:Array,
     default:[]

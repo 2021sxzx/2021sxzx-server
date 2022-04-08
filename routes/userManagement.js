@@ -6,7 +6,8 @@ const {
   returnUserList,
   updateUserAndReturnList,
   deleteUserAndReturnList,
-  searchUserAndReturnList
+  searchUserAndReturnList,
+  setActivationAndReturn
 } = require('../controller/userManagementController')
 
 function setStatusCode(res, data) {

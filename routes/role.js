@@ -77,8 +77,8 @@ router.get('/v1/role', async (req, res, next) => {
  * 搜索角色
  */
 router.post('/v1/searchRole', async (req, res, next) => {
-  let {searchData} = req.body
-  let data = await searchRoleAndReturnObject(searchData)
+  let {searchValue} = req.body
+  let data = await searchRoleAndReturnObject(searchValue)
   setStatusCode(res, data)
   res.json(data)
 })

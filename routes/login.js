@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    postLogin
+    postLogin,
+    postLogout
 } = require("../controller/loginController")
 
 
@@ -15,22 +16,38 @@ function setStatusCode(res, data) {
 }
 
 
-router.post('/v1/login', async (req, res, next) => {
+router.post('/v1/login', async (req, res) => {
     let loginData = req.body;
     let data = await postLogin(loginData);
     setStatusCode(res, data);
-    console.log('login');
     if (data.code == 200) {
         const jwt = data.data.jwt;
         const token = jwt.token;
+        const refresh_token = data.data.refresh_token;
         const cookie = data.data.cookie;
-        res.cookie('auth-token', token, cookie);
+        res.cookie('access_token', token, cookie);
+        res.cookie("refresh_token", refresh_token, {
+            // secure: true,
+            httpOnly: true
+        });
         res.json(data);
     } else if (data.code == 404) {
-        console.log(data.msg);
         res.status(403).send(data.msg);
 
     }
+
+});
+
+router.post('/v1/logout', async (req, res, next) => {
+    let logoutData = req.body;
+    let data = await postLogout(logoutData);
+
+
+
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
+    //res.redirect("/v1/home");
+    res.json(data);
 
 });
 

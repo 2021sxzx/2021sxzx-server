@@ -1,8 +1,8 @@
 const mongoose = require("mongoose")
 
 // comment表的定义
-const userDepartmentSchema = new mongoose.Schema({
-  idc:{  // 用户的证件号码
+const departmentMapUserSchema = new mongoose.Schema({
+  account:{  // 用户的证件号码
     type:String,
     required:true
   },
@@ -11,7 +11,7 @@ const userDepartmentSchema = new mongoose.Schema({
     required:true
   },
   join_time:{   //加入的时间
-    type:String,
+    type:Number,
     required:true
   },
   department_name:{  //部门的名称
@@ -20,5 +20,5 @@ const userDepartmentSchema = new mongoose.Schema({
   }
 })
 
-const userDepartment = mongoose.model('user_department',userDepartmentSchema)
-module.exports = userDepartment
+const departmentMapUser = mongoose.model('departmentMapUser',departmentMapUserSchema)
+module.exports = departmentMapUser;
