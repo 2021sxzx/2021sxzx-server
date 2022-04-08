@@ -5,7 +5,7 @@ const roleMapPermission = require('../model/roleMapPermission');
 const { SuccessModel } = require('../utils/resultModel');
 
 class sideBarData {
-  async getSideBarList (role_name) {
+  async   getSideBarList (role_name) {
     let permissionIdentifier = await roleMapPermission.find({
       role_name: role_name
     });
