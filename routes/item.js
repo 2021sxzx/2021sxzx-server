@@ -160,4 +160,16 @@ router.post('/v1/updateItemGuide', async (req, res, next) => {
     res.json(data)
 })
 
+router.post('/v1/addAuditAdvise', async (req, res, next) => {
+    let data = await itemController.addAuditAdvise(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/getItemGuideAndAuditAdvises', async (req, res, next) => {
+    let data = await itemController.getItemGuideAndAuditAdvises(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 module.exports = router

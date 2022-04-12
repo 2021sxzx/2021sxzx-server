@@ -12,6 +12,10 @@ const tempTaskSchema = new mongoose.Schema({
     task_code: {              //事项指南编码
         type: String,
         required: true,
+        index: {
+            unique: true,
+            sparse: true
+        }
     },
     task_name: {              //事项指南名称
         type: String,
