@@ -62,7 +62,8 @@ const itemSchema = new mongoose.Schema({
                 type: String,
                 default: ''
             }
-        }]
+        }],
+        default: []
     }
 })
 

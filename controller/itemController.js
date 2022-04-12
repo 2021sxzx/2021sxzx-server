@@ -82,7 +82,7 @@ async function getUserRankSchema() {
  */
 async function getRuleTree() {
     try {
-        var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { __v: 0 })
+        var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { __v: 0, children: 0 })
         var res = {}
         for (let i = 0; i < rules.length; i++) {
             res[rules[i].rule_id] = rules[i]
@@ -99,7 +99,7 @@ async function getRuleTree() {
  */
 async function getRegionTree() {
     try {
-        var regions = await modelRegion.find({}, { __v: 0 })
+        var regions = await modelRegion.find({}, { __v: 0, children: 0 })
         var res = {}
         for (let i = 0; i < regions.length; i++) {
             res[regions[i]['_id']] = regions[i]
@@ -876,13 +876,13 @@ async function getRegions({
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
             var dict = {}
-            dict.data = await modelRegion.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            dict.data = await modelRegion.find(query, { __v: 0, children: 0 }).skip(page_num * page_size).limit(page_size)
             dict.total = await modelRegion.find(query).count()
             dict.page_size = page_size
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
         }
-        var regions = await modelRegion.find(query, { __v: 0 })
+        var regions = await modelRegion.find(query, { __v: 0, children: 0 })
         return new SuccessModel({ msg: '查询成功', data: regions })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -1265,7 +1265,7 @@ async function getRules({
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = { $gte: start, $lte: end }
-        var res = await modelRule.find(query, { __v: 0 })
+        var res = await modelRule.find(query, { __v: 0, children: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
