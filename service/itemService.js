@@ -59,7 +59,7 @@ async function initialize() {
     }
 }
 
-initialize()
+// initialize()
 
 async function createRegions(region_id) {
     //把字典设为不可用状态
