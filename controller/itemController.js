@@ -121,6 +121,8 @@ async function getRegionTree() {
  * @param {Array<String>} rule_id 规则id
  * @param {Array<String>} region_code 区划编码
  * @param {Array<String>} region_id 区划id
+ * @param {String} creator_name 创建人名字
+ * @param {String} department_name 部门名称
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns
@@ -136,6 +138,8 @@ async function getItems({
     rule_id = null,
     region_code = null,
     region_id = null,
+    creator_name = null,
+    department_name = null,
     page_size = null,
     page_num = null
 }) {
@@ -147,6 +151,8 @@ async function getItems({
         if (rule_id !== null) query.rule_id = { $in: rule_id }
         if (region_code !== null) query.region_code = { $in: region_code }
         if (region_id !== null) query.region_id = { $in: region_id }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         create_start_time = (create_start_time !== null) ? create_start_time : 0
         create_end_time = (create_end_time !== null) ? create_end_time : 9999999999999
         query.create_time = { $gte: create_start_time, $lte: create_end_time }
@@ -252,7 +258,12 @@ async function createRules({
             await modelRule.create({
                 rule_id: maxRuleId.toString(),
                 rule_name: 'null',
-                parentId: ''
+                parentId: '',
+                creator: {
+                    id: 'null',
+                    name: 'null',
+                    department_name: 'null'
+                }
             })
         } catch (e) {
             return new SuccessModel({ msg: '创建规则成功', data: res })
@@ -284,7 +295,12 @@ async function createRuleStake() {
         await modelRule.create({
             rule_id: maxRuleId.toString(),
             rule_name: 'null',
-            parentId: ''
+            parentId: '',
+            creator: {
+                id: 'null',
+                name: 'null',
+                department_name: 'null'
+            }
         })
     } catch (err) {
         throw new Error('联系管理员检查数据库的rule表，确保rule_name为null的桩存在且rule_id是最大值')
@@ -314,9 +330,9 @@ async function deleteRules({
             }
         }
         //检查是否有事项指南与规则绑定
-        var items = await modelItem.find({ rule_id: { $in: rules } }, { __v: 0 })
-        if (items.length > 0) {
-            return new SuccessModel({ msg: '删除规则失败，有与其绑定的事项还未处理', data: { code: 999, items: items } })
+        var items = await modelItem.find({ rule_id: { $in: rules } }, { __v: 0 }).count()
+        if (items > 0) {
+            return new SuccessModel({ msg: '删除规则失败，有与其绑定的事项还未处理', data: { code: 999 } })
         }
         //批量删除
         var result = await modelRule.deleteMany({ rule_id: { $in: rules } })
@@ -426,6 +442,10 @@ async function getItemGuide({
  * @param {Number} task_status 事项指南状态（0或者1）
  * @param {String} task_code 事项指南编码
  * @param {String} task_name 事项指南名称（用于模糊匹配）
+ * @param {String} creator_name 创建人名字
+ * @param {String} department_name 部门名称
+ * @param {Number} start_time 创建时间的起始时间
+ * @param {Number} end_time 创建时间的终止时间
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns 
@@ -434,6 +454,10 @@ async function getItemGuides({
     task_status = null,
     task_code = null,
     task_name = null,
+    creator_name = null,
+    department_name = null,
+    start_time = null,
+    end_time = null,
     page_size = null,
     page_num = null
 }) {
@@ -442,6 +466,11 @@ async function getItemGuides({
         if (task_status !== null) query.task_status = task_status
         if (task_code !== null) query.task_code = task_code
         if (task_name !== null) query.task_name = { $regex: task_name }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        var start = (start_time !== null) ? start_time : 0
+        var end = (end_time !== null) ? end_time : 9999999999999
+        query.create_time = { $gte: start, $lte: end }
         if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
             throw new Error('page_size和page_num需要一起传')
         }
@@ -704,6 +733,7 @@ async function updateItemGuide({
             qr_code: null,
             zzzd: null
         }
+        var bulkOps = []
         if (new_task_code !== null) {
             let task = await modelTempTask.exists({
                 task_code: { $in: new_task_code, $ne: task_code }
@@ -712,6 +742,12 @@ async function updateItemGuide({
                 throw new Error('存在相同的事项指南编码，不能重复: ' + new_task_code)
             }
             newData.task_code = new_task_code
+            bulkOps.push({
+                updateOne: {
+                    fileter: { task_code: task_code },
+                    update: { task_code: new_task_code }
+                }
+            })
         }
         if (task_name !== null) newData.task_name = task_name
         if (wsyy !== null) newData.wsyy = wsyy
@@ -749,6 +785,7 @@ async function updateItemGuide({
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
+        var result1 = await modelItem.bulkWrite(bulkOps)
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
@@ -794,6 +831,10 @@ async function getRegionPaths({
  * @param {Array<Number>} region_level 区划等级
  * @param {Array<String>} parentId 上级区划id
  * @param {Array<String>} parentCode 上级区划编码（如果和parentId一起传的话就优先使用这个）
+ * @param {String} creator_name 创建人名称
+ * @param {String} department_name 部门名称
+ * @param {Number} start_time 创建时间的起始时间
+ * @param {Number} end_time 创建时间的终止时间
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns
@@ -804,6 +845,10 @@ async function getRegions({
     region_level = null,
     parentId = null,
     parentCode = null,
+    creator_name = null,
+    department_name = null,
+    start_time = null,
+    end_time = null,
     page_size = null,
     page_num = null
 }) {
@@ -819,6 +864,11 @@ async function getRegions({
             codes.forEach(function (value) { parentid.push(value['_id']) })
             query.parentId = { $in: parentid }
         }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        var start = (start_time !== null) ? start_time : 0
+        var end = (end_time !== null) ? end_time : 9999999999999
+        query.create_time = { $gte: start, $lte: end }
         if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
             throw new Error('page_size和page_num需要一起传')
         }
@@ -1188,6 +1238,8 @@ async function getChildRegionsByRuleAndRegion({
  * @param {Array<String>} rule_id 规则id
  * @param {String} rule_name 规则名称，用于模糊查询
  * @param {Array<String>} parentId 父规则id
+ * @param {String} creator_name 创建人名字
+ * @param {String} department_name 部门名称
  * @param {Number} start_time 规则创建时间的起始时间
  * @param {Number} end_time 规则创建时间的终止时间
  * @returns
@@ -1196,45 +1248,23 @@ async function getRules({
     rule_id = null,
     rule_name = null,
     parentId = null,
+    creator_name = null,
+    department_name = null,
     start_time = null,
     end_time = null
 }) {
     try {
-        //rule_id用于准确查询
-        if (rule_id !== null) {
-            var res = await modelRule.find({
-                rule_id: { $in: rule_id },
-                rule_name: { $ne: 'null' }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        //rule_name用于模糊查询
-        if (rule_name !== null) {
-            let start = (start_time !== null) ? start_time : 0
-            let end = (end_time !== null) ? end_time : 9999999999999
-            var res = await modelRule.find({
-                rule_name: { $regex: rule_name },
-                create_time: { $gte: start, $lte: end }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        //parentId用于查找子规则
-        if (parentId !== null) {
-            let start = (start_time !== null) ? start_time : 0
-            let end = (end_time !== null) ? end_time : 9999999999999
-            var res = await modelRule.find({
-                parentId: { $in: parentId },
-                create_time: { $gte: start, $lte: end }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        //只根据创建时间查询，或者全量查询
+        var query = {}
+        if (rule_id !== null) query.rule_id = { $in: rule_id }
+        if (rule_name !== null) query.rule_name = { $regex: rule_name }
+        else query.rule_name = { $ne: 'null' }
+        if (parentId !== null) query.parentId = { $in: parentId }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
-        var res = await modelRule.find({
-            rule_name: { $ne: 'null' },
-            create_time: { $gte: start, $lte: end }
-        }, { __v: 0 })
+        query.create_time = { $gte: start, $lte: end }
+        var res = await modelRule.find(query, { __v: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -1322,9 +1352,9 @@ async function deleteRegions({
             }
         }
         //检查是否有事项指南与区划绑定
-        var items = await modelItem.find({ region_id: { $in: regions } }, { __v: 0 })
-        if (items.length > 0) {
-            return new SuccessModel({ msg: '删除区划失败，有与其绑定的事项还未处理', data: { code: 999, items: items } })
+        var items = await modelItem.find({ region_id: { $in: regions } }, { __v: 0 }).count()
+        if (items > 0) {
+            return new SuccessModel({ msg: '删除区划失败，有与其绑定的事项还未处理', data: { code: 999 } })
         }
         //批量删除
         await modelRegion.deleteMany({ _id: { $in: regions } })
@@ -1369,13 +1399,9 @@ async function updateRegions({
             if (region === null) {
                 throw new Error('_id不存在: ' + _id)
             }
-            //更新region（差量）
+            //更新region
             let newData = {}
-            if (region_code !== null) {
-                let r = await modelRegion.findOne({ region_code: region_code }, { __v: 0 })
-                if (r !== null) {
-                    throw new Error('region_code已存在，更新失败: ' + region_code)
-                }
+            if (region_code !== region.region_code) {
                 newData.region_code = region_code
                 itemBulkOps.push({
                     updateMany: {
