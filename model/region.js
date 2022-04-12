@@ -22,6 +22,10 @@ const regionSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    children: {
+        type: Array,
+        default: []
+    },
     creator: {      //创建人
         id: {
             type: String,

@@ -47,6 +47,22 @@ const itemSchema = new mongoose.Schema({
             type: String,
             required: true
         }
+    },
+    audit_advises: {
+        type: [{
+            user_id: {
+                type: String,
+                default: ''
+            },
+            user_name: {
+                type: String,
+                default: ''
+            },
+            advise: {
+                type: String,
+                default: ''
+            }
+        }]
     }
 })
 

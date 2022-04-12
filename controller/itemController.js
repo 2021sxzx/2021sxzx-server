@@ -10,6 +10,7 @@ const modelUserRank = require('../model/userRank')
 const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
 const modelDepartmentMapUsers = require('../model/departmentMapUser')
+const itemService = require('../service/itemService')
 
 //仅用于getRegionPaths函数，避免并发时重复创建导致内存占用临时骤增
 var regionCodeDic = {}
@@ -1512,6 +1513,68 @@ async function changeItemStatus({
 }
 
 /**
+ * 添加审核意见
+ * @param {String} item_id 事项id
+ * @param {Number} rank 几级审核（从1开始）
+ * @param {String} user_id 用户id
+ * @param {String} advise 审核意见
+ * @returns 
+ */
+async function addAuditAdvise({
+    item_id = null,
+    rank = null,
+    user_id = null,
+    advise = null
+}) {
+    try {
+        if (item_id === null || rank === null || user_id === null || advise === null) {
+            throw new Error('需要item_id、rank、user_id和advise')
+        }
+        var item = await modelItem.findOne({ _id: item_id }, { __v: 0 })
+        if (item === null) {
+            throw new Error('item_id不存在')
+        }
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在')
+        }
+        var advises = item.audit_advises._doc
+        while (advises.length < rank) {
+            advises.push({ user_id: '', user_name: '', advise: '' })
+        }
+        advises[rank - 1].user_id = user_id
+        advises[rank - 1].user_name = user.user_name
+        advises[rank - 1].advise = advise
+        var result = await modelItem.updateOne({ _id: item_id }, { audit_advises: advises })
+        return new SuccessModel({ msg: '添加成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '添加失败', data: err.message })
+    }
+}
+
+/**
+ * 获取事项指南和审核意见
+ * @param {String} item_id 事项id
+ * @returns 
+ */
+async function getItemGuideAndAuditAdvises({
+    item_id = null
+}) {
+    try {
+        if (item_id === null) {
+            throw new Error('需要item_id')
+        }
+        var item = await modelItem.findOne({ _id: item_id }, { task_code: 1, audit_advises: 1 })
+        var itemGuide = await modelTempTask.findOne({ task_code: item.task_code }, { _id: 0, __v: 0 })
+        var result = itemGuide._doc
+        result.audit_advises = item.audit_advises
+        return new SuccessModel({ msg: '获取成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取失败', data: err.message })
+    }
+}
+
+/**
  * 更新用户身份
  * @param {Array<Object>} user_rank 待更新的用户身份
  * @returns 
@@ -1633,5 +1696,7 @@ module.exports = {
     getItemGuides,
     createItemGuide,
     deleteItemGuides,
-    updateItemGuide
+    updateItemGuide,
+    addAuditAdvise,
+    getItemGuideAndAuditAdvises
 }

@@ -5,7 +5,11 @@ const mongoose = require("mongoose")
 const ruleSchema = new mongoose.Schema({
     rule_id: {      // 规则项id
         type: String,
-        required: true
+        required: true,
+        index: {
+            unique: true,
+            sparse: true
+        }
     },
     rule_name: {    // 规则项名称
         type: String,
@@ -14,6 +18,10 @@ const ruleSchema = new mongoose.Schema({
     parentId: {     // 父节点的id名称
         type: String,
         default: ''
+    },
+    children: {
+        type: Array,
+        default: []
     },
     create_time: {  // 创建时间
         type: Number,
