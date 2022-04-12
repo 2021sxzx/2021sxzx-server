@@ -744,7 +744,7 @@ async function updateItemGuide({
             newData.task_code = new_task_code
             bulkOps.push({
                 updateOne: {
-                    fileter: { task_code: task_code },
+                    filter: { task_code: task_code },
                     update: { task_code: new_task_code }
                 }
             })

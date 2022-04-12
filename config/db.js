@@ -15,7 +15,7 @@ if(process.env.NODE_ENV === 'dev'){
     port     : '6379',
   }
   MONGO_CONFIG = {
-    url       : 'mongodb://root2:Hgc16711@8.134.73.52:27017/sxzx'
+    url      : 'mongodb://root2:Hgc16711@8.134.73.52:27017/sxzx'
   }
 }
 module.exports = {

@@ -1399,6 +1399,54 @@ zyk ::1 - - [2022-03-08T08:11:22.916Z] "GET /api/v1/allComment HTTP/1.1" 200 282
 ::ffff:127.0.0.1 - - [18/Mar/2022:12:06:29 +0000] "GET /api/v1/comment HTTP/1.1" 200 3181 "-" "PostmanRuntime/7.28.4"
 ::ffff:127.0.0.1 - - [18/Mar/2022:12:06:54 +0000] "GET /api/v1/comment HTTP/1.1" 200 4531 "-" "PostmanRuntime/7.28.4"
 ::ffff:127.0.0.1 - - [18/Mar/2022:12:07:24 +0000] "GET /api/v1/comment HTTP/1.1" 200 4531 "-" "PostmanRuntime/7.28.4"
+<<<<<<< HEAD
+::1 - - [16/Mar/2022:12:54:36 +0000] "POST /api/v1/login HTTP/1.1" 200 225 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:04:58 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:06:47 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:07:38 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:08:55 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:10:41 +0000] "POST /api/v1/login HTTP/1.1" 200 225 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:11:33 +0000] "POST /api/v1/login HTTP/1.1" 200 225 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:13:19 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:21:45 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:23:36 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:23:49 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:24:03 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:25:29 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:27:23 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:13:28:09 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:15:32:12 +0000] "GET /api/v1/user HTTP/1.1" 500 1265 "-" "PostmanRuntime/7.29.0"
+::1 - - [16/Mar/2022:15:33:13 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:04:26:34 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:04:29:07 +0000] "GET /api/v1/user HTTP/1.1" 403 33 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:07:57 +0000] "POST /api/v1/login HTTP/1.1" 404 - "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:08:34 +0000] "POST /api/v1/login HTTP/1.1" 404 - "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:09:17 +0000] "POST /api/v1/login HTTP/1.1" 404 22 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:10:12 +0000] "POST /api/v1/login HTTP/1.1" 403 22 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:10:21 +0000] "POST /api/v1/login HTTP/1.1" 403 48 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:11:35 +0000] "POST /api/v1/login HTTP/1.1" 403 19 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:11:45 +0000] "POST /api/v1/login HTTP/1.1" 200 180 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:12:41 +0000] "POST /api/v1/login HTTP/1.1" 200 384 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:13:46 +0000] "GET /api/v1/user HTTP/1.1" 403 33 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:15:18 +0000] "GET /api/v1/user HTTP/1.1" 500 1266 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:58:13 +0000] "GET /api/v1/user HTTP/1.1" 403 33 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:58:18 +0000] "POST /api/v1/login HTTP/1.1" 200 384 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:05:58:35 +0000] "POST /api/v1/login HTTP/1.1" 200 384 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:02:33 +0000] "GET /api/v1/user HTTP/1.1" 500 1266 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:03:54 +0000] "GET /api/v1/user HTTP/1.1" 500 1266 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:04:54 +0000] "GET /api/v1/user HTTP/1.1" 500 1266 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:05:23 +0000] "GET /api/v1/user HTTP/1.1" 500 1266 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:05:43 +0000] "GET /api/v1/user HTTP/1.1" 500 1266 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:06:25 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:08:31 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:09:58 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:12:30 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:12:54 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:15:21 +0000] "POST /api/v1/login HTTP/1.1" 200 402 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:16:39 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:20:12 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+::1 - - [17/Mar/2022:06:20:44 +0000] "GET /api/v1/user HTTP/1.1" 200 193 "-" "PostmanRuntime/7.29.0"
+=======
 ::ffff:127.0.0.1 - - [18/Mar/2022:16:47:58 +0000] "POST /api/v1/role HTTP/1.1" - - "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [18/Mar/2022:16:50:03 +0000] "GET /api/v1/allComment HTTP/1.1" 200 26161 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [18/Mar/2022:16:51:30 +0000] "GET /api/v1/sideBar HTTP/1.1" 404 1415 "-" "PostmanRuntime/7.29.0"
@@ -1422,6 +1470,9 @@ zyk ::1 - - [2022-03-08T08:11:22.916Z] "GET /api/v1/allComment HTTP/1.1" 200 282
 ::ffff:127.0.0.1 - - [18/Mar/2022:17:38:49 +0000] "POST /api/v1/role HTTP/1.1" 200 133 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [18/Mar/2022:17:39:50 +0000] "POST /api/v1/role HTTP/1.1" 200 133 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [18/Mar/2022:17:41:31 +0000] "POST /api/v1/role HTTP/1.1" 200 136 "-" "PostmanRuntime/7.29.0"
+<<<<<<< HEAD
+>>>>>>> fb0dec527f6f14cebc3e8ab9150be18a73407c35
+=======
 ::ffff:127.0.0.1 - - [18/Mar/2022:17:43:31 +0000] "POST /api/v1/searchRole HTTP/1.1" 200 302 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [18/Mar/2022:17:43:43 +0000] "POST /api/v1/sideBar HTTP/1.1" 200 529 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [18/Mar/2022:17:43:54 +0000] "GET /api/v1/permissionList HTTP/1.1" 200 802 "-" "PostmanRuntime/7.29.0"
@@ -2689,4 +2740,8 @@ zyk ::1 - - [2022-03-08T08:11:22.916Z] "GET /api/v1/allComment HTTP/1.1" 200 282
 =======
 ::ffff:127.0.0.1 - - [07/Apr/2022:08:33:10 +0000] "POST /api/v1/getRules HTTP/1.1" 404 70 "-" "PostmanRuntime/7.29.0"
 ::ffff:127.0.0.1 - - [07/Apr/2022:08:34:36 +0000] "POST /api/v1/getRules HTTP/1.1" 200 25241 "-" "PostmanRuntime/7.29.0"
+<<<<<<< HEAD
 >>>>>>> 7022e1ba42d154181caefd62a8cbc9ffba15e048
+=======
+>>>>>>> 232a17bdbf6e0967295429a45355fe6b8039e4dd
+>>>>>>> 547f9a29caece84879bcaa668554793e3bf1ad69
