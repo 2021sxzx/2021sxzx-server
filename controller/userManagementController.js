@@ -164,7 +164,7 @@ async function searchUserAndReturnList (searchValue) {
           password: item.password,
           activation_status: item.activation_status,
           department_name: cal
-      }
+        }
       })
     )
     return new SuccessModel({

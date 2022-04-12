@@ -1,4 +1,4 @@
-const user = require('../model/users');
+const User = require('../model/users');
 const jwt = require('jsonwebtoken');
 
 const { jwt_secret,
@@ -17,8 +17,8 @@ const redisClient = require('../config/redis')
  */
 async function authenticate(loginData) {
     try {
-        const { account, password } = loginData
-        let res = await user.findOne({ account: account })
+        const { account, password } = loginData;
+        let res = await User.findOne({ account: account });
         if (res !== null) {
             // Compare password
             if (password === res.password) {
