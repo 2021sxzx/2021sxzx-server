@@ -19,7 +19,6 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.5",
     "morgan": "~1.9.1",
-<<<<<<< HEAD
     "nodemon": "^2.0.12"
   },
   "description": "- 首先对js包括es6有一定的学习\r - 对node环境的js运行有一定的了解\r - 学习过express框架的基本操作，b站上有很多的教程，也可以直接看express的官方文档\r - 对mongodb有一定的了解，使用mongoose来对mongodb进行操作，b站也有资源，mongoose的文档也比较容易懂",
@@ -35,12 +34,4 @@
     "url": "https://github.com/2021sxzx/2021sxzx-server/issues"
   },
   "homepage": "https://github.com/2021sxzx/2021sxzx-server#readme"
-=======
-    "multer": "^1.4.4",
-    "node-os-utils": "^1.3.6",
-    "nodemon": "^2.0.12",
-    "redis": "^3.1.2",
-    "systeminformation": "^5.11.9"
-  }
->>>>>>> 232a17bdbf6e0967295429a45355fe6b8039e4dd
 }
