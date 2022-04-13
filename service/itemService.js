@@ -98,7 +98,14 @@ async function updateRegions(region_id) {
         regionDic.data[result[i]._id].region_level = result[i].region_level
         //parentId有改变的话要修改父节点的children数组
         if (regionDic.data[result[i]._id].parentId !== result[i].parentId) {
-            
+            let old_parent = regionDic.data[regionDic.data[result[i]._id].parentId]
+            if (old_parent) {
+                old_parent.children.splice(old_parent.children.indexOf(result[i]._id), 1)
+            }
+            let new_parent = regionDic.data[result[i].parentId]
+            if (new_parent) {
+                new_parent.children.push(result[i]._id)
+            }
             regionDic.data[result[i]._id].parentId = result[i].parentId
         }
     }

@@ -12,36 +12,6 @@ const modelItemStatus = require('../model/itemStatus')
 const modelDepartmentMapUsers = require('../model/departmentMapUser')
 const itemService = require('../service/itemService')
 
-//仅用于getRegionPaths函数，避免并发时重复创建导致内存占用临时骤增
-var regionCodeDic = {}
-var regionIdDic = {}
-var ruleDic = {}
-
-//server运行时初始化数据
-async function initialize() {
-    //初始化区划树
-    var regions = await modelRegion.find({}, { __v: 0 })
-    for (let i = 0, len = regions.length; i < len; i++) {
-        regionCodeDic[regions[i].region_code] = regions[i]._doc
-        regionIdDic[regions[i]._id] = regions[i]._doc
-        regionIdDic[regions[i]._id].children = []
-    }
-    //初始化区划树节点的children数组
-    var keys = Object.keys(regionIdDic)
-    for (let i = 0, len = keys.length; i < len; i++) {
-        var region = regionIdDic[keys[i]]
-        var parent = regionIdDic[region.parentId]
-        if (parent) {
-            parent.children.push(keys[i])
-        }
-    }
-    //初始化规则树
-    var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
-    rules.forEach(function (value) { ruleDic[value.rule_id] = value._doc })
-    console.log('Initialize done!!!')
-}
-initialize()
-
 /**
  * 获取事项状态表
  * @returns 
@@ -1538,13 +1508,12 @@ async function changeItemStatus({
  */
 async function addAuditAdvise({
     item_id = null,
-    rank = null,
     user_id = null,
     advise = null
 }) {
     try {
-        if (item_id === null || rank === null || user_id === null || advise === null) {
-            throw new Error('需要item_id、rank、user_id和advise')
+        if (item_id === null || user_id === null || advise === null) {
+            throw new Error('需要item_id、user_id和advise')
         }
         var item = await modelItem.findOne({ _id: item_id }, { __v: 0 })
         if (item === null) {
@@ -1555,12 +1524,7 @@ async function addAuditAdvise({
             throw new Error('user_id不存在')
         }
         var advises = item.audit_advises._doc
-        while (advises.length < rank) {
-            advises.push({ user_id: '', user_name: '', advise: '' })
-        }
-        advises[rank - 1].user_id = user_id
-        advises[rank - 1].user_name = user.user_name
-        advises[rank - 1].advise = advise
+        advises.push({ user_id: user_id, user_name: user.user_name, advise: (advise !== null) ? advise : '' })
         var result = await modelItem.updateOne({ _id: item_id }, { audit_advises: advises })
         return new SuccessModel({ msg: '添加成功', data: result })
     } catch (err) {
