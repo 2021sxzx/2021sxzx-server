@@ -51,7 +51,7 @@ async function getItemStatusScheme() {
         var status = await modelItemStatus.find({}, { _id: 0, __v: 0 })
         var result = {}
         for (let i = 0; i < status.length; i++) {
-            result[status[i].eng_name] = status[i]
+            result[status[i].id] = status[i]
         }
         return new SuccessModel({ msg: '获取成功', data: result })
     } catch (err) {
@@ -403,6 +403,10 @@ async function getRulePaths({
             throw new Error('数组长度小于等于0')
         }
         //计算路径
+        var ruleDic = itemService.getRuleDic()
+        if (ruleDic === null) {
+            throw new Error('请刷新重试')
+        }
         var res = {}
         for (let i = 0; i < rule_id.length; i++) {
             let rulePath = []
@@ -795,29 +799,33 @@ async function updateItemGuide({
 
 /**
  * 获取区划路径
- * @param {Array<String>} region_code 区划编码
+ * @param {Array<String>} region_id 区划编码
  * @returns
  */
 async function getRegionPaths({
-    region_code = null
+    region_id = null
 }) {
     try {
-        if (region_code === null) {
-            throw new Error('请求体中需要一个regionIds属性，且该属性是一个数组')
+        if (region_id === null) {
+            throw new Error('请求体中需要一个region_id属性，且该属性是一个数组')
         }
-        if (region_code.length <= 0) {
+        if (region_id.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
         //计算路径
+        var regionDic = itemService.getRegionDic()
+        if (regionDic === null) {
+            throw new Error('请刷新重试')
+        }
         var res = {}
-        for (let i = 0; i < region_code.length; i++) {
+        for (let i = 0; i < region_id.length; i++) {
             let regionPath = []
-            let node = regionCodeDic[region_code[i]] ? regionCodeDic[region_code[i]] : null
+            let node = regionDic[region_id[i]] ? regionDic[region_id[i]] : null
             while (node !== null) {
                 regionPath.unshift(node)
-                node = regionIdDic[node.parentId] ? regionIdDic[node.parentId] : null
+                node = regionDic[node.parentId] ? regionDic[node.parentId] : null
             }
-            res[region_code[i]] = regionPath
+            res[region_id[i]] = regionPath
         }
         return new SuccessModel({ msg: '获取区划路径成功', data: res })
     } catch (err) {
@@ -1433,6 +1441,7 @@ async function updateRegions({
 
 /**
  * 改变事项的状态
+ * @param {String} user_id 用户id
  * @param {Array<Object>} items 待改变状态的事项（数组成员包含item_id和next_status属性）
  * @returns 
  */
@@ -1472,15 +1481,22 @@ async function changeItemStatus({
             if (item === null) {
                 throw new Error('item_id不存在: ' + item_id)
             }
-            //判断能否变为next_status
+            //事项状态变到next_status
             for (let j = 0; j < itemStatus.length; j++) {
                 var status = itemStatus[j]
                 if (status.id !== item.item_status) {
                     if (j === itemStatus.length - 1) throw new Error('itemStatus表和数据库中已有的事项状态对不上')
                     continue
                 }
-                if (status.next_status.includes(next_status) === false) {
-                    throw new Error('事项所处状态无法变到指定状态: ' + item_id)
+                //判断能否变为next_status
+                var keys = Object.keys(status.next_status)
+                for (let k = 0; k < keys.length; k++) {
+                    if (status.next_status[keys[k]] === next_status) {
+                        break
+                    }
+                    if (k === keys.length - 1) {
+                        throw new Error('事项所处状态无法变到指定状态: ' + item_id)
+                    }
                 }
                 if (can_operate.includes(status.id) === false) {
                     throw new Error('该用户无法修改状态为\"' + status.name + '\"的事项')
