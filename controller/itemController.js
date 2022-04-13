@@ -1122,55 +1122,21 @@ async function getChildRegionsByRuleAndRegion({
         }
         result.push(region._doc)
         //找出该区划的下级区划
-        // var childRegions = await modelRegion.find({ parentId: region['_id'] }, { __v: 0 })
-        // const funA = function (value, rule_id) {
-        //     return new Promise(async function (resolve, reject) {
-        //         try {
-        //             //遍历区划，检查该区划包括其全部下级区划在内是否存在rule_id对应的事项
-        //             var regionCodes = []
-        //             var q = []
-        //             q.push(value._id)
-        //             regionCodes.push(value.region_code)
-        //             while (q.length > 0) {
-        //                 let children = await modelRegion.find({ parentId: { $in: q } }, { __v: 0 })
-        //                 q = []
-        //                 for (let i = 0, len = children.length; i < len; i++) {
-        //                     q.push(children[i]._id)
-        //                     regionCodes.push(children[i].region_code)
-        //                 }
-        //             }
-        //             //找出匹配的事项
-        //             var res = await modelItem.exists({
-        //                 rule_id: rule_id,
-        //                 region_code: { $in: regionCodes }
-        //             })
-        //             resolve(res)
-        //         } catch (e) {
-        //             reject(e.message)
-        //         }
-        //     })
-        // }
-        var childRegions = regionIdDic[region._id].children
+        var regionDic = itemService.getRegionDic()
+        var childRegions = regionDic[region._id].children
         for (let i = 0; i < childRegions.length; i++) {
-            // var value = childRegions[i]
-            var value = regionIdDic[childRegions[i]]
+            var value = regionDic[childRegions[i]]
             //遍历区划，检查该区划包括其全部下级区划在内是否存在rule_id对应的事项
             var regionCodes = []
             var q = []
             q.push(value._id)
             regionCodes.push(value.region_code)
             while (q.length > 0) {
-                // let children = await modelRegion.find({ parentId: { $in: q } }, { __v: 0 })
-                // q = []
-                // for (let j = 0; j < children.length; j++) {
-                //     q.push(children[j]['_id'])
-                //     regionCodes.push(children[j].region_code)
-                // }
                 let len = q.length
                 for (let j = 0; j < len; j++) {
                     let id = q.shift()
-                    regionCodes.push(regionIdDic[id].region_code)
-                    let children = regionIdDic[id].children
+                    regionCodes.push(regionDic[id].region_code)
+                    let children = regionDic[id].children
                     Array.prototype.push.apply(q, children)
                 }
             }
@@ -1180,34 +1146,15 @@ async function getChildRegionsByRuleAndRegion({
                 region_code: { $in: regionCodes }
             })
             //子区划中有事项的haveItem是1，否则是0
-            // value._doc.haveItem = 0
-            // if (res === true) {
-            //     value._doc.haveItem = 1
-            // }
-            // result.push(value._doc)
-            value.haveItem = 0
+            let r = Object.assign({}, value)
+            r.haveItem = 0
             if (res === true) {
-                value.haveItem = 1
+                r.haveItem = 1
             }
-            result.push(value)
+            result.push(r)
         }
-        // var promiseList = []
-        // for (let i = 0; i < childRegions.length; i++) {
-        //     var value = childRegions[i]
-        //     promiseList.push(funA(value, rule_id))
-        // }
-        // var res = await Promise.all(promiseList)
-        // for (let i = 0; i < childRegions.length; i++) {
-        //     var value = childRegions[i]
-        //     value._doc.haveItem = 0
-        //     if (res[i] === true) {
-        //         value._doc.haveItem = 1
-        //     }
-        //     result.push(value._doc)
-        // }
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
-        console.log(err.message)
         return new ErrorModel({ msg: '查询失败', data: err.message })
     }
 }

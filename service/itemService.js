@@ -13,7 +13,7 @@ async function initialize() {
         regionDic.status = 0
         var regions = await modelRegion.find({}, { __v: 0 })
         for (let i = 0, len = regions.length; i < len; i++) {
-            regionDic.data[regions[i]._id.toString()] = Object.assign({}, regions[i])
+            regionDic.data[regions[i]._id.toString()] = Object.assign({}, regions[i]._doc)
         }
         //区划树完成
         regionDic.status = 1
@@ -22,7 +22,7 @@ async function initialize() {
         ruleDic.status = 0
         var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
         for (let i = 0, len = rules.length; i < len; i++) {
-            ruleDic.data[rules[i].rule_id] = Object.assign({}, rules[i])
+            ruleDic.data[rules[i].rule_id] = Object.assign({}, rules[i]._doc)
         }
         //规则树完成
         ruleDic.status = 1
@@ -55,7 +55,7 @@ async function createRegions(region_id) {
     }
     //新增数据
     for (let i = 0; i < result.length; i++) {
-        regionDic.data[result[i]._id.toString()] = Object.assign({}, result[i])
+        regionDic.data[result[i]._id.toString()] = Object.assign({}, result[i]._doc)
     }
     //更新对应父节点的children数组
     for (let i = 0; i < result1.length; i++) {
@@ -125,7 +125,7 @@ async function createRules(rule_id) {
     }
     //新增数据
     for (let i = 0; i < result.length; i++) {
-        ruleDic.data[result[i].rule_id] = Object.assign({}, result[i])
+        ruleDic.data[result[i].rule_id] = Object.assign({}, result[i]._doc)
     }
     //把字典设为可用状态
     ruleDic.status = 1
