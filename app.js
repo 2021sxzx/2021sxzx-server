@@ -30,7 +30,10 @@ const mongoose = require("mongoose")
 // const itemGuide = require("./model/task")
 mongoose.connect(MONGO_CONFIG.url);
 const app = express();
-
+//上传图片大小限制（张奕凯）
+const bodyParser = require('body-parser');
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit:50000}));
 // 动态网页的模板设置
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
