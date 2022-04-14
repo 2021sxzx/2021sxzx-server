@@ -16,8 +16,8 @@ router.get('/v1/getItemStatusScheme', async (req, res, next) => {
     res.json(data)
 })
 
-router.get('/v1/getUserRankSchema', async (req, res, next) => {
-    let data = await itemController.getUserRankSchema()
+router.post('/v1/getUserRank', async (req, res, next) => {
+    let data = await itemController.getUserRank(req.body)
     setStatusCode(res, data)
     res.json(data)
 })
@@ -141,5 +141,47 @@ router.post('/v1/getItemGuides', async (req, res, next) => {
     setStatusCode(res, data)
     res.json(data)
 })
+
+router.post('/v1/createItemGuide', async (req, res, next) => {
+    let data = await itemController.createItemGuide(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/deleteItemGuides', async (req, res, next) => {
+    let data = await itemController.deleteItemGuides(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/updateItemGuide', async (req, res, next) => {
+    let data = await itemController.updateItemGuide(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/addAuditAdvise', async (req, res, next) => {
+    let data = await itemController.addAuditAdvise(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/getItemGuideAndAuditAdvises', async (req, res, next) => {
+    let data = await itemController.getItemGuideAndAuditAdvises(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+// router.post('/v1/getRuleDic', async (req, res, next) => {
+//     let data = await itemController.getRuleDic(req.body)
+//     setStatusCode(res, data)
+//     res.json(data)
+// })
+
+// router.post('/v1/getRegionDic', async (req, res, next) => {
+//     let data = await itemController.getRegionDic(req.body)
+//     setStatusCode(res, data)
+//     res.json(data)
+// })
 
 module.exports = router
