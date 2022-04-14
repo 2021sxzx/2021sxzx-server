@@ -30,16 +30,30 @@ async function getItemStatusScheme() {
 }
 
 /**
- * 获取用户身份表
+ * 获取用户身份
  * @returns 
  */
-async function getUserRankSchema() {
+async function getUserRank({
+    user_id = null
+}) {
     try {
-        var ranks = await modelUserRank.find({}, { _id: 0, __v: 0 })
+        var user = await modelUsers.findOne({ _id: user_id }, { user_rank: 1 })
+        var rank = await modelUserRank.findOne({ id: user.user_rank }, { _id: 0, __v: 0 })
         var result = {}
-        for (let i = 0; i < ranks.length; i++) {
-            result[ranks[i].eng_name] = ranks[i]
+        var can_see = rank.can_see
+        var can_operate = rank.can_operate
+        //检查can_see_temp
+        if (rank.can_see_temp[user_id]) {
+            can_see = rank.can_see_temp[user_id]
         }
+        //检查can_operate_temp
+        if (rank.can_operate_temp[user_id]) {
+            can_operate = rank.can_operate_temp[user_id]
+        }
+        result.eng_name = rank.eng_name
+        result.cn_name = rank.cn_name
+        result.can_see = can_see
+        result.can_operate = can_operate
         return new SuccessModel({ msg: '获取成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '获取失败', data: err.message })
@@ -99,6 +113,7 @@ async function getRegionTree() {
  * @returns
  */
 async function getItems({
+    user_id = null,
     create_start_time = null,
     create_end_time = null,
     release_start_time = null,
@@ -201,6 +216,7 @@ async function createRules({
         }
         //创建规则
         var arr = new Array()
+        var bulkOps = []
         for (let i = 0; i < rules.length; i++) {
             arr.push({
                 rule_id: rules[i].rule_id,
@@ -212,8 +228,27 @@ async function createRules({
                     department_name: department.department_name
                 }
             })
+            bulkOps.push({
+                // insertOne: {
+                //     document: {
+                //         rule_id: rules[i].rule_id,
+                //         rule_name: rules[i].rule_name,
+                //         parentId: rules[i].parentId,
+                //         creator: {
+                //             id: user_id,
+                //             name: user.user_name,
+                //             department_name: department.department_name
+                //         }
+                //     }
+                // },
+                updateOne: {
+                    filter: { rule_id: rules[i].parentId },
+                    update: { $push: { children: rules[i].rule_id } }
+                }
+            })
         }
         var result = await modelRule.create(arr)
+        await modelRule.bulkWrite(bulkOps)
         //返回真实的rule_id和_id
         var res = {}
         for (let i = 0; i < rules.length; i++) {
@@ -224,6 +259,12 @@ async function createRules({
                 }
             }
         }
+        //更新内存中的规则树
+        var data = []
+        for (let i = 0; i < rules.length; i++) {
+            data.push(rules[i].rule_id)
+        }
+        itemService.addUpdateTask('createRules', data)
         //创建桩
         try {
             await modelRule.create({
@@ -293,20 +334,35 @@ async function deleteRules({
         if (rules.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        var bulkOps = []
         for (let i = 0; i < rules.length; i++) {
             //判断rule_id的合法性
             let rule = await modelRule.findOne({ rule_id: rules[i] }, { _id: 0, __v: 0 })
             if (rule === null || rule.rule_name === 'null') {
                 throw new Error('rule_id错误: ' + rules[i])
             }
+            bulkOps.push({
+                updateOne: {
+                    filter: { rule_id: rule.parentId },
+                    update: { $pull: { children: rule.rule_id } }
+                }
+            })
         }
+        bulkOps.push({
+            deleteMany: {
+                filter: { rule_id: { $in: rules } }
+            }
+        })
         //检查是否有事项指南与规则绑定
         var items = await modelItem.find({ rule_id: { $in: rules } }, { __v: 0 }).count()
         if (items > 0) {
             return new SuccessModel({ msg: '删除规则失败，有与其绑定的事项还未处理', data: { code: 999 } })
         }
         //批量删除
-        var result = await modelRule.deleteMany({ rule_id: { $in: rules } })
+        // var result = await modelRule.deleteMany({ rule_id: { $in: rules } })
+        var result = await modelRule.bulkWrite(bulkOps)
+        //更新内存中的规则树
+        itemService.addUpdateTask('deleteRules', rules)
         return new SuccessModel({ msg: '删除规则成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '删除规则失败', data: err.message })
@@ -321,7 +377,6 @@ async function deleteRules({
 async function updateRules({
     rules = null
 }) {
-    var modifiedCount = 0
     try {
         if (rules === null) {
             throw new Error('请求体中需要一个rules属性，且该属性是一个数组')
@@ -329,6 +384,8 @@ async function updateRules({
         if (rules.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        var data = []
+        var bulkOps = []
         for (let i = 0; i < rules.length; i++) {
             //解构，没有传的字段默认null
             let {
@@ -347,11 +404,34 @@ async function updateRules({
             //更新rule
             let newData = {}
             if (rule_name !== null) newData.rule_name = rule_name
-            if (parentId !== null) newData.parentId = parentId
-            await modelRule.updateOne({ rule_id: rule_id }, newData)
-            modifiedCount += 1
+            if (parentId !== null) {
+                newData.parentId = parentId
+                bulkOps.push({
+                    updateOne: {
+                        filter: { rule_id: rule.parentId },
+                        update: { $pull: { children: rule_id } }
+                    }
+                })
+                bulkOps.push({
+                    updateOne: {
+                        filter: { rule_id: parentId },
+                        update: { $push: { children: rule_id } }
+                    }
+                })
+            }
+            bulkOps.push({
+                updateOne: {
+                    filter: { rule_id: rule_id },
+                    update: newData
+                }
+            })
+            data.push(rule_id)
         }
-        return new SuccessModel({ msg: '更新规则成功', data: modifiedCount })
+        //批量更新
+        var result = await modelRule.bulkWrite(bulkOps)
+        //更新内存中的规则树
+        itemService.addUpdateTask('updateRules', data)
+        return new SuccessModel({ msg: '更新规则成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新规则失败', data: err.message })
     }
@@ -1248,6 +1328,10 @@ async function createRegion({
                 department_name: department.department_name
             }
         })
+        //更新父区划的children数组
+        await modelRegion.updateOne({ _id: parentId }, { $push: { children: result._id.toString() } })
+        //更新内存中的区划树
+        itemService.addUpdateTask('createRegions', [result._id.toString()])
         //返回创建结果
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
@@ -1270,22 +1354,37 @@ async function deleteRegions({
         if (regions.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
-        //判断region_id的合法性
+        var bulkOps = []
         for (let i = 0; i < regions.length; i++) {
+            //判断region_id的合法性
             var rs = await modelRegion.findOne({ _id: regions[i] }, { __v: 0 })
             if (rs === null) {
                 throw new Error('region_id不存在: ' + regions[i])
             }
+            bulkOps.push({
+                updateOne: {
+                    filter: { _id: rs.parentId },
+                    update: { $pull: { children: rs._id.toString() } }
+                }
+            })
         }
+        bulkOps.push({
+            deleteMany: {
+                filter: { _id: { $in: regions } }
+            }
+        })
         //检查是否有事项指南与区划绑定
         var items = await modelItem.find({ region_id: { $in: regions } }, { __v: 0 }).count()
         if (items > 0) {
             return new SuccessModel({ msg: '删除区划失败，有与其绑定的事项还未处理', data: { code: 999 } })
         }
         //批量删除
-        await modelRegion.deleteMany({ _id: { $in: regions } })
+        // await modelRegion.deleteMany({ _id: { $in: regions } })
+        var result = await modelRegion.bulkWrite(bulkOps)
+        //更新内存中的区划树
+        itemService.addUpdateTask('deleteRegions', regions)
         //返回结果
-        return new SuccessModel({ msg: '删除成功' })
+        return new SuccessModel({ msg: '删除成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '删除失败', data: err.message })
     }
@@ -1308,6 +1407,7 @@ async function updateRegions({
         }
         var regionBulkOps = []
         var itemBulkOps = []
+        var region_id = []
         for (let i = 0; i < regions.length; i++) {
             //解构，没有的字段默认是null
             let {
@@ -1325,6 +1425,7 @@ async function updateRegions({
             if (region === null) {
                 throw new Error('_id不存在: ' + _id)
             }
+            region_id.push(_id)
             //更新region
             let newData = {}
             if (region_code !== region.region_code) {
@@ -1338,7 +1439,21 @@ async function updateRegions({
             }
             if (region_name !== null) newData.region_name = region_name
             if (region_level !== null) newData.region_level = region_level
-            if (parentId !== null) newData.parentId = parentId
+            if (parentId !== null) {
+                newData.parentId = parentId
+                regionBulkOps.push({
+                    updateOne: {
+                        filter: { _id: region.parentId },
+                        update: { $pull: { children: _id } }
+                    }
+                })
+                regionBulkOps.push({
+                    updateOne: {
+                        filter: { _id: parentId },
+                        update: { $push: { children: _id } }
+                    }
+                })
+            }
             regionBulkOps.push({
                 updateOne: {
                     filter: { _id: _id },
@@ -1348,7 +1463,9 @@ async function updateRegions({
         }
         //批量更新
         var result = await modelRegion.bulkWrite(regionBulkOps)
-        var result1 = await modelItem.bulkWrite(itemBulkOps)
+        await modelItem.bulkWrite(itemBulkOps)
+        //更新内存中的区划树
+        itemService.addUpdateTask('updateRegions', region_id)
         //返回结果
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
@@ -1470,7 +1587,7 @@ async function addAuditAdvise({
         if (user === null) {
             throw new Error('user_id不存在')
         }
-        var advises = item.audit_advises._doc
+        var advises = item._doc.audit_advises
         advises.push({ user_id: user_id, user_name: user.user_name, advise: (advise !== null) ? advise : '' })
         var result = await modelItem.updateOne({ _id: item_id }, { audit_advises: advises })
         return new SuccessModel({ msg: '添加成功', data: result })
@@ -1547,6 +1664,11 @@ async function updateUserRank({
     }
 }
 
+/**
+ * 用于临时提升用户权限
+ * @param {Array<Object>} array 
+ * @returns 
+ */
 async function changeUserRankTemporary({
     array = null
 }) {
@@ -1598,9 +1720,29 @@ async function changeUserRankTemporary({
     }
 }
 
+// async function getRuleDic({
+//     rule_id = null
+// }) {
+//     var ruleDic = itemService.getRuleDic()
+//     if (rule_id !== null) {
+//         return new SuccessModel({ msg: '获取成功', data: ruleDic[rule_id] })
+//     }
+//     return new SuccessModel({ msg: '获取成功', data: ruleDic })
+// }
+
+// async function getRegionDic({
+//     region_id = null
+// }) {
+//     var regionDic = itemService.getRegionDic()
+//     if (region_id !== null) {
+//         return new SuccessModel({ msg: '获取成功', data: regionDic[region_id] })
+//     }
+//     return new SuccessModel({ msg: '获取成功', data: regionDic })
+// }
+
 module.exports = {
     getItemStatusScheme,
-    getUserRankSchema,
+    getUserRank,
     getRuleTree,
     getRegionTree,
     getItems,
@@ -1625,5 +1767,7 @@ module.exports = {
     deleteItemGuides,
     updateItemGuide,
     addAuditAdvise,
-    getItemGuideAndAuditAdvises
+    getItemGuideAndAuditAdvises,
+    // getRuleDic,
+    // getRegionDic
 }

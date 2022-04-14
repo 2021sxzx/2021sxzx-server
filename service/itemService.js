@@ -118,14 +118,24 @@ async function createRules(rule_id) {
     ruleDic.status = 0
     //以数据库中已创建的数据为准
     var result = null
+    var result1 = null
     try {
         result = await modelRule.find({ rule_id: { $in: rule_id } }, { __v: 0 })
+        let id = []
+        for (let i = 0; i < result.length; i++) {
+            id.push(result[i].parentId)
+        }
+        result1 = await modelRule.find({ rule_id: { $in: id } }, { __v: 0 })
     } catch (err) {
         throw new Error(err.message)
     }
     //新增数据
     for (let i = 0; i < result.length; i++) {
         ruleDic.data[result[i].rule_id] = Object.assign({}, result[i]._doc)
+    }
+    //更新对应父节点的children数组
+    for (let i = 0; i < result1.length; i++) {
+        ruleDic.data[result1[i].rule_id].children = Array.prototype.concat([], result1[i].children)
     }
     //把字典设为可用状态
     ruleDic.status = 1
@@ -136,6 +146,10 @@ async function deleteRules(rule_id) {
     ruleDic.status = 0
     //删除数据
     for (let i = 0; i < rule_id.length; i++) {
+        let parent = ruleDic.data[ruleDic.data[rule_id[i]].parentId]
+        if (parent) {
+            parent.children.splice(parent.children.indexOf(rule_id[i]), 1)
+        }
         delete ruleDic.data[rule_id[i]]
     }
     //把字典设为可用状态
@@ -155,7 +169,18 @@ async function updateRules(rule_id) {
     //修改内存中的数据
     for (let i = 0; i < result.length; i++) {
         ruleDic.data[result[i].rule_id].rule_name = result[i].rule_name
-        ruleDic.data[result[i].rule_id].parentId = result[i].parentId
+        //parentId有改变的话要修改父节点的children数组
+        if (ruleDic.data[result[i].rule_id].parentId !== result[i].parentId) {
+            let old_parent = ruleDic.data[ruleDic.data[result[i].rule_id].parentId]
+            if (old_parent) {
+                old_parent.children.splice(old_parent.children.indexOf(result[i].rule_id), 1)
+            }
+            let new_parent = ruleDic.data[result[i].parentId]
+            if (new_parent) {
+                new_parent.children.push(result[i].rule_id)
+            }
+            ruleDic.data[result[i].rule_id].parentId = result[i].parentId
+        }
     }
     //把字典设为可用状态
     ruleDic.status = 1
@@ -189,8 +214,7 @@ async function runTasks() {
     if (running === true) return
     running = true
     while (tasks.length > 0) {
-        let func = tasks.shift()
-        await func()
+        await tasks.shift()
     }
     running = false
 }
