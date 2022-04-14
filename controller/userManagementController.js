@@ -9,6 +9,7 @@ const {
   isActivation,
   setActivation
 } = require('../service/userManagementService')
+const userDepartmentService = require('../service/userDepartmentService');
 
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -19,14 +20,34 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
  */
 async function addUserAndReturnList (userInfo) {
   try {
-    await addUser(userInfo)
-    const res = await getUserList()
+    await addUser(userInfo);
+    await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name);
+
+    const res = await getUserList();
+    const res_ = await Promise.all(
+      res.map(async (item) => {
+        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        if (!item['department_name']) {
+          item['department_name'] = cal;
+        }
+
+        return {
+          _id: item._id,
+          user_name: item.user_name,
+          role_name: item.role_name,
+          account: item.account,
+          password: item.password,
+          activation_status: item.activation_status,
+          department_name: cal
+        }
+      })
+    )
     return new SuccessModel({
       msg: '添加成功',
-      data: res
+      data: res_
     })
   } catch (e) {
-    return new ErrorModel({msg: e.message})
+    return new ErrorModel({msg: e.message});
   }
 }
 
@@ -36,10 +57,28 @@ async function addUserAndReturnList (userInfo) {
  */
 async function returnUserList () {
   try {
-    const res = await getUserList()
+    const res = await getUserList();
+    const res_ = await Promise.all(
+      res.map(async (item) => {
+        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        if (!item['department_name']) {
+          item['department_name'] = cal;
+        }
+        // console.log(item.department_name)
+        return {
+          _id: item._id,
+          user_name: item.user_name,
+          role_name: item.role_name,
+          account: item.account,
+          password: item.password,
+          activation_status: item.activation_status,
+          department_name: cal
+        }
+      })
+    )
     return new SuccessModel({
       msg: '获取列表成功',
-      data: res
+      data: res_
     })
   } catch (e) {
     return new ErrorModel({msg: e.message})
@@ -58,9 +97,27 @@ async function updateUserAndReturnList (user_name, password, role_name, account,
   try {
     await updateUser(user_name, password, role_name, account, new_account)
     const res = await getUserList()
+    const res_ = await Promise.all(
+      res.map(async (item) => {
+        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        if (!item['department_name']) {
+          item['department_name'] = cal;
+        }
+        console.log(item.department_name)
+        return {
+          _id: item._id,
+          user_name: item.user_name,
+          role_name: item.role_name,
+          account: item.account,
+          password: item.password,
+          activation_status: item.activation_status,
+          department_name: cal
+        }
+      })
+    )
     return new SuccessModel({
       msg: '修改成功',
-      data: res
+      data: res_
     })
   } catch (e) {
     return new ErrorModel({msg: e.message})
@@ -74,8 +131,9 @@ async function updateUserAndReturnList (user_name, password, role_name, account,
  */
 async function deleteUserAndReturnList (account) {
   try {
-    await deleteUser(account)
-    const res = await getUserList()
+    await deleteUser(account);
+    await userDepartmentService.deleteUserAndDepartment(account);
+    const res = await getUserList();
     return new SuccessModel({
       msg: '删除成功',
       data: res
@@ -90,10 +148,28 @@ async function deleteUserAndReturnList (account) {
  */
 async function searchUserAndReturnList (searchValue) {
   try {
-    const res = await searchUser(searchValue)
+    const res = await searchUser(searchValue);
+    const res_ = await Promise.all(
+      res.map(async (item) => {
+        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        if (!item['department_name']) {
+          item['department_name'] = cal;
+        }
+        console.log(item.department_name)
+        return {
+          _id: item._id,
+          user_name: item.user_name,
+          role_name: item.role_name,
+          account: item.account,
+          password: item.password,
+          activation_status: item.activation_status,
+          department_name: cal
+        }
+      })
+    )
     return new SuccessModel({
       msg: '查询成功',
-      data: res
+      data: res_
     })
   } catch (e) {
     throw new ErrorModel({msg: e.message})
@@ -103,10 +179,28 @@ async function searchUserAndReturnList (searchValue) {
 async function setActivationAndReturn (account) {
   try {
     const res = await setActivation(account);
+    const res_ = await Promise.all(
+      res.map(async (item) => {
+        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        if (!item['department_name']) {
+          item['department_name'] = cal;
+        }
+        console.log(item.department_name)
+        return {
+          _id: item._id,
+          user_name: item.user_name,
+          role_name: item.role_name,
+          account: item.account,
+          password: item.password,
+          activation_status: item.activation_status,
+          department_name: cal
+      }
+      })
+    )
     return new SuccessModel({
       msg: '改变激活状态成功',
-      data: res
-    });
+      data: res_
+    })
   } catch (e) {
     throw new ErrorModel({msg: e.message});
   }

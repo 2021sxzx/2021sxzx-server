@@ -1,4 +1,6 @@
 const { ErrorModel, SuccessModel } = require('../utils/resultModel')
+const path = require('path')
+const fs = require('fs')
 const modelItem = require('../model/item')
 const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
@@ -7,6 +9,8 @@ const modelTempTask = require('../model/tempTasks')
 const modelUserRank = require('../model/userRank')
 const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
+const modelDepartmentMapUsers = require('../model/departmentMapUser')
+const itemService = require('../service/itemService')
 
 /**
  * 获取事项状态表
@@ -17,7 +21,7 @@ async function getItemStatusScheme() {
         var status = await modelItemStatus.find({}, { _id: 0, __v: 0 })
         var result = {}
         for (let i = 0; i < status.length; i++) {
-            result[status[i].eng_name] = status[i]
+            result[status[i].id] = status[i]
         }
         return new SuccessModel({ msg: '获取成功', data: result })
     } catch (err) {
@@ -48,7 +52,7 @@ async function getUserRankSchema() {
  */
 async function getRuleTree() {
     try {
-        var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { __v: 0 })
+        var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { __v: 0, children: 0 })
         var res = {}
         for (let i = 0; i < rules.length; i++) {
             res[rules[i].rule_id] = rules[i]
@@ -65,7 +69,7 @@ async function getRuleTree() {
  */
 async function getRegionTree() {
     try {
-        var regions = await modelRegion.find({}, { __v: 0 })
+        var regions = await modelRegion.find({}, { __v: 0, children: 0 })
         var res = {}
         for (let i = 0; i < regions.length; i++) {
             res[regions[i]['_id']] = regions[i]
@@ -88,6 +92,8 @@ async function getRegionTree() {
  * @param {Array<String>} rule_id 规则id
  * @param {Array<String>} region_code 区划编码
  * @param {Array<String>} region_id 区划id
+ * @param {String} creator_name 创建人名字
+ * @param {String} department_name 部门名称
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns
@@ -103,6 +109,8 @@ async function getItems({
     rule_id = null,
     region_code = null,
     region_id = null,
+    creator_name = null,
+    department_name = null,
     page_size = null,
     page_num = null
 }) {
@@ -114,6 +122,8 @@ async function getItems({
         if (rule_id !== null) query.rule_id = { $in: rule_id }
         if (region_code !== null) query.region_code = { $in: region_code }
         if (region_id !== null) query.region_id = { $in: region_id }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         create_start_time = (create_start_time !== null) ? create_start_time : 0
         create_end_time = (create_end_time !== null) ? create_end_time : 9999999999999
         query.create_time = { $gte: create_start_time, $lte: create_end_time }
@@ -145,14 +155,24 @@ async function getItems({
  * @returns
  */
 async function createRules({
+    user_id = null,
     rules = null
 }) {
     try {
-        if (rules === null) {
-            throw new Error('请求体中需要一个rules属性，且该属性是一个数组')
+        if (user_id === null || rules === null) {
+            throw new Error('请求体中需要user_id和rules')
         }
         if (rules.length <= 0) {
             throw new Error('数组长度小于等于0')
+        }
+        //检查user_id
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在: ' + user_id)
+        }
+        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
+        if (department === null) {
+            throw new Error('用户没有所属部门')
         }
         //检查桩
         var stakes = await modelRule.find({ rule_name: 'null' }, { _id: 0, __v: 0 })
@@ -185,7 +205,12 @@ async function createRules({
             arr.push({
                 rule_id: rules[i].rule_id,
                 rule_name: rules[i].rule_name,
-                parentId: rules[i].parentId
+                parentId: rules[i].parentId,
+                creator: {
+                    id: user_id,
+                    name: user.user_name,
+                    department_name: department.department_name
+                }
             })
         }
         var result = await modelRule.create(arr)
@@ -204,7 +229,12 @@ async function createRules({
             await modelRule.create({
                 rule_id: maxRuleId.toString(),
                 rule_name: 'null',
-                parentId: ''
+                parentId: '',
+                creator: {
+                    id: 'null',
+                    name: 'null',
+                    department_name: 'null'
+                }
             })
         } catch (e) {
             return new SuccessModel({ msg: '创建规则成功', data: res })
@@ -236,7 +266,12 @@ async function createRuleStake() {
         await modelRule.create({
             rule_id: maxRuleId.toString(),
             rule_name: 'null',
-            parentId: ''
+            parentId: '',
+            creator: {
+                id: 'null',
+                name: 'null',
+                department_name: 'null'
+            }
         })
     } catch (err) {
         throw new Error('联系管理员检查数据库的rule表，确保rule_name为null的桩存在且rule_id是最大值')
@@ -266,9 +301,9 @@ async function deleteRules({
             }
         }
         //检查是否有事项指南与规则绑定
-        var items = await modelItem.find({ rule_id: { $in: rules } }, { __v: 0 })
-        if (items.length > 0) {
-            return new SuccessModel({ msg: '删除规则失败，有与其绑定的事项还未处理', data: {code: 999, items: items} })
+        var items = await modelItem.find({ rule_id: { $in: rules } }, { __v: 0 }).count()
+        if (items > 0) {
+            return new SuccessModel({ msg: '删除规则失败，有与其绑定的事项还未处理', data: { code: 999 } })
         }
         //批量删除
         var result = await modelRule.deleteMany({ rule_id: { $in: rules } })
@@ -337,18 +372,18 @@ async function getRulePaths({
         if (rule_id.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
-        //读一次数据库，建立dict，key是rule_id，value是规则树节点
-        var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
-        var dic = {}
-        rules.forEach(function (value) { dic[value.rule_id] = value })
         //计算路径
+        var ruleDic = itemService.getRuleDic()
+        if (ruleDic === null) {
+            throw new Error('请刷新重试')
+        }
         var res = {}
         for (let i = 0; i < rule_id.length; i++) {
             let rulePath = []
-            let node = dic[rule_id[i]] ? dic[rule_id[i]] : null
+            let node = ruleDic[rule_id[i]] ? ruleDic[rule_id[i]] : null
             while (node !== null) {
                 rulePath.unshift(node)
-                node = dic[node.parentId] ? dic[node.parentId] : null
+                node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
             }
             res[rule_id[i]] = rulePath
         }
@@ -359,7 +394,7 @@ async function getRulePaths({
 }
 
 /**
- * 获取事项指南
+ * 获取事项指南，返回Object或者null
  * @param {String} task_code 事项指南编码
  * @returns
  */
@@ -378,29 +413,55 @@ async function getItemGuide({
 }
 
 /**
- * 获取事项指南，只返回task_code，仅用于获取已绑定或未绑定规则的事项指南
+ * 获取事项指南，只返回task_code、task_name和task_status
  * @param {Number} task_status 事项指南状态（0或者1）
+ * @param {String} task_code 事项指南编码
+ * @param {String} task_name 事项指南名称（用于模糊匹配）
+ * @param {String} creator_name 创建人名字
+ * @param {String} department_name 部门名称
+ * @param {Number} start_time 创建时间的起始时间
+ * @param {Number} end_time 创建时间的终止时间
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns 
  */
 async function getItemGuides({
     task_status = null,
+    task_code = null,
+    task_name = null,
+    creator_name = null,
+    department_name = null,
+    start_time = null,
+    end_time = null,
     page_size = null,
     page_num = null
 }) {
     try {
-        if (task_status === null) {
-            throw new Error('需要task_status')
-        }
+        var query = {}
+        if (task_status !== null) query.task_status = task_status
+        if (task_code !== null) query.task_code = task_code
+        if (task_name !== null) query.task_name = { $regex: task_name }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        var start = (start_time !== null) ? start_time : 0
+        var end = (end_time !== null) ? end_time : 9999999999999
+        query.create_time = { $gte: start, $lte: end }
         if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
             throw new Error('page_size和page_num需要一起传')
         }
         if (page_size !== null && page_num !== null) {
-            var result = await modelTempTask.find({ task_status: task_status }, { task_code: 1, task_name: 1 }).skip(page_size * page_num).limit(page_size)
+            var result = {}
+            result.data = await modelTempTask.find(query, {
+                task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
+            }).skip(page_size * page_num).limit(page_size)
+            result.total = await modelTempTask.find(query).count()
+            result.page_size = page_size
+            result.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: result })
         }
-        var result = await modelTempTask.find({ task_status: task_status }, { task_code: 1, task_name: 1 })
+        var result = await modelTempTask.find(query, {
+            task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
+        })
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -408,38 +469,333 @@ async function getItemGuides({
 }
 
 /**
+ * 创建事项指南
+ * @param {String} task_code 事项指南编码
+ * @param {String} task_name 事项指南名称
+ * @param {String} wsyy 已开通的网上办理方式
+ * @param {Array<Number>} service_object_type 服务对象类型
+ * @param {String} conditions 办理条件
+ * @param {Array<Object>} legal_basis 法律法规依据
+ * @param {Number} legal_period 法定期限
+ * @param {String} legal_period_type 法定期限单位
+ * @param {Number} promised_period 承诺期限
+ * @param {String} promised_period_type 承诺期限单位
+ * @param {Array<Object>} windows 办事窗口
+ * @param {String} apply_content 申请内容
+ * @param {String} ckbllc 窗口办理流程
+ * @param {String} wsbllc 网上办理流程
+ * @param {String} mobile_applt_website 移动端办理地址
+ * @param {Array<Object>} submit_documents 提交材料
+ * @param {String} zxpt 咨询平台
+ * @param {String} qr_code 二维码
+ * @param {String} zzzd 自助终端
+ * @returns 
+ */
+async function createItemGuide({
+    user_id = null,
+    task_code = null,
+    task_name = null,
+    wsyy = null,
+    service_object_type = null,
+    conditions = null,
+    legal_basis = null,
+    legal_period = null,
+    legal_period_type = null,
+    promised_period = null,
+    promised_period_type = null,
+    windows = null,
+    apply_content = null,
+    ckbllc = null,
+    wsbllc = null,
+    mobile_applt_website = null,
+    submit_documents = null,
+    zxpt = null,
+    qr_code = null,
+    zzzd = null
+}) {
+    try {
+        //检查user_id
+        if (user_id === null) {
+            throw new Error('需要user_id')
+        }
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在: ' + user_id)
+        }
+        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
+        if (department === null) {
+            throw new Error('用户没有所属部门')
+        }
+        var newData = {
+            task_code: null,
+            task_name: null,
+            wsyy: null,
+            service_object_type: null,
+            conditions: null,
+            legal_basis: null,
+            legal_period: null,
+            legal_period_type: null,
+            promised_period: null,
+            promised_period_type: null,
+            windows: null,
+            apply_content: null,
+            ckbllc: null,
+            wsbllc: null,
+            mobile_applt_website: null,
+            submit_documents: null,
+            zxpt: null,
+            qr_code: null,
+            zzzd: null,
+            creator: {
+                id: user_id,
+                name: user.user_name,
+                department_name: department.department_name
+            }
+        }
+        if (task_code !== null) {
+            let task = await modelTempTask.exists({ task_code: task_code })
+            if (task === true) {
+                throw new Error('事项指南编码已存在')
+            }
+            newData.task_code = task_code
+        }
+        if (task_name !== null) newData.task_name = task_name
+        if (wsyy !== null) newData.wsyy = wsyy
+        if (service_object_type !== null) {
+            let str = ''
+            for (let i = 0; i < service_object_type.length; i++) {
+                if (str === '') {
+                    str += service_object_type[i].toString()
+                } else {
+                    str += ',' + service_object_type[i].toString()
+                }
+            }
+            newData.service_object_type = str
+        }
+        if (conditions !== null) newData.conditions = conditions
+        if (legal_basis !== null) newData.legal_basis = legal_basis
+        if (legal_period !== null) newData.legal_period = legal_period
+        if (legal_period_type !== null) newData.legal_period_type = legal_period_type
+        if (promised_period !== null) newData.promised_period = promised_period
+        if (promised_period_type !== null) newData.promised_period_type = promised_period_type
+        if (windows !== null) newData.windows = windows
+        if (apply_content !== null) newData.apply_content = apply_content
+        if (ckbllc !== null) newData.ckbllc = ckbllc
+        if (wsbllc !== null) newData.wsbllc = wsbllc
+        if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
+        if (submit_documents !== null) newData.submit_documents = submit_documents
+        if (zxpt !== null) newData.zxpt = zxpt
+        if (qr_code !== null) {
+            // var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
+            // var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+            // var dataBuffer = Buffer.from(base64Data, 'base64')
+            // fs.writeFileSync(filePath, dataBuffer)
+            // newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = qr_code
+        }
+        if (zzzd !== null) newData.zzzd = zzzd
+        var result = await modelTempTask.create(newData)
+        return new SuccessModel({ msg: '创建成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '创建失败', data: err.message })
+    }
+}
+
+/**
+ * 删除事项指南
+ * @param {Array<String>} task_code 事项指南编码
+ * @returns 
+ */
+async function deleteItemGuides({
+    task_code = null
+}) {
+    try {
+        if (task_code === null) {
+            throw new Error('删除事项指南至少需要task_code')
+        }
+        if (!task_code.length || task_code.length <= 0) {
+            throw new Error('数组长度小于等于0')
+        }
+        //检查task_code的合法性
+        for (let i = 0; i < task_code.length; i++) {
+            var task = await modelTempTask.exists({ task_code: task_code[i] })
+            if (task === false) {
+                throw new Error('task_code不存在: ' + task_code[i])
+            }
+        }
+        //批量删除
+        var result = await modelTempTask.deleteMany({ task_code: { $in: task_code } })
+        return new SuccessModel({ msg: '删除成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '删除失败', data: err.message })
+    }
+}
+
+/**
+ * 更新事项指南
+ * @param {String} task_code 事项指南编码
+ * @param {String} new_task_code 新的事项指南编码
+ * @param {String} task_name 事项指南名称
+ * @param {String} wsyy 已开通的网上办理方式
+ * @param {Array<Number>} service_object_type 服务对象类型
+ * @param {String} conditions 办理条件
+ * @param {Array<Object>} legal_basis 法律法规依据
+ * @param {Number} legal_period 法定期限
+ * @param {String} legal_period_type 法定期限单位
+ * @param {Number} promised_period 承诺期限
+ * @param {String} promised_period_type 承诺期限单位
+ * @param {Array<Object>} windows 办事窗口
+ * @param {String} apply_content 申请内容
+ * @param {String} ckbllc 窗口办理流程
+ * @param {String} wsbllc 网上办理流程
+ * @param {String} mobile_applt_website 移动端办理地址
+ * @param {Array<Object>} submit_documents 提交材料
+ * @param {String} zxpt 咨询平台
+ * @param {String} qr_code 二维码
+ * @param {String} zzzd 自助终端
+ * @returns 
+ */
+async function updateItemGuide({
+    task_code = null,
+    new_task_code = null,
+    task_name = null,
+    wsyy = null,
+    service_object_type = null,
+    conditions = null,
+    legal_basis = null,
+    legal_period = null,
+    legal_period_type = null,
+    promised_period = null,
+    promised_period_type = null,
+    windows = null,
+    apply_content = null,
+    ckbllc = null,
+    wsbllc = null,
+    mobile_applt_website = null,
+    submit_documents = null,
+    zxpt = null,
+    qr_code = null,
+    zzzd = null
+}) {
+    try {
+        if (task_code === null) {
+            throw new Error('更新事项指南信息需要传入task_code')
+        }
+        if (task_code !== null) {
+            let task = await modelTempTask.exists({ task_code: task_code })
+            if (task === false) {
+                throw new Error('事项指南编码不存在')
+            }
+        }
+        var newData = {
+            task_code: null,
+            task_name: null,
+            wsyy: null,
+            service_object_type: null,
+            conditions: null,
+            legal_basis: null,
+            legal_period: null,
+            legal_period_type: null,
+            promised_period: null,
+            promised_period_type: null,
+            windows: null,
+            apply_content: null,
+            ckbllc: null,
+            wsbllc: null,
+            mobile_applt_website: null,
+            submit_documents: null,
+            zxpt: null,
+            qr_code: null,
+            zzzd: null
+        }
+        var bulkOps = []
+        if (new_task_code !== null) {
+            let task = await modelTempTask.exists({
+                task_code: { $in: new_task_code, $ne: task_code }
+            })
+            if (task === true) {
+                throw new Error('存在相同的事项指南编码，不能重复: ' + new_task_code)
+            }
+            newData.task_code = new_task_code
+            bulkOps.push({
+                updateOne: {
+                    filter: { task_code: task_code },
+                    update: { task_code: new_task_code }
+                }
+            })
+        }
+        if (task_name !== null) newData.task_name = task_name
+        if (wsyy !== null) newData.wsyy = wsyy
+        if (service_object_type !== null) {
+            let str = ''
+            for (let i = 0; i < service_object_type.length; i++) {
+                if (str === '') {
+                    str += service_object_type[i].toString()
+                } else {
+                    str += ',' + service_object_type[i].toString()
+                }
+            }
+            newData.service_object_type = str
+        }
+        if (conditions !== null) newData.conditions = conditions
+        if (legal_basis !== null) newData.legal_basis = legal_basis
+        if (legal_period !== null) newData.legal_period = legal_period
+        if (legal_period_type !== null) newData.legal_period_type = legal_period_type
+        if (promised_period !== null) newData.promised_period = promised_period
+        if (promised_period_type !== null) newData.promised_period_type = promised_period_type
+        if (windows !== null) newData.windows = windows
+        if (apply_content !== null) newData.apply_content = apply_content
+        if (ckbllc !== null) newData.ckbllc = ckbllc
+        if (wsbllc !== null) newData.wsbllc = wsbllc
+        if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
+        if (submit_documents !== null) newData.submit_documents = submit_documents
+        if (zxpt !== null) newData.zxpt = zxpt
+        if (qr_code !== null) {
+            // var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
+            // var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+            // var dataBuffer = Buffer.from(base64Data, 'base64')
+            // fs.writeFileSync(filePath, dataBuffer)
+            // newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = qr_code
+        }
+        if (zzzd !== null) newData.zzzd = zzzd
+        var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
+        var result1 = await modelItem.bulkWrite(bulkOps)
+        return new SuccessModel({ msg: '更新成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '更新失败', data: err.message })
+    }
+}
+
+/**
  * 获取区划路径
- * @param {Array<String>} region_code 区划编码
+ * @param {Array<String>} region_id 区划编码
  * @returns
  */
 async function getRegionPaths({
-    region_code = null
+    region_id = null
 }) {
     try {
-        if (region_code === null) {
-            throw new Error('请求体中需要一个regionIds属性，且该属性是一个数组')
+        if (region_id === null) {
+            throw new Error('请求体中需要一个region_id属性，且该属性是一个数组')
         }
-        if (region_code.length <= 0) {
+        if (region_id.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
-        //读取一次数据库，建立dict，key是region_id，value是区划树节点
-        var regions = await modelRegion.find({}, { __v: 0 })
-        var dicCode = {}
-        var dicId = {}
-        regions.forEach(function (value) {
-            dicCode[value.region_code] = value
-            dicId[value['_id']] = value
-        })
         //计算路径
+        var regionDic = itemService.getRegionDic()
+        if (regionDic === null) {
+            throw new Error('请刷新重试')
+        }
         var res = {}
-        for (let i = 0; i < region_code.length; i++) {
+        for (let i = 0; i < region_id.length; i++) {
             let regionPath = []
-            let node = dicCode[region_code[i]] ? dicCode[region_code[i]] : null
+            let node = regionDic[region_id[i]] ? regionDic[region_id[i]] : null
             while (node !== null) {
                 regionPath.unshift(node)
-                node = dicId[node.parentId] ? dicId[node.parentId] : null
+                node = regionDic[node.parentId] ? regionDic[node.parentId] : null
             }
-            res[region_code[i]] = regionPath
+            res[region_id[i]] = regionPath
         }
         return new SuccessModel({ msg: '获取区划路径成功', data: res })
     } catch (err) {
@@ -454,6 +810,10 @@ async function getRegionPaths({
  * @param {Array<Number>} region_level 区划等级
  * @param {Array<String>} parentId 上级区划id
  * @param {Array<String>} parentCode 上级区划编码（如果和parentId一起传的话就优先使用这个）
+ * @param {String} creator_name 创建人名称
+ * @param {String} department_name 部门名称
+ * @param {Number} start_time 创建时间的起始时间
+ * @param {Number} end_time 创建时间的终止时间
  * @param {Number} page_size 页大小
  * @param {Number} page_num 页码
  * @returns
@@ -464,6 +824,10 @@ async function getRegions({
     region_level = null,
     parentId = null,
     parentCode = null,
+    creator_name = null,
+    department_name = null,
+    start_time = null,
+    end_time = null,
     page_size = null,
     page_num = null
 }) {
@@ -479,19 +843,24 @@ async function getRegions({
             codes.forEach(function (value) { parentid.push(value['_id']) })
             query.parentId = { $in: parentid }
         }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        var start = (start_time !== null) ? start_time : 0
+        var end = (end_time !== null) ? end_time : 9999999999999
+        query.create_time = { $gte: start, $lte: end }
         if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
             throw new Error('page_size和page_num需要一起传')
         }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
             var dict = {}
-            dict.data = await modelRegion.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            dict.data = await modelRegion.find(query, { __v: 0, children: 0 }).skip(page_num * page_size).limit(page_size)
             dict.total = await modelRegion.find(query).count()
             dict.page_size = page_size
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
         }
-        var regions = await modelRegion.find(query, { __v: 0 })
+        var regions = await modelRegion.find(query, { __v: 0, children: 0 })
         return new SuccessModel({ msg: '查询成功', data: regions })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -504,17 +873,28 @@ async function getRegions({
  * @returns
  */
 async function createItems({
+    user_id = null,
     items = null
 }) {
     try {
-        if (items === null) {
-            throw new Error('至少需要items属性，且该属性是一个数组')
+        if (user_id === null || items === null) {
+            throw new Error('需要user_id和items')
         }
         if (!items.length || items.length <= 0) {
             throw new Error('数组长度小于等于0')
         }
+        //检查user_id
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在: ' + user_id)
+        }
+        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
+        if (department === null) {
+            throw new Error('用户没有所属部门')
+        }
         //遍历数组创建事项
         var newData = []
+        var bulkOps = []
         for (let i = 0; i < items.length; i++) {
             //解构，没有传的字段默认是null
             let {
@@ -533,7 +913,7 @@ async function createItems({
             }
             //检查rule_id的合法性
             let rule = await modelRule.exists({ rule_id: rule_id })
-            if (rule === null) {
+            if (rule === false) {
                 throw new Error('rule_id不存在: ' + rule_id)
             }
             //检查region_code和region_id的合法性
@@ -541,7 +921,7 @@ async function createItems({
             if (region === null) {
                 throw new Error('region_code不存在: ' + region_code)
             }
-            if (region._id !== region_id) {
+            if (region._id != region_id) {
                 throw new Error('region_code和region_id不匹配: ' + region_code + '\t' + region_id)
             }
             newData.push({
@@ -549,11 +929,27 @@ async function createItems({
                 task_code: task_code,
                 rule_id: rule_id,
                 region_code: region_code,
-                region_id: region_id
+                region_id: region_id,
+                creator: {
+                    id: user_id,
+                    name: user.user_name,
+                    department_name: department.department_name
+                }
             })
+            //修改对应事项指南的状态
+            if (task.task_status === 0) {
+                bulkOps.push({
+                    updateOne: {
+                        filter: { task_code: task_code },
+                        update: { task_status: 1 }
+                    }
+                })
+            }
         }
         //批量创建
         var result = await modelItem.create(newData)
+        //批量更新
+        var result1 = await modelTempTask.bulkWrite(bulkOps)
         //返回结果
         return new SuccessModel({ msg: '创建事项成功', data: result })
     } catch (err) {
@@ -631,7 +1027,7 @@ async function updateItems({
             }
             //判断_id的合法性
             let item = await modelItem.exists({ _id: _id })
-            if (item === null) {
+            if (item === false) {
                 throw new Error('_id不存在: ' + _id)
             }
             //更新item（差量）
@@ -639,7 +1035,7 @@ async function updateItems({
             if (task_code !== null) {
                 //检查task_code的合法性
                 let task = await modelTempTask.exists({ task_code: task_code })
-                if (task === null) {
+                if (task === false) {
                     throw new Error('task_code不存在: ' + task_code)
                 }
                 //检查是否需要更改对应事项指南的状态
@@ -657,7 +1053,7 @@ async function updateItems({
             if (rule_id !== null) {
                 //检查rule_id的合法性
                 let rule = await modelRule.exists({ rule_id: rule_id })
-                if (rule === null) {
+                if (rule === false) {
                     throw new Error('rule_id不存在: ' + rule_id)
                 }
                 newData.rule_id = rule_id
@@ -671,7 +1067,7 @@ async function updateItems({
                 if (region === null) {
                     throw new Error('region_code不存在')
                 }
-                if (region._id !== region_id) {
+                if (region._id != region_id) {
                     throw new Error('region_code和region_id不匹配')
                 }
                 newData.region_code = region_code
@@ -721,25 +1117,27 @@ async function getChildRegionsByRuleAndRegion({
         })
         //有事项haveItem是1，否则是0
         region._doc.haveItem = 0
-        if (res !== null) {
+        if (res === true) {
             region._doc.haveItem = 1
         }
         result.push(region._doc)
         //找出该区划的下级区划
-        var childRegions = await modelRegion.find({ parentId: region['_id'] }, { __v: 0 })
+        var regionDic = itemService.getRegionDic()
+        var childRegions = regionDic[region._id].children
         for (let i = 0; i < childRegions.length; i++) {
-            var value = childRegions[i]
+            var value = regionDic[childRegions[i]]
             //遍历区划，检查该区划包括其全部下级区划在内是否存在rule_id对应的事项
             var regionCodes = []
             var q = []
-            q.push(value['_id'])
+            q.push(value._id)
             regionCodes.push(value.region_code)
             while (q.length > 0) {
-                let children = await modelRegion.find({ parentId: { $in: q } }, { __v: 0 })
-                q = []
-                for (let j = 0; j < children.length; j++) {
-                    q.push(children[j]['_id'])
-                    regionCodes.push(children[j].region_code)
+                let len = q.length
+                for (let j = 0; j < len; j++) {
+                    let id = q.shift()
+                    regionCodes.push(regionDic[id].region_code)
+                    let children = regionDic[id].children
+                    Array.prototype.push.apply(q, children)
                 }
             }
             //找出匹配的事项
@@ -748,11 +1146,12 @@ async function getChildRegionsByRuleAndRegion({
                 region_code: { $in: regionCodes }
             })
             //子区划中有事项的haveItem是1，否则是0
-            value._doc.haveItem = 0
-            if (res !== null) {
-                value._doc.haveItem = 1
+            let r = Object.assign({}, value)
+            r.haveItem = 0
+            if (res === true) {
+                r.haveItem = 1
             }
-            result.push(value._doc)
+            result.push(r)
         }
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
@@ -765,6 +1164,8 @@ async function getChildRegionsByRuleAndRegion({
  * @param {Array<String>} rule_id 规则id
  * @param {String} rule_name 规则名称，用于模糊查询
  * @param {Array<String>} parentId 父规则id
+ * @param {String} creator_name 创建人名字
+ * @param {String} department_name 部门名称
  * @param {Number} start_time 规则创建时间的起始时间
  * @param {Number} end_time 规则创建时间的终止时间
  * @returns
@@ -773,45 +1174,23 @@ async function getRules({
     rule_id = null,
     rule_name = null,
     parentId = null,
+    creator_name = null,
+    department_name = null,
     start_time = null,
     end_time = null
 }) {
     try {
-        //rule_id用于准确查询
-        if (rule_id !== null) {
-            var res = await modelRule.find({
-                rule_id: { $in: rule_id },
-                rule_name: { $ne: 'null' }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        //rule_name用于模糊查询
-        if (rule_name !== null) {
-            let start = (start_time !== null) ? start_time : 0
-            let end = (end_time !== null) ? end_time : 9999999999999
-            var res = await modelRule.find({
-                rule_name: { $regex: rule_name },
-                create_time: { $gte: start, $lte: end }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        //parentId用于查找子规则
-        if (parentId !== null) {
-            let start = (start_time !== null) ? start_time : 0
-            let end = (end_time !== null) ? end_time : 9999999999999
-            var res = await modelRule.find({
-                parentId: { $in: parentId },
-                create_time: { $gte: start, $lte: end }
-            }, { __v: 0 })
-            return new SuccessModel({ msg: '查询成功', data: res })
-        }
-        //只根据创建时间查询，或者全量查询
+        var query = {}
+        if (rule_id !== null) query.rule_id = { $in: rule_id }
+        if (rule_name !== null) query.rule_name = { $regex: rule_name }
+        else query.rule_name = { $ne: 'null' }
+        if (parentId !== null) query.parentId = { $in: parentId }
+        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
-        var res = await modelRule.find({
-            rule_name: { $ne: 'null' },
-            create_time: { $gte: start, $lte: end }
-        }, { __v: 0 })
+        query.create_time = { $gte: start, $lte: end }
+        var res = await modelRule.find(query, { __v: 0, children: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -827,16 +1206,29 @@ async function getRules({
  * @returns
  */
 async function createRegion({
+    user_id = null,
     region_code = null,
     region_name = null,
     region_level = null,
     parentId = null
 }) {
     try {
+        if (user_id === null) {
+            throw new Error('需要user_id')
+        }
         if (region_code === null || region_name === null || region_level === null || parentId === null) {
             throw new Error('创建区划的时候必须包括全部字段的信息，包括region_code、region_name、region_level和parentCode')
         }
-        //创建区划
+        //检查user_id
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在: ' + user_id)
+        }
+        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
+        if (department === null) {
+            throw new Error('用户没有所属部门')
+        }
+        //检查region_level和parentId的合法性
         var parent = await modelRegion.findOne({ _id: parentId }, { __v: 0 })
         if (parent === null) {
             throw new Error('parentId不存在: ' + parentId)
@@ -844,12 +1236,19 @@ async function createRegion({
         if (parent.region_level + 1 !== region_level) {
             throw new Error('region_level错误，上级区划的region_level是' + parent.region_level)
         }
+        //创建区划
         var result = await modelRegion.create({
             region_code: region_code,
             region_name: region_name,
             region_level: region_level,
-            parentId: parentId
+            parentId: parentId,
+            creator: {
+                id: user_id,
+                name: user.user_name,
+                department_name: department.department_name
+            }
         })
+        //返回创建结果
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '创建失败', data: err.message })
@@ -879,12 +1278,13 @@ async function deleteRegions({
             }
         }
         //检查是否有事项指南与区划绑定
-        var items = await modelItem.find({ region_id: { $in: regions } }, { __v: 0 })
-        if (items.length > 0) {
-            return new SuccessModel({ msg: '删除区划失败，有与其绑定的事项还未处理', data: {code: 999, items: items} })
+        var items = await modelItem.find({ region_id: { $in: regions } }, { __v: 0 }).count()
+        if (items > 0) {
+            return new SuccessModel({ msg: '删除区划失败，有与其绑定的事项还未处理', data: { code: 999 } })
         }
         //批量删除
         await modelRegion.deleteMany({ _id: { $in: regions } })
+        //返回结果
         return new SuccessModel({ msg: '删除成功' })
     } catch (err) {
         return new ErrorModel({ msg: '删除失败', data: err.message })
@@ -925,13 +1325,9 @@ async function updateRegions({
             if (region === null) {
                 throw new Error('_id不存在: ' + _id)
             }
-            //更新region（差量）
+            //更新region
             let newData = {}
-            if (region_code !== null) {
-                let r = await modelRegion.findOne({ region_code: region_code }, { __v: 0 })
-                if (r !== null) {
-                    throw new Error('region_code已存在，更新失败: ' + region_code)
-                }
+            if (region_code !== region.region_code) {
                 newData.region_code = region_code
                 itemBulkOps.push({
                     updateMany: {
@@ -953,6 +1349,7 @@ async function updateRegions({
         //批量更新
         var result = await modelRegion.bulkWrite(regionBulkOps)
         var result1 = await modelItem.bulkWrite(itemBulkOps)
+        //返回结果
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
@@ -961,6 +1358,7 @@ async function updateRegions({
 
 /**
  * 改变事项的状态
+ * @param {String} user_id 用户id
  * @param {Array<Object>} items 待改变状态的事项（数组成员包含item_id和next_status属性）
  * @returns 
  */
@@ -1000,15 +1398,22 @@ async function changeItemStatus({
             if (item === null) {
                 throw new Error('item_id不存在: ' + item_id)
             }
-            //判断能否变为next_status
+            //事项状态变到next_status
             for (let j = 0; j < itemStatus.length; j++) {
                 var status = itemStatus[j]
                 if (status.id !== item.item_status) {
                     if (j === itemStatus.length - 1) throw new Error('itemStatus表和数据库中已有的事项状态对不上')
                     continue
                 }
-                if (status.next_status.includes(next_status) === false) {
-                    throw new Error('事项所处状态无法变到指定状态: ' + item_id)
+                //判断能否变为next_status
+                var keys = Object.keys(status.next_status)
+                for (let k = 0; k < keys.length; k++) {
+                    if (status.next_status[keys[k]] === next_status) {
+                        break
+                    }
+                    if (k === keys.length - 1) {
+                        throw new Error('事项所处状态无法变到指定状态: ' + item_id)
+                    }
                 }
                 if (can_operate.includes(status.id) === false) {
                     throw new Error('该用户无法修改状态为\"' + status.name + '\"的事项')
@@ -1020,6 +1425,15 @@ async function changeItemStatus({
                         update: { item_status: next_status }
                     }
                 })
+                //如果是转到审核通过状态，就更新一下事项的发布时间
+                if (status.eng_name === 'Success') {
+                    bulkOps.push({
+                        updateOne: {
+                            filter: { _id: item_id },
+                            update: { release_time: Date.now() }
+                        }
+                    })
+                }
                 break
             }
         }
@@ -1028,6 +1442,62 @@ async function changeItemStatus({
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
+    }
+}
+
+/**
+ * 添加审核意见
+ * @param {String} item_id 事项id
+ * @param {Number} rank 几级审核（从1开始）
+ * @param {String} user_id 用户id
+ * @param {String} advise 审核意见
+ * @returns 
+ */
+async function addAuditAdvise({
+    item_id = null,
+    user_id = null,
+    advise = null
+}) {
+    try {
+        if (item_id === null || user_id === null || advise === null) {
+            throw new Error('需要item_id、user_id和advise')
+        }
+        var item = await modelItem.findOne({ _id: item_id }, { __v: 0 })
+        if (item === null) {
+            throw new Error('item_id不存在')
+        }
+        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
+        if (user === null) {
+            throw new Error('user_id不存在')
+        }
+        var advises = item.audit_advises._doc
+        advises.push({ user_id: user_id, user_name: user.user_name, advise: (advise !== null) ? advise : '' })
+        var result = await modelItem.updateOne({ _id: item_id }, { audit_advises: advises })
+        return new SuccessModel({ msg: '添加成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '添加失败', data: err.message })
+    }
+}
+
+/**
+ * 获取事项指南和审核意见
+ * @param {String} item_id 事项id
+ * @returns 
+ */
+async function getItemGuideAndAuditAdvises({
+    item_id = null
+}) {
+    try {
+        if (item_id === null) {
+            throw new Error('需要item_id')
+        }
+        var item = await modelItem.findOne({ _id: item_id }, { task_code: 1, audit_advises: 1 })
+        var itemGuide = await modelTempTask.findOne({ task_code: item.task_code }, { _id: 0, __v: 0 })
+        var result = itemGuide._doc
+        result.audit_advises = item.audit_advises
+        return new SuccessModel({ msg: '获取成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取失败', data: err.message })
     }
 }
 
@@ -1150,5 +1620,10 @@ module.exports = {
     getRegionPaths,
     getChildRegionsByRuleAndRegion,
     getItemGuide,
-    getItemGuides
+    getItemGuides,
+    createItemGuide,
+    deleteItemGuides,
+    updateItemGuide,
+    addAuditAdvise,
+    getItemGuideAndAuditAdvises
 }

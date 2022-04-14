@@ -33,6 +33,37 @@ const itemSchema = new mongoose.Schema({
     region_id: {    //区划id
         type: String,
         required: true
+    },
+    creator: {      //创建人
+        id: {
+            type: String,
+            required: true
+        },
+        name: {
+            type: String,
+            required: true
+        },
+        department_name: {
+            type: String,
+            required: true
+        }
+    },
+    audit_advises: {
+        type: [{
+            user_id: {
+                type: String,
+                default: ''
+            },
+            user_name: {
+                type: String,
+                default: ''
+            },
+            advise: {
+                type: String,
+                default: ''
+            }
+        }],
+        default: []
     }
 })
 
