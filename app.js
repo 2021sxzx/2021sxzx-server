@@ -49,14 +49,14 @@ app.set('view engine', 'jade');
 // 日志的设置使用
 app.use(logger('dev'));
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.log'), { flags: 'a' });
-app.use(logger('combined', {
-  stream: accessLogStream
-}));
-//往日志添加用户信息
-// logger.token('id',function getId(req){return 'zyk'});
-// app.use(logger(':id :remote-addr - :remote-user [:date[iso]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
+// app.use(logger('combined', {
 //   stream: accessLogStream
 // }));
+//往日志添加用户信息
+logger.token('id',function getId(req){return '往来'});
+app.use(logger(':id :remote-addr - :remote-user [:date[iso]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
+  stream: accessLogStream
+}));
 // post请求的参数的获取, express会将解析之后, 转换成对象的post请求参数放到请求对象的body属性中
 app.use(express.json());// 告诉express能够解析 application/json类型的请求参数
 app.use(express.urlencoded({ extended: false }));// 告诉express能够解析 表单类型的请求参数 application/x-www-form-urlencoded

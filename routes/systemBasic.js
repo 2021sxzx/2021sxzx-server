@@ -222,13 +222,13 @@ router.post(
 //上传网站logo  怎么同一个表单分开传图片呢
 storage = multer.diskStorage({
   destination(req,res,cb){
-    cb(null,'upload');
+    cb(null,'public/imgs');
   },
   filename(req,file,cb){
     const filenameArr = file.originalname.split('.');
     // console.log("-----------req-------------")
     // console.log(req.body)
-    cb(null,"网站logo" + '.' + filenameArr[filenameArr.length-1]);
+    cb(null,"ic_logo_test" + '.' + filenameArr[filenameArr.length-1]);
   }
 });
 var websitelogoupload = multer({storage});
