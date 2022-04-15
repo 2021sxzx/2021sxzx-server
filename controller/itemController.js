@@ -113,7 +113,6 @@ async function getRegionTree() {
  * @returns
  */
 async function getItems({
-    user_id = null,
     create_start_time = null,
     create_end_time = null,
     release_start_time = null,
@@ -150,15 +149,61 @@ async function getItems({
         }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
+            var items = await modelItem.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            //计算规则路径和区划路径
+            var ruleDic = itemService.getRuleDic()
+            var regionDic = itemService.getRegionDic()
+            if (ruleDic === null || regionDic === null) {
+                throw new Error('请刷新重试')
+            }
+            for (let i = 0; i < items.length; i++) {
+                let rulePath = ''
+                let node = ruleDic[items[i].rule_id] ? ruleDic[items[i].rule_id] : null
+                while (node !== null) {
+                    rulePath = node.rule_name + '/' + rulePath
+                    node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
+                }
+                items[i]._doc.rule_path = rulePath
+                let regionPath = ''
+                let node1 = regionDic[items[i].region_id] ? regionDic[items[i].region_id] : null
+                while (node1 !== null) {
+                    regionPath = node1.region_name + '/' + regionPath
+                    node1 = regionDic[node1.parentId] ? regionDic[node1.parentId] : null
+                }
+                items[i]._doc.region_path = regionPath
+            }
+            //返回结果
             var dict = {}
-            dict.data = await modelItem.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            dict.data = items
             dict.total = await modelItem.find(query).count()
             dict.page_size = page_size
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
         }
-        var res = await modelItem.find(query, { __v: 0 })
-        return new SuccessModel({ msg: '查询成功', data: res })
+        var items = await modelItem.find(query, { __v: 0 })
+        //计算规则路径和区划路径
+        var ruleDic = itemService.getRuleDic()
+        var regionDic = itemService.getRegionDic()
+        if (ruleDic === null || regionDic === null) {
+            throw new Error('请刷新重试')
+        }
+        for (let i = 0; i < items.length; i++) {
+            let rulePath = ''
+            let node = ruleDic[items[i].rule_id] ? ruleDic[items[i].rule_id] : null
+            while (node !== null) {
+                rulePath = node.rule_name + '/' + rulePath
+                node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
+            }
+            items[i]._doc.rule_path = rulePath
+            let regionPath = ''
+            let node1 = regionDic[items[i].region_id] ? regionDic[items[i].region_id] : null
+            while (node1 !== null) {
+                regionPath = node1.region_name + '/' + regionPath
+                node1 = regionDic[node1.parentId] ? regionDic[node1.parentId] : null
+            }
+            items[i]._doc.region_path = regionPath
+        }
+        return new SuccessModel({ msg: '查询成功', data: items })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
     }
@@ -941,6 +986,20 @@ async function getRegions({
             return new SuccessModel({ msg: '查询成功', data: dict })
         }
         var regions = await modelRegion.find(query, { __v: 0, children: 0 })
+        //计算区划路径
+        var regionDic = itemService.getRegionDic()
+        if (regionDic === null) {
+            throw new Error('请刷新重试')
+        }
+        for (let i = 0; i < regions.length; i++) {
+            let regionPath = ''
+            let node = regionDic[regions[i]._id] ? regionDic[regions[i]._id] : null
+            while (node !== null) {
+                regionPath = node.region_name + '/' + regionPath
+                node = regionDic[node.parentId] ? regionDic[node.parentId] : null
+            }
+            regions[i]._doc.region_path = regionPath
+        }
         return new SuccessModel({ msg: '查询成功', data: regions })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -1271,6 +1330,20 @@ async function getRules({
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = { $gte: start, $lte: end }
         var res = await modelRule.find(query, { __v: 0, children: 0 })
+        //计算规则路径
+        var ruleDic = itemService.getRuleDic()
+        if (ruleDic === null) {
+            throw new Error('请刷新重试')
+        }
+        for (let i = 0; i < res.length; i++) {
+            let rulePath = ''
+            let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null
+            while (node !== null) {
+                rulePath = node.rule_name + '/' + rulePath
+                node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
+            }
+            res[i]._doc.rule_path = rulePath
+        }
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -1588,7 +1661,12 @@ async function addAuditAdvise({
             throw new Error('user_id不存在')
         }
         var advises = item._doc.audit_advises
-        advises.push({ user_id: user_id, user_name: user.user_name, advise: (advise !== null) ? advise : '' })
+        advises.push({
+            time: Date.now(),
+            user_id: user_id,
+            user_name: user.user_name,
+            advise: (advise !== null) ? advise : ''
+        })
         var result = await modelItem.updateOne({ _id: item_id }, { audit_advises: advises })
         return new SuccessModel({ msg: '添加成功', data: result })
     } catch (err) {

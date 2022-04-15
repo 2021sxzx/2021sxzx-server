@@ -53,7 +53,7 @@ const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.lo
 //   stream: accessLogStream
 // }));
 //往日志添加用户信息
-logger.token('id',function getId(req){return '往来'});
+logger.token('id',function getId(req){return req.headers.user_id});
 app.use(logger(':id :remote-addr - :remote-user [:date[iso]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
   stream: accessLogStream
 }));
