@@ -720,7 +720,7 @@ async function createItemGuide({
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('public/imgs/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = path.join('/imgs/itemGuideQRCode', task_code + '.png')
             // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
@@ -890,7 +890,7 @@ async function updateItemGuide({
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('public/imgs/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = path.join('/imgs/itemGuideQRCode', task_code + '.png')
             // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
