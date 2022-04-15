@@ -989,8 +989,23 @@ async function getRegions({
         }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
+            //计算区划路径
+            var regions = await modelRegion.find(query, { __v: 0, children: 0 }).skip(page_num * page_size).limit(page_size)
+            var regionDic = itemService.getRegionDic()
+            if (regionDic === null) {
+                throw new Error('请刷新重试')
+            }
+            for (let i = 0; i < regions.length; i++) {
+                let regionPath = ''
+                let node = regionDic[regions[i]._id] ? regionDic[regions[i]._id] : null
+                while (node !== null) {
+                    regionPath = node.region_name + '/' + regionPath
+                    node = regionDic[node.parentId] ? regionDic[node.parentId] : null
+                }
+                regions[i]._doc.region_path = regionPath
+            }
             var dict = {}
-            dict.data = await modelRegion.find(query, { __v: 0, children: 0 }).skip(page_num * page_size).limit(page_size)
+            dict.data = regions
             dict.total = await modelRegion.find(query).count()
             dict.page_size = page_size
             dict.page_num = page_num
