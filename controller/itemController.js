@@ -711,12 +711,12 @@ async function createItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            // var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
-            // var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
-            // var dataBuffer = Buffer.from(base64Data, 'base64')
-            // fs.writeFileSync(filePath, dataBuffer)
-            // newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
-            newData.qr_code = qr_code
+            var filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
+            var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+            var dataBuffer = Buffer.from(base64Data, 'base64')
+            fs.writeFileSync(filePath, dataBuffer)
+            newData.qr_code = path.join('public/imgs/itemGuideQRCode', task_code + '.png')
+            // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.create(newData)
@@ -876,12 +876,12 @@ async function updateItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            // var filePath = path.join('../upload/itemGuideQRCode', task_code + '.png')
-            // var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
-            // var dataBuffer = Buffer.from(base64Data, 'base64')
-            // fs.writeFileSync(filePath, dataBuffer)
-            // newData.qr_code = path.join('upload/itemGuideQRCode', task_code + '.png')
-            newData.qr_code = qr_code
+            var filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
+            var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+            var dataBuffer = Buffer.from(base64Data, 'base64')
+            fs.writeFileSync(filePath, dataBuffer)
+            newData.qr_code = path.join('public/imgs/itemGuideQRCode', task_code + '.png')
+            // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
