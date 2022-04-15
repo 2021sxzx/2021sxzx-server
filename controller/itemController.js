@@ -711,7 +711,11 @@ async function createItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
+            var filePath = '../public/imgs/itemGuideQRCode'
+            if (!fs.existsSync(filePath)) {
+                fs.mkdirSync(filePath)
+            }
+            filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
@@ -876,7 +880,11 @@ async function updateItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
+            var filePath = '../public/imgs/itemGuideQRCode'
+            if (!fs.existsSync(filePath)) {
+                fs.mkdirSync(filePath)
+            }
+            filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
