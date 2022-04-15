@@ -186,6 +186,11 @@ async function updateRules(rule_id) {
     ruleDic.status = 1
 }
 
+/**
+ * 添加一个更新内存中数据的任务
+ * @param {String} functionName 函数名
+ * @param {Array<String>} data 要更新的id
+ */
 async function addUpdateTask(functionName, data) {
     switch (functionName) {
         case 'createRegions':
@@ -210,6 +215,10 @@ async function addUpdateTask(functionName, data) {
     runTasks()
 }
 
+/**
+ * 顺序执行tasks数组中的全部函数（同一时间只会有一个runTasks运行）
+ * @returns 
+ */
 async function runTasks() {
     if (running === true) return
     running = true
@@ -219,6 +228,10 @@ async function runTasks() {
     running = false
 }
 
+/**
+ * 获取内存中的区划树
+ * @returns Object || null
+ */
 function getRegionDic() {
     if (regionDic.status === 1) {
         return regionDic.data
@@ -227,6 +240,10 @@ function getRegionDic() {
     }
 }
 
+/**
+ * 获取内存中的规则树
+ * @returns Object || null
+ */
 function getRuleDic() {
     if (ruleDic.status === 1) {
         return ruleDic.data
@@ -234,6 +251,8 @@ function getRuleDic() {
         return null
     }
 }
+
+
 
 module.exports = {
     addUpdateTask,
