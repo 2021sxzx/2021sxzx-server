@@ -11,6 +11,7 @@ const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
 const modelDepartmentMapUsers = require('../model/departmentMapUser')
 const itemService = require('../service/itemService')
+const { dirname } = require('path')
 
 /**
  * 获取事项状态表
@@ -711,11 +712,11 @@ async function createItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var filePath = '../public/imgs/itemGuideQRCode'
+            var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
-            filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
+            filePath = path.join(filePath, task_code + '.png')
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
@@ -726,6 +727,7 @@ async function createItemGuide({
         var result = await modelTempTask.create(newData)
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
+        // console.log(err.message)
         return new ErrorModel({ msg: '创建失败', data: err.message })
     }
 }
@@ -880,11 +882,11 @@ async function updateItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var filePath = '../public/imgs/itemGuideQRCode'
+            var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
-            filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
+            filePath = path.join(filePath, task_code + '.png')
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
@@ -893,9 +895,10 @@ async function updateItemGuide({
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
-        var result1 = await modelItem.bulkWrite(bulkOps)
+        await modelItem.bulkWrite(bulkOps)
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
+        // console.log(err.message)
         return new ErrorModel({ msg: '更新失败', data: err.message })
     }
 }
