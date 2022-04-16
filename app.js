@@ -34,8 +34,6 @@ const mongoose = require("mongoose")
 // const itemGuide = require("./model/task")
 mongoose.connect(MONGO_CONFIG.url);
 
-
-
 const app = express();
 //上传图片大小限制（张奕凯）
 const bodyParser = require('body-parser');
