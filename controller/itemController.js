@@ -11,6 +11,7 @@ const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
 const modelDepartmentMapUsers = require('../model/departmentMapUser')
 const itemService = require('../service/itemService')
+const { dirname } = require('path')
 
 /**
  * 获取事项状态表
@@ -711,21 +712,22 @@ async function createItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var filePath = '../public/imgs/itemGuideQRCode'
+            var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
-            filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
+            filePath = path.join(filePath, task_code + '.png')
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('public/imgs/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = path.join('/imgs/itemGuideQRCode', task_code + '.png')
             // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.create(newData)
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
+        // console.log(err.message)
         return new ErrorModel({ msg: '创建失败', data: err.message })
     }
 }
@@ -880,22 +882,23 @@ async function updateItemGuide({
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
         if (qr_code !== null) {
-            var filePath = '../public/imgs/itemGuideQRCode'
+            var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
-            filePath = path.join('../public/imgs/itemGuideQRCode', task_code + '.png')
+            filePath = path.join(filePath, task_code + '.png')
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('public/imgs/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = path.join('/imgs/itemGuideQRCode', task_code + '.png')
             // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
-        var result1 = await modelItem.bulkWrite(bulkOps)
+        await modelItem.bulkWrite(bulkOps)
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
+        // console.log(err.message)
         return new ErrorModel({ msg: '更新失败', data: err.message })
     }
 }
@@ -986,8 +989,23 @@ async function getRegions({
         }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
+            //计算区划路径
+            var regions = await modelRegion.find(query, { __v: 0, children: 0 }).skip(page_num * page_size).limit(page_size)
+            var regionDic = itemService.getRegionDic()
+            if (regionDic === null) {
+                throw new Error('请刷新重试')
+            }
+            for (let i = 0; i < regions.length; i++) {
+                let regionPath = ''
+                let node = regionDic[regions[i]._id] ? regionDic[regions[i]._id] : null
+                while (node !== null) {
+                    regionPath = node.region_name + '/' + regionPath
+                    node = regionDic[node.parentId] ? regionDic[node.parentId] : null
+                }
+                regions[i]._doc.region_path = regionPath
+            }
             var dict = {}
-            dict.data = await modelRegion.find(query, { __v: 0, children: 0 }).skip(page_num * page_size).limit(page_size)
+            dict.data = regions
             dict.total = await modelRegion.find(query).count()
             dict.page_size = page_size
             dict.page_num = page_num

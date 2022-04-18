@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 6237ed0e0842000062005753 ::ffff:127.0.0.1 - - [2022-02-15T03:03:29.368Z] "POST /api/v1/getUserRank HTTP/1.1" 200 136 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36 Edg/100.0.1185.39"
 6237ed0e0842000062005753 ::ffff:127.0.0.1 - - [2022-02-15T03:03:29.449Z] "GET /api/v1/getRuleTree/ HTTP/1.1" 200 25752 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36 Edg/100.0.1185.39"
 6237ed0e0842000062005753 ::ffff:127.0.0.1 - - [2022-02-15T03:03:31.107Z] "GET /api/v1/getRegionTree/ HTTP/1.1" 200 923662 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36 Edg/100.0.1185.39"
@@ -5256,3 +5257,5 @@ zyk ::ffff:127.0.0.1 - - [2022-04-15T02:42:59.633Z] "GET /api/v1/show/ HTTP/1.1"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-04-17T14:44:48.713Z] "GET /api/v1/failure HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36 Edg/100.0.1185.44"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-04-17T14:44:50.596Z] "GET /api/v1/failure HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36 Edg/100.0.1185.44"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-04-17T14:44:51.238Z] "POST /api/v1/sideBar HTTP/1.1" 200 1704 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36 Edg/100.0.1185.44"
+=======
+>>>>>>> 3dd260cadeaf1cb8d46265b5d057d7ab4e2facb8

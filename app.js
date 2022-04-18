@@ -27,14 +27,17 @@ const { validate_jwt } = require('./utils/validateJwt');
 
 const { MONGO_CONFIG } = require("./config/db") //数据库的配置信息
 const mongoose = require("mongoose")
+const redisClient = require('./config/redis');
 // const systemFailure = require("./model/systemFailure")
 // const rule = require("./model/rule")
 // const itemRule = require("./model/itemRule")
 // const item = require("./model/item")
 // const itemGuide = require("./model/task")
+
+(async () => {
+  await redisClient.connect()
+})();
 mongoose.connect(MONGO_CONFIG.url);
-
-
 
 const app = express();
 //上传图片大小限制（张奕凯）
