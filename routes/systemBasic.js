@@ -166,7 +166,7 @@ router.post('/v1/interface-configuration',function(req,res){
     res.send('结束')
 })
 
-//上传后台logo
+//上传首页轮播图
 var enter="file"
 var storage = multer.diskStorage({
   destination(req,res,cb){
@@ -176,7 +176,7 @@ var storage = multer.diskStorage({
     const filenameArr = file.originalname.split('.');
     // console.log("-----------req-------------")
     // console.log(req.body)
-    cb(null,"后台logo" + '.' + filenameArr[filenameArr.length-1]);
+    cb(null,"banner_pc" + '.' + filenameArr[filenameArr.length-1]);
   }
 });
 var upload = multer({storage});

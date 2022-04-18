@@ -17,7 +17,7 @@ const systemFailureSchema = new mongoose.Schema({
     type:String,
     required:true
   },
-  idc:{
+  user_name:{
     type:String,
     required:true
   }
