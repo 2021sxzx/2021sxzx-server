@@ -51,7 +51,7 @@ const {
    * @returns {Promise<ErrorModel|SuccessModel>}
    */
   async function getSearchSystemLog(searchData) {
-    let {myself,today,thisWeek} = searchData
+    let {myselfID,today,thisWeek} = searchData
 /*    if(!myself) {
       myself = false
     }*/
@@ -63,7 +63,7 @@ const {
       thisWeek = false
     }
     try {
-      let data = await searchByCondition({myself,today,thisWeek})
+      let data = await searchByCondition({myselfID,today,thisWeek})
       return new SuccessModel({msg: '查询成功', data:data});
     } catch (e) {
       return new ErrorModel({msg:e.message})

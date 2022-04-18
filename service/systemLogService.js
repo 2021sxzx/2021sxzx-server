@@ -119,7 +119,7 @@ async function getSystemLogDetail() {
  * @param thisWeek
  * @returns {Promise<*>}
  */
-async function searchByCondition({ myself, today, thisWeek }) {
+async function searchByCondition({ myselfID, today, thisWeek }) {
   try {
     let condition = {};
     condition.pageNum = 0;
@@ -128,7 +128,7 @@ async function searchByCondition({ myself, today, thisWeek }) {
     // thisWeek=true;
     // myself=true;
     // return { myself, today, thisWeek }
-    if (myself === false && today === false && thisWeek === false) {
+    if (myselfID === '' && today === false && thisWeek === false) {
       return systemLogData
       // return [{idc:"001"}]
   //     TimeZone time = TimeZone.getTimeZone("Etc/GMT-8");  //转换为中国时区
@@ -145,13 +145,13 @@ async function searchByCondition({ myself, today, thisWeek }) {
     //     return currentItem.user_name === "张毅";
     //   }));
     // }
-    if (myself) {
-      console.log('myself:',myself)
-      return (newSystemLogData = systemLogData.filter((currentItem) => {
+    if (myselfID) {
+      // console.log('myself:',myselfID)
+      newSystemLogData = systemLogData.filter((currentItem) => {
         // console.log(currentItem)
         // console.log(currentItem._id,':',myself)
-        return currentItem._id === myself;
-      }));
+        return currentItem._id === myselfID;
+      });
     }
     if (today === true) {
       let d = new Date();
