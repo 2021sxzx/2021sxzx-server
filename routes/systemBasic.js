@@ -228,7 +228,7 @@ storage = multer.diskStorage({
     const filenameArr = file.originalname.split('.');
     // console.log("-----------req-------------")
     // console.log(req.body)
-    cb(null,"ic_logo_test" + '.' + filenameArr[filenameArr.length-1]);
+    cb(null,"ic_logo" + '.' + filenameArr[filenameArr.length-1]);
   }
 });
 var websitelogoupload = multer({storage});
