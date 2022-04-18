@@ -170,7 +170,7 @@ router.post('/v1/interface-configuration',function(req,res){
 var enter="file"
 var storage = multer.diskStorage({
   destination(req,res,cb){
-    cb(null,'upload');
+    cb(null,'public/imgs');
   },
   filename(req,file,cb){
     const filenameArr = file.originalname.split('.');

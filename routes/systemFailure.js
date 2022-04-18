@@ -44,7 +44,9 @@ const systemFailure = require("../model/systemFailure");
     console.log("first")
     let data=req.body;
     console.log(data)
-    systemFailure.delete.One()
+    systemFailure.deleteOne({'_id':data._id}).then((res) =>{
+      console.log('success')
+    })
     // let result = await createSystemFailureController(data)
     // setStatusCode(res, result)
     // res.json(result)
