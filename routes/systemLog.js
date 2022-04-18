@@ -26,15 +26,6 @@ function setStatusCode(res,data) {
 })
 
 /**
- * 系统日志的获取
- */
- router.get('/v1/log', async (req,res,next) => {
-  let data = await getAllSystemLogDetail()
-  setStatusCode(res,data)
-  res.json(data)
-})
-
-/**
  * 搜索功能
  */
 router.post('/v1/searchLog',async (req,res,next) => {
@@ -42,6 +33,12 @@ router.post('/v1/searchLog',async (req,res,next) => {
   let data = await getSearchSystemLog(searchData)
   setStatusCode(res,data)
   res.json(data)
+})
+
+router.get('/v1/test',async (req,res,next) => {
+    let d = new Date().toJSON().substring(0,10);
+    setStatusCode(res,d)
+    res.json(d)
 })
 
 

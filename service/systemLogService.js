@@ -1,6 +1,8 @@
 const systemLog = require("../model/systemLog");
 const users = require("../model/users");
 const fs = require('fs')
+//与数据库默认的_id进行匹配
+var ObjectID = require('mongoose').ObjectId;
 
 /**
  * 请求操作映射表
@@ -10,9 +12,35 @@ function chargeTypeChange(value) {
   var chargeTypeGroup = {
       "GET /api/v1/allSystemLog":"查询所有日志",
       "GET /api/v1/allSystemLogDetail":"查询详细日志",
+      "POST /api/v1/getUserRank":"获取用户评论等级",
+      "GET /api/v1/getRuleTree/":"获取事项规则树",
+      "GET /api/v1/getItemStatusScheme":"获取事项规则数据集",
+      "POST /api/v1/getItems":"获取事项规则",
+      "POST /api/v1/login":"用户登录",
+      "POST /api/v1/sideBar":"获取侧边栏",
+      "GET /api/v1/getRegionTree/":"获取规则树",
   };
   return chargeTypeGroup[value];
-};
+}
+
+/**
+ * 查找操作人id对应的用户名的方法
+ * @param id 操作人的id
+ * @returns {Promise<*>}
+ */
+  async function getUserById(id) {
+  try {
+    // console.log("first")
+    // return "id";
+    // let data =await users.find({ 'account':'noKPI' });
+    let data =await users.find({ '_id':id });
+    // console.log(data[0])
+    return {name:data[0].user_name,account:data[0].account};
+    // return data
+  } catch (e) {
+    return e.message;
+  }
+}
 
 /**
  * 看看log是什么
@@ -35,9 +63,19 @@ function chargeTypeChange(value) {
     var data = fs.readFileSync('log/access.log');
     data=data.toString().split("\n");
     var dataArray=[]
-    data.forEach(function(item,index){
-      dataArray.push({log_id:index,create_time:item.substr(item.indexOf("[")+1,20),content:chargeTypeChange(item.slice(item.indexOf("\"")+1,item.indexOf("H")-1)),user_name:'zyk',idc:'133'})
-    })
+    var user=""//objectkey for循环
+    // data.forEach(async function(item,index){
+    //   //目前先拿id，之后会在这里根据id搜索到名字和手机号
+    //   name=await getUserName('6237ed0e0842000062005753')
+    //   dataArray.push({log_id:index,create_time:item.substr(item.indexOf("[")+1,20),content:chargeTypeChange(item.slice(item.indexOf("\"")+1,item.indexOf("H")-1)),user_name:name,idc:'133'})//item.slice(0,item.indexOf(":")-1)
+    // })
+
+    var dataLength=data.length;
+    for (let i=0;i<dataLength;i++){
+      // name=await getUserName('6237ed0e0842000062005753')
+      user=await getUserById(data[i].slice(0,data[i].indexOf(":")-1))
+        dataArray.push({log_id:i,create_time:data[i].substr(data[i].indexOf("[")+1,20),content:chargeTypeChange(data[i].slice(data[i].indexOf("\"")+1,data[i].indexOf("H")-1)),user_name:user.name,idc:user.account,_id:data[i].slice(0,data[i].indexOf(":")-1)})//item.slice(0,item.indexOf(":")-1)
+    }
     return (dataArray);
   } catch (e) {
     return "showSystemLog:"+e.message;
@@ -51,21 +89,6 @@ function chargeTypeChange(value) {
   try {
     let res = await systemLog.find();
     return res;
-  } catch (e) {
-    return e.message;
-  }
-}
-
-/**
- * 查找操作人idc对应的用户名的方法
- * @param idc 操作人的证件号
- * @returns {Promise<*>}
- */
-async function getUserName(item_id) {
-  try {
-    let data = await users.find({ idc: item_id });
-    return data[0];
-    // return data
   } catch (e) {
     return e.message;
   }
@@ -100,7 +123,7 @@ async function searchByCondition({ myself, today, thisWeek }) {
   try {
     let condition = {};
     condition.pageNum = 0;
-    let systemLogData = await getSystemLogDetail();
+    let systemLogData = await showSystemLog();
     let newSystemLogData = [];
     // thisWeek=true;
     // myself=true;
@@ -122,16 +145,21 @@ async function searchByCondition({ myself, today, thisWeek }) {
     //     return currentItem.user_name === "张毅";
     //   }));
     // }
-    if (myself === true) {
+    if (myself) {
+      console.log('myself:',myself)
       return (newSystemLogData = systemLogData.filter((currentItem) => {
-        return currentItem.user_name === "张毅";
+        // console.log(currentItem)
+        // console.log(currentItem._id,':',myself)
+        return currentItem._id === myself;
       }));
     }
     if (today === true) {
       let d = new Date();
       newSystemLogData = systemLogData.filter((currentItem) => {
-        return currentItem.create_time.substring(0, 10) == d.toJSON().substring(0,10);
+        // console.log(currentItem.create_time.substring(0, 10),'||',d.toJSON().substring(0,10))
+        return currentItem.create_time.substring(0, 10) === d.toJSON().substring(0,10);
       });
+      console.log(newSystemLogData)
     }
     if (thisWeek === true) {
       let date1 = new Date();

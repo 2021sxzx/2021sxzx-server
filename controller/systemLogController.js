@@ -52,9 +52,10 @@ const {
    */
   async function getSearchSystemLog(searchData) {
     let {myself,today,thisWeek} = searchData
-    if(!myself) {
+/*    if(!myself) {
       myself = false
-    }
+    }*/
+    // console.log('myself:',myself)
     if(!today) {
       today = false;
     }
