@@ -990,7 +990,7 @@ async function getRegions({
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
             //计算区划路径
-            var regions = await modelRegion.find(query, { __v: 0, children: 0 }).skip(page_num * page_size).limit(page_size)
+            var regions = await modelRegion.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
             var regionDic = itemService.getRegionDic()
             if (regionDic === null) {
                 throw new Error('请刷新重试')
@@ -1355,7 +1355,7 @@ async function getRules({
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = { $gte: start, $lte: end }
-        var res = await modelRule.find(query, { __v: 0, children: 0 })
+        var res = await modelRule.find(query, { __v: 0 })
         //计算规则路径
         var ruleDic = itemService.getRuleDic()
         if (ruleDic === null) {
