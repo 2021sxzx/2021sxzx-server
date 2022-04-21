@@ -75,6 +75,10 @@ const tempTaskSchema = new mongoose.Schema({
             address: {        //地址
                 type: String,
                 required: true
+            },
+            office_hour: {
+                type: String,
+                required: true
             }
         }],
         default: [],
