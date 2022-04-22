@@ -10,8 +10,10 @@ const modelUserRank = require('../model/userRank')
 const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
 const modelDepartmentMapUsers = require('../model/departmentMapUser')
+const modelStatusMapPermissions = require('../model/statusMapPermissions')
 const itemService = require('../service/itemService')
 const { dirname } = require('path')
+const modelRoleMapPermission = require('../model/roleMapPermission')
 
 /**
  * 获取事项状态表
@@ -38,25 +40,36 @@ async function getUserRank({
     user_id = null
 }) {
     try {
-        var user = await modelUsers.findOne({ _id: user_id }, { user_rank: 1 })
-        var rank = await modelUserRank.findOne({ id: user.user_rank }, { _id: 0, __v: 0 })
-        var result = {}
-        var can_see = rank.can_see
-        var can_operate = rank.can_operate
-        //检查can_see_temp
-        if (rank.can_see_temp[user_id]) {
-            can_see = rank.can_see_temp[user_id]
+        var user = await modelUsers.findOne({ _id: user_id }, { role_name: 1 })
+        var permissions = await modelRoleMapPermission.find({ role_name: user.role_name }, { permission_identifier: 1 })
+        var identifier = []
+        for (let i = 0; i < permissions.length; i++) 
+            identifier.push(permissions[i].permission_identifier)
+        var status = await modelStatusMapPermissions.find({ permission_identifier: { $in: identifier }})
+        var statusMap = {}
+        for (let i = 0; i < status.length; i++){
+            for (let j = 0; j < (status[i].status_id).length; j++){
+                if (!((status[i].status_id)[j] in statusMap)){
+                    statusMap[(status[i].status_id)[j]] = true
+                }
+            }
         }
-        //检查can_operate_temp
-        if (rank.can_operate_temp[user_id]) {
-            can_operate = rank.can_operate_temp[user_id]
+        //---------------------------------
+        //manage_status和audit_status用来筛选两个页面渲染的事项状态
+        //暂时写死
+        let result = {
+            'manage_status': [ 0, 1, 2, 3, 4, 5 ],
+            'audit_status': [ 1, 2, 5 ],
+            'operate_status': []
         }
-        result.eng_name = rank.eng_name
-        result.cn_name = rank.cn_name
-        result.can_see = can_see
-        result.can_operate = can_operate
+        //---------------------------------
+        for (let key in statusMap){
+            result.operate_status.push(parseInt(key))
+        }
+        
         return new SuccessModel({ msg: '获取成功', data: result })
     } catch (err) {
+        console.log(err)
         return new ErrorModel({ msg: '获取失败', data: err.message })
     }
 }
