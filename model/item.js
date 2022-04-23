@@ -50,6 +50,10 @@ const itemSchema = new mongoose.Schema({
     },
     audit_advises: {
         type: [{
+            time: {
+                type: Number,
+                default: Date.now()
+            },
             user_id: {
                 type: String,
                 default: ''
@@ -62,7 +66,8 @@ const itemSchema = new mongoose.Schema({
                 type: String,
                 default: ''
             }
-        }]
+        }],
+        default: []
     }
 })
 

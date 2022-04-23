@@ -14,8 +14,8 @@ const itemStatusScheme = new mongoose.Schema({
         required: true
     },
     next_status: {
-        type: Array,
-        default: []
+        type: Object,
+        default: {}
     }
 })
 

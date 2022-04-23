@@ -15,7 +15,7 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          cd /www/wwwroot/2021sxzx-server
+          cd /www/wwwroot/sxzx
           git pull
           npm install
           pm2 delete 0

@@ -120,7 +120,6 @@ async function getCommentTotal() {
 async function getTask(task_code){
   try {
     let data = await task.find({task_code: task_code},{ _id: 1, task_code: 1, task_name: 1})
-    console.log(task_code);
     return data[0]
   } catch (e) {
     return e.message
@@ -149,7 +148,7 @@ async function getTask(task_code){
  */
 async function getItem(item_id){
   try {
-    let data = await item.find({item_id})
+    let data = await item.find({_id: item_id})
     return data[0];
   } catch (e) {
     return e.message
@@ -180,7 +179,6 @@ async function getCommentDetail({pageNum,score}) {
     for(let i=0;i<commentArr.length;i++) {
       let item_id = commentArr[i].item_id
       let item = await getItem(item_id)
-      console.log(item.task_code);
       let ruleData = await getRule(item.rule_id)
       let task = await getTask(item.task_code)
       commentArr[i].rule = ruleData
@@ -221,7 +219,6 @@ async function searchByCondition({startTime, endTime, score, type, typeData}) {
       return newCommentData
     }
     type = parseInt(type)
-    console.log(type);
     switch (type) {
       case 0:
         break

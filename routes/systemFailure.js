@@ -4,6 +4,7 @@ const {
     showSystemFailureController,
     createSystemFailureController
   } = require("../controller/systemFailureController")
+const systemFailure = require("../model/systemFailure");
 
   function setStatusCode(res,data) {
     if(data.code === 200) {
@@ -27,9 +28,27 @@ const {
   /**
    * 提交一个系统故障
    */
-  router.post('/v1/createSystemFailure', async (req, res, next) => {
-    let data = await createSystemFailureController(req.body)
-    setStatusCode(res, data)
-    res.json(data)
+  router.post('/v1/create-system-failure', async (req, res, next) => {
+    console.log("first")
+    let data=req.body;
+    console.log(data)
+    let result = await createSystemFailureController(data)
+    setStatusCode(res, result)
+    res.json(result)
+})
+
+  /**
+   * 删除一个系统故障
+   */
+   router.post('/v1/delete-system-failure', async (req, res, next) => {
+    console.log("first")
+    let data=req.body;
+    console.log(data)
+    systemFailure.deleteOne({'_id':data._id}).then((res) =>{
+      console.log('success')
+    })
+    // let result = await createSystemFailureController(data)
+    // setStatusCode(res, result)
+    // res.json(result)
 })
   module.exports = router;

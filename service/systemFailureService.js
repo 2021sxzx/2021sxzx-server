@@ -1,5 +1,6 @@
 const systemFailure = require("../model/systemFailure");
-const fs = require('fs')
+const fs = require('fs');
+const { db } = require("../model/systemFailure");
 /**
  * 返回全部系统故障记录的接口
  * @returns {Promise<*|*>}
@@ -21,18 +22,19 @@ const fs = require('fs')
  * @param {string} idc
  * @returns 
  */
- async function createSystemFailure({failure_time,failure_des,failure_name,idc}) {
+ async function createSystemFailure(data) {
   try {
-      if (failure_name === null) {
+      if (data.failureName === null) {
           throw new Error('call createSystemFailure error: failure_name is null')
       }
       var res = await systemFailure.create({
-        failure_time: failure_time,
-        failure_des: failure_des,
-        failure_name: failure_name,
-        idc: idc
+        failure_time: data.create_time,
+        failure_des: data.failureDescription,
+        failure_name: data.failureName,
+        user_name: data.user_name
       })
-      return res
+      console.log('success')
+      console.log(res)
   } catch (err) {
       throw new Error(err.message)
   }

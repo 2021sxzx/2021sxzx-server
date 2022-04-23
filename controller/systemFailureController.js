@@ -1,3 +1,4 @@
+const systemFailure = require("../model/systemFailure");
 const {
     getAllFailure,
     createSystemFailure
@@ -25,12 +26,11 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
    * @param {string} idc
    * @returns {Promise<ErrorModel|SuccessModel>}
    */
-     async function createSystemFailureController(failure_time,failure_des,failure_name,idc) {
+     async function createSystemFailureController(data) {
       try {
-        await itemService.createItemRule({
-          failure_time,failure_des,failure_name,idc
-      })
-      return new SuccessModel({msg: '获取系统故障成功',});
+        console.log(data)
+        await createSystemFailure(data);
+      return new SuccessModel({msg: '获取系统故障成功',data:'success'});
       } catch (e) {
         return new ErrorModel({msg:e.message})
       }

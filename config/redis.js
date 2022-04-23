@@ -2,9 +2,16 @@ const redis = require("redis");
 const { REDIS_CONFIG } = require("./db"); //redis
 
 
-const redisClient = redis.createClient(REDIS_CONFIG.port, REDIS_CONFIG.host);
+const redisClient = redis.createClient({
+    socket: {
+        port: REDIS_CONFIG.port,
+        host: REDIS_CONFIG.host
+    },
+    password: REDIS_CONFIG.password
+  });
 
 redisClient.on('connect', () => {
+    console.log(123)
 })
 
 redisClient.on('error', (error) => {

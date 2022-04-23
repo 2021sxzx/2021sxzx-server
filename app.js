@@ -27,17 +27,23 @@ const { validate_jwt } = require('./utils/validateJwt');
 
 const { MONGO_CONFIG } = require("./config/db") //数据库的配置信息
 const mongoose = require("mongoose")
+const redisClient = require('./config/redis');
 // const systemFailure = require("./model/systemFailure")
 // const rule = require("./model/rule")
 // const itemRule = require("./model/itemRule")
 // const item = require("./model/item")
 // const itemGuide = require("./model/task")
+
+(async () => {
+  await redisClient.connect()
+})();
 mongoose.connect(MONGO_CONFIG.url);
 
-
-
 const app = express();
-
+//上传图片大小限制（张奕凯）
+const bodyParser = require('body-parser');
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit:50000}));
 // 动态网页的模板设置
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -46,14 +52,14 @@ app.set('view engine', 'jade');
 // 日志的设置使用
 app.use(logger('dev'));
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.log'), { flags: 'a' });
-app.use(logger('combined', {
-  stream: accessLogStream
-}));
-//往日志添加用户信息
-// logger.token('id',function getId(req){return 'zyk'});
-// app.use(logger(':id :remote-addr - :remote-user [:date[iso]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
+// app.use(logger('combined', {
 //   stream: accessLogStream
 // }));
+//往日志添加用户信息
+logger.token('id',function getId(req){return req.headers.user_id});
+app.use(logger(':id :remote-addr - :remote-user [:date[iso]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
+  stream: accessLogStream
+}));
 // post请求的参数的获取, express会将解析之后, 转换成对象的post请求参数放到请求对象的body属性中
 app.use(express.json());// 告诉express能够解析 application/json类型的请求参数
 app.use(express.urlencoded({ extended: false }));// 告诉express能够解析 表单类型的请求参数 application/x-www-form-urlencoded
