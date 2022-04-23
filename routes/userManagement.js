@@ -8,7 +8,10 @@ const {
   deleteUserAndReturnList,
   searchUserAndReturnList,
   setActivationAndReturn
-} = require('../controller/userManagementController')
+} = require('../controller/userManagementController');
+
+const userDepartmentService = require('../service/userDepartmentService');
+const departmentMapUser = require('../model/departmentMapUser')
 
 function setStatusCode(res, data) {
   if (data.code === 200) {
@@ -25,6 +28,17 @@ router.get('/v1/user', async (req, res, next) => {
   res.json(data)
 })
 
+router.get('/v1/testInfer', async (req, res, next) => {
+  const data = await departmentMapUser.findOne({
+    account: 'test0422',
+    user_name: 'test0422'
+  });
+  // const data = await userDepartmentService.findDepartmentByAccount('test0422', 'test0422');
+  res.json({
+    data2: data
+  });
+})
+
 // 添加用户
 router.post('/v1/user', async (req, res, next) => {
   const data = await addUserAndReturnList({
@@ -32,6 +46,7 @@ router.post('/v1/user', async (req, res, next) => {
     account: req.body.account,
     password: req.body.password,
     role_name: req.body.role_name,
+    department_name: req.body.department_name
   })
   setStatusCode(res, data)
   res.json(data)

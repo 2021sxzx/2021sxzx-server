@@ -21,16 +21,16 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 async function addUserAndReturnList (userInfo) {
   try {
     await addUser(userInfo);
-    await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name);
+    await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name, userInfo.department_name);
 
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
         const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
-        if (!item['department_name']) {
-          item['department_name'] = cal;
-        }
-
+        // if (!item['department_name']) {
+        //   item['department_name'] = cal;
+        // }
+        cal = cal === undefined ? '无' : cal;
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -61,9 +61,10 @@ async function returnUserList () {
     const res_ = await Promise.all(
       res.map(async (item) => {
         const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
-        if (!item['department_name']) {
-          item['department_name'] = cal;
-        }
+        // if (!item['department_name']) {
+        //   item['department_name'] = cal;
+        // }
+        // cal = cal === undefined ? '无' : cal;
         // console.log(item.department_name)
         return {
           _id: item._id,
@@ -152,6 +153,7 @@ async function searchUserAndReturnList (searchValue) {
     const res_ = await Promise.all(
       res.map(async (item) => {
         const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        cal = cal === undefined ? '无部门' : cal;
         if (!item['department_name']) {
           item['department_name'] = cal;
         }
