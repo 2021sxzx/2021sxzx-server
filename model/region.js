@@ -23,22 +23,29 @@ const regionSchema = new mongoose.Schema({
         default: ''
     },
     children: {
-        type: Array,
+        type: [{
+            type: String
+        }],
         default: []
     },
-    creator: {      //创建人
-        id: {
-            type: String,
-            required: true
-        },
-        name: {
-            type: String,
-            required: true
-        },
-        department_name: {
-            type: String,
-            required: true
-        }
+    // creator: {      //创建人
+    //     id: {
+    //         type: String,
+    //         required: true
+    //     },
+    //     name: {
+    //         type: String,
+    //         required: true
+    //     },
+    //     department_name: {
+    //         type: String,
+    //         required: true
+    //     }
+    // },
+    creator_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'users'
     }
 })
 

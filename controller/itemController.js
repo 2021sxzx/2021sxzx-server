@@ -4,8 +4,7 @@ const fs = require('fs')
 const modelItem = require('../model/item')
 const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
-const modelTask = require('../model/task')
-const modelTempTask = require('../model/tempTasks')
+const modelTask = require('../model/tasks')
 const modelUserRank = require('../model/userRank')
 const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
@@ -148,10 +147,39 @@ async function getItems({
         if (task_code !== null) query.task_code = { $in: task_code }
         if (item_status !== null) query.item_status = { $in: item_status }
         if (rule_id !== null) query.rule_id = { $in: rule_id }
-        if (region_code !== null) query.region_code = { $in: region_code }
-        if (region_id !== null) query.region_id = { $in: region_id }
-        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
-        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        query['$and'] = []
+        // if (region_code !== null) query.region_code = { $in: region_code }
+        if (region_code !== null) {
+            let regions = await modelRegion.find({ region_code: { $in: region_code } }, { _id: 1 })
+            for (let i = 0, len = regions.length; i < len; i++) {
+                regions.push(regions.shift()._id)
+            }
+            query['$and'].push({ region_id: { $in: regions } })
+        }
+        // if (region_id !== null) query.region_id = { $in: region_id }
+        if (region_id !== null) {
+            query['$and'].push({ region_id: { $in: region_id } })
+        }
+        // if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (creator_name !== null) {
+            let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
+        }
+        // if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        if (department_name !== null) {
+            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
+            for (let i = 0, len = accounts.length; i < len; i++) {
+                accounts.push(accounts.shift().account)
+            }
+            let users = await modelUsers.find({ account: { $in: accounts } }, { _id: 1 })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
+        }
         create_start_time = (create_start_time !== null) ? create_start_time : 0
         create_end_time = (create_end_time !== null) ? create_end_time : 9999999999999
         query.create_time = { $gte: create_start_time, $lte: create_end_time }
@@ -163,7 +191,54 @@ async function getItems({
         }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
-            var items = await modelItem.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            // var items = await modelItem.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            var items = await modelItem
+                .aggregate([
+                    {
+                        $match: query
+                    },
+                    {
+                        $lookup: {
+                            from: modelRegion.collection.name,
+                            localField: 'region_id',
+                            foreignField: '_id',
+                            as: 'region_info'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: modelUsers.collection.name,
+                            localField: 'creator_id',
+                            foreignField: '_id',
+                            as: 'user'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: modelDepartmentMapUsers.collection.name,
+                            localField: 'user.account',
+                            foreignField: 'account',
+                            as: 'department'
+                        }
+                    },
+                    {
+                        $addFields: {
+                            user: { $arrayElemAt: ['$user', 0] },
+                            department: { $arrayElemAt: ['$department', 0] },
+                            region_info: { $arrayElemAt: ['$region_info', 0] }
+                        }
+                    }
+                ])
+                .addFields({
+                    creator: {
+                        id: '$creator_id',
+                        name: '$user.user_name',
+                        department_name: '$department.department_name'
+                    },
+                    region_code: '$region_info.region_code'
+                })
+                .project({ __v: 0, user: 0, department: 0, creator_id: 0, region_info: 0 })
+                .skip(page_num * page_size).limit(page_size)
             //计算规则路径和区划路径
             var ruleDic = itemService.getRuleDic()
             var regionDic = itemService.getRegionDic()
@@ -177,14 +252,14 @@ async function getItems({
                     rulePath = node.rule_name + '/' + rulePath
                     node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
                 }
-                items[i]._doc.rule_path = rulePath
+                items[i].rule_path = rulePath
                 let regionPath = ''
                 let node1 = regionDic[items[i].region_id] ? regionDic[items[i].region_id] : null
                 while (node1 !== null) {
                     regionPath = node1.region_name + '/' + regionPath
                     node1 = regionDic[node1.parentId] ? regionDic[node1.parentId] : null
                 }
-                items[i]._doc.region_path = regionPath
+                items[i].region_path = regionPath
             }
             //返回结果
             var dict = {}
@@ -194,7 +269,53 @@ async function getItems({
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
         }
-        var items = await modelItem.find(query, { __v: 0 })
+        // var items = await modelItem.find(query, { __v: 0 })
+        var items = await modelItem
+            .aggregate([
+                {
+                    $match: query
+                },
+                {
+                    $lookup: {
+                        from: modelRegion.collection.name,
+                        localField: 'region_id',
+                        foreignField: '_id',
+                        as: 'region_info'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: modelUsers.collection.name,
+                        localField: 'creator_id',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: modelDepartmentMapUsers.collection.name,
+                        localField: 'user.account',
+                        foreignField: 'account',
+                        as: 'department'
+                    }
+                },
+                {
+                    $addFields: {
+                        user: { $arrayElemAt: ['$user', 0] },
+                        department: { $arrayElemAt: ['$department', 0] },
+                        region_info: { $arrayElemAt: ['$region_info', 0] }
+                    }
+                }
+            ])
+            .addFields({
+                creator: {
+                    id: '$creator_id',
+                    name: '$user.user_name',
+                    department_name: '$department.department_name'
+                },
+                region_code: '$region_info.region_code'
+            })
+            .project({ __v: 0, user: 0, department: 0, creator_id: 0, region_info: 0 })
         //计算规则路径和区划路径
         var ruleDic = itemService.getRuleDic()
         var regionDic = itemService.getRegionDic()
@@ -208,14 +329,14 @@ async function getItems({
                 rulePath = node.rule_name + '/' + rulePath
                 node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
             }
-            items[i]._doc.rule_path = rulePath
+            items[i].rule_path = rulePath
             let regionPath = ''
             let node1 = regionDic[items[i].region_id] ? regionDic[items[i].region_id] : null
             while (node1 !== null) {
                 regionPath = node1.region_name + '/' + regionPath
                 node1 = regionDic[node1.parentId] ? regionDic[node1.parentId] : null
             }
-            items[i]._doc.region_path = regionPath
+            items[i].region_path = regionPath
         }
         return new SuccessModel({ msg: '查询成功', data: items })
     } catch (err) {
@@ -244,14 +365,10 @@ async function createRules({
         if (user === null) {
             throw new Error('user_id不存在: ' + user_id)
         }
-        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
-        if (department === null) {
-            throw new Error('用户没有所属部门')
-        }
         //检查桩
         var stakes = await modelRule.find({ rule_name: 'null' }, { _id: 0, __v: 0 })
         if (stakes.length !== 1) {
-            await createRuleStake()
+            await createRuleStake(user_id)
             stakes = await modelRule.find({ rule_name: 'null' }, { _id: 0, __v: 0 })
         }
         var stake = stakes[0]
@@ -281,25 +398,14 @@ async function createRules({
                 rule_id: rules[i].rule_id,
                 rule_name: rules[i].rule_name,
                 parentId: rules[i].parentId,
-                creator: {
-                    id: user_id,
-                    name: user.user_name,
-                    department_name: department.department_name
-                }
+                // creator: {
+                //     id: user_id,
+                //     name: user.user_name,
+                //     department_name: department.department_name
+                // },
+                creator_id: user_id
             })
             bulkOps.push({
-                // insertOne: {
-                //     document: {
-                //         rule_id: rules[i].rule_id,
-                //         rule_name: rules[i].rule_name,
-                //         parentId: rules[i].parentId,
-                //         creator: {
-                //             id: user_id,
-                //             name: user.user_name,
-                //             department_name: department.department_name
-                //         }
-                //     }
-                // },
                 updateOne: {
                     filter: { rule_id: rules[i].parentId },
                     update: { $push: { children: rules[i].rule_id } }
@@ -330,11 +436,12 @@ async function createRules({
                 rule_id: maxRuleId.toString(),
                 rule_name: 'null',
                 parentId: '',
-                creator: {
-                    id: 'null',
-                    name: 'null',
-                    department_name: 'null'
-                }
+                // creator: {
+                //     id: 'null',
+                //     name: 'null',
+                //     department_name: 'null'
+                // }
+                creator_id: user_id
             })
         } catch (e) {
             return new SuccessModel({ msg: '创建规则成功', data: res })
@@ -349,7 +456,7 @@ async function createRules({
 /**
  * 创建rule表里面的桩（非外部接口）
  */
-async function createRuleStake() {
+async function createRuleStake(user_id) {
     try {
         //先把全部桩删掉
         await modelRule.deleteMany({ rule_name: 'null' })
@@ -367,11 +474,12 @@ async function createRuleStake() {
             rule_id: maxRuleId.toString(),
             rule_name: 'null',
             parentId: '',
-            creator: {
-                id: 'null',
-                name: 'null',
-                department_name: 'null'
-            }
+            // creator: {
+            //     id: 'null',
+            //     name: 'null',
+            //     department_name: 'null'
+            // }
+            creator_id: user_id
         })
     } catch (err) {
         throw new Error('联系管理员检查数据库的rule表，确保rule_name为null的桩存在且rule_id是最大值')
@@ -450,7 +558,8 @@ async function updateRules({
             let {
                 rule_id = null,
                 rule_name = null,
-                parentId = null
+                parentId = null,
+                creator_id = null
             } = rules[i]
             if (rule_id === null) {
                 throw new Error('更新规则的时候需要传rule_id')
@@ -463,20 +572,30 @@ async function updateRules({
             //更新rule
             let newData = {}
             if (rule_name !== null) newData.rule_name = rule_name
+            if (creator_id !== null) {
+                let e = await modelUsers.exists({ _id: creator_id })
+                if (e === false) {
+                    throw new Error('creator_id错误: ' + creator_id)
+                }
+                newData.creator_id = creator_id
+            }
             if (parentId !== null) {
                 newData.parentId = parentId
-                bulkOps.push({
-                    updateOne: {
-                        filter: { rule_id: rule.parentId },
-                        update: { $pull: { children: rule_id } }
-                    }
-                })
-                bulkOps.push({
-                    updateOne: {
-                        filter: { rule_id: parentId },
-                        update: { $push: { children: rule_id } }
-                    }
-                })
+                //如果parentId改变的话就要同时修改旧父节点和新父节点的children数组
+                if (rule.parentId !== parentId) {
+                    bulkOps.push({
+                        updateOne: {
+                            filter: { rule_id: rule.parentId },
+                            update: { $pull: { children: rule_id } }
+                        }
+                    })
+                    bulkOps.push({
+                        updateOne: {
+                            filter: { rule_id: parentId },
+                            update: { $push: { children: rule_id } }
+                        }
+                    })
+                }
             }
             bulkOps.push({
                 updateOne: {
@@ -544,7 +663,43 @@ async function getItemGuide({
         if (task_code === null) {
             throw new Error('需要task_code字段')
         }
-        var res = await modelTempTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
+        // var res = await modelTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
+        var res = await modelTask
+            .aggregate([
+                {
+                    $match: { task_code: task_code }
+                },
+                {
+                    $lookup: {
+                        from: modelUsers.collection.name,
+                        localField: 'creator_id',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: modelDepartmentMapUsers.collection.name,
+                        localField: 'user.account',
+                        foreignField: 'account',
+                        as: 'department'
+                    }
+                },
+                {
+                    $addFields: {
+                        user: { $arrayElemAt: ['$user', 0] },
+                        department: { $arrayElemAt: ['$department', 0] }
+                    }
+                }
+            ])
+            .addFields({
+                creator: {
+                    id: '$creator_id',
+                    name: '$user.user_name',
+                    department_name: '$department.department_name'
+                }
+            })
+            .project({ __v: 0, user: 0, department: 0, creator_id: 0 })
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -580,8 +735,27 @@ async function getItemGuides({
         if (task_status !== null) query.task_status = task_status
         if (task_code !== null) query.task_code = task_code
         if (task_name !== null) query.task_name = { $regex: task_name }
-        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
-        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        query['$and'] = []
+        // if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (creator_name !== null) {
+            let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
+        }
+        // if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        if (department_name !== null) {
+            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
+            for (let i = 0, len = accounts.length; i < len; i++) {
+                accounts.push(accounts.shift().account)
+            }
+            let users = await modelUsers.find({ account: { $in: accounts } }, { _id: 1 })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
+        }
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = { $gte: start, $lte: end }
@@ -590,17 +764,91 @@ async function getItemGuides({
         }
         if (page_size !== null && page_num !== null) {
             var result = {}
-            result.data = await modelTempTask.find(query, {
-                task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
-            }).skip(page_size * page_num).limit(page_size)
-            result.total = await modelTempTask.find(query).count()
+            // result.data = await modelTask.find(query, {
+            //     task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
+            // }).skip(page_size * page_num).limit(page_size)
+            var tasks = await modelTask
+                .aggregate([
+                    {
+                        $match: query
+                    },
+                    {
+                        $lookup: {
+                            from: modelUsers.collection.name,
+                            localField: 'creator_id',
+                            foreignField: '_id',
+                            as: 'user'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: modelDepartmentMapUsers.collection.name,
+                            localField: 'user.account',
+                            foreignField: 'account',
+                            as: 'department'
+                        }
+                    },
+                    {
+                        $addFields: {
+                            user: { $arrayElemAt: ['$user', 0] },
+                            department: { $arrayElemAt: ['$department', 0] }
+                        }
+                    }
+                ])
+                .addFields({
+                    creator: {
+                        id: '$creator_id',
+                        name: '$user.user_name',
+                        department_name: '$department.department_name'
+                    }
+                })
+                .project({ task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1 })
+                .skip(page_size * page_num).limit(page_size)
+            result.data = tasks
+            result.total = await modelTask.find(query).count()
             result.page_size = page_size
             result.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: result })
         }
-        var result = await modelTempTask.find(query, {
-            task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
-        })
+        // var result = await modelTask.find(query, {
+        //     task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
+        // })
+        var tasks = await modelTask
+            .aggregate([
+                {
+                    $match: query
+                },
+                {
+                    $lookup: {
+                        from: modelUsers.collection.name,
+                        localField: 'creator_id',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: modelDepartmentMapUsers.collection.name,
+                        localField: 'user.account',
+                        foreignField: 'account',
+                        as: 'department'
+                    }
+                },
+                {
+                    $addFields: {
+                        user: { $arrayElemAt: ['$user', 0] },
+                        department: { $arrayElemAt: ['$department', 0] }
+                    }
+                }
+            ])
+            .addFields({
+                creator: {
+                    id: '$creator_id',
+                    name: '$user.user_name',
+                    department_name: '$department.department_name'
+                }
+            })
+            .project({ task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1 })
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -685,14 +933,15 @@ async function createItemGuide({
             zxpt: null,
             qr_code: null,
             zzzd: null,
-            creator: {
-                id: user_id,
-                name: user.user_name,
-                department_name: department.department_name
-            }
+            // creator: {
+            //     id: user_id,
+            //     name: user.user_name,
+            //     department_name: department.department_name
+            // }
+            creator_id: user_id
         }
         if (task_code !== null) {
-            let task = await modelTempTask.exists({ task_code: task_code })
+            let task = await modelTask.exists({ task_code: task_code })
             if (task === true) {
                 throw new Error('事项指南编码已存在')
             }
@@ -737,7 +986,7 @@ async function createItemGuide({
             // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
-        var result = await modelTempTask.create(newData)
+        var result = await modelTask.create(newData)
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
         // console.log(err.message)
@@ -762,13 +1011,13 @@ async function deleteItemGuides({
         }
         //检查task_code的合法性
         for (let i = 0; i < task_code.length; i++) {
-            var task = await modelTempTask.exists({ task_code: task_code[i] })
+            var task = await modelTask.exists({ task_code: task_code[i] })
             if (task === false) {
                 throw new Error('task_code不存在: ' + task_code[i])
             }
         }
         //批量删除
-        var result = await modelTempTask.deleteMany({ task_code: { $in: task_code } })
+        var result = await modelTask.deleteMany({ task_code: { $in: task_code } })
         return new SuccessModel({ msg: '删除成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '删除失败', data: err.message })
@@ -826,7 +1075,7 @@ async function updateItemGuide({
             throw new Error('更新事项指南信息需要传入task_code')
         }
         if (task_code !== null) {
-            let task = await modelTempTask.exists({ task_code: task_code })
+            let task = await modelTask.exists({ task_code: task_code })
             if (task === false) {
                 throw new Error('事项指南编码不存在')
             }
@@ -854,7 +1103,7 @@ async function updateItemGuide({
         }
         var bulkOps = []
         if (new_task_code !== null) {
-            let task = await modelTempTask.exists({
+            let task = await modelTask.exists({
                 task_code: { $in: new_task_code, $ne: task_code }
             })
             if (task === true) {
@@ -907,7 +1156,7 @@ async function updateItemGuide({
             // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
-        var result = await modelTempTask.updateOne({ task_code: task_code }, newData)
+        var result = await modelTask.updateOne({ task_code: task_code }, newData)
         await modelItem.bulkWrite(bulkOps)
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
@@ -992,8 +1241,27 @@ async function getRegions({
             codes.forEach(function (value) { parentid.push(value['_id']) })
             query.parentId = { $in: parentid }
         }
-        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
-        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        query['$and'] = []
+        // if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (creator_name !== null) {
+            let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
+        }
+        // if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        if (department_name !== null) {
+            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
+            for (let i = 0, len = accounts.length; i < len; i++) {
+                accounts.push(accounts.shift().account)
+            }
+            let users = await modelUsers.find({ account: { $in: accounts } }, { _id: 1 })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
+        }
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = { $gte: start, $lte: end }
@@ -1002,8 +1270,45 @@ async function getRegions({
         }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
+            // var regions = await modelRegion.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
+            var regions = await modelRegion
+                .aggregate([
+                    {
+                        $match: query
+                    },
+                    {
+                        $lookup: {
+                            from: modelUsers.collection.name,
+                            localField: 'creator_id',
+                            foreignField: '_id',
+                            as: 'user'
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: modelDepartmentMapUsers.collection.name,
+                            localField: 'user.account',
+                            foreignField: 'account',
+                            as: 'department'
+                        }
+                    },
+                    {
+                        $addFields: {
+                            user: { $arrayElemAt: ['$user', 0] },
+                            department: { $arrayElemAt: ['$department', 0] }
+                        }
+                    }
+                ])
+                .addFields({
+                    creator: {
+                        id: '$creator_id',
+                        name: '$user.user_name',
+                        department_name: '$department.department_name'
+                    }
+                })
+                .project({ __v: 0, user: 0, department: 0, creator_id: 0 })
+                .skip(page_num * page_size).limit(page_size)
             //计算区划路径
-            var regions = await modelRegion.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
             var regionDic = itemService.getRegionDic()
             if (regionDic === null) {
                 throw new Error('请刷新重试')
@@ -1015,7 +1320,7 @@ async function getRegions({
                     regionPath = node.region_name + '/' + regionPath
                     node = regionDic[node.parentId] ? regionDic[node.parentId] : null
                 }
-                regions[i]._doc.region_path = regionPath
+                regions[i].region_path = regionPath
             }
             var dict = {}
             dict.data = regions
@@ -1024,7 +1329,43 @@ async function getRegions({
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
         }
-        var regions = await modelRegion.find(query, { __v: 0, children: 0 })
+        // var regions = await modelRegion.find(query, { __v: 0 })
+        var regions = await modelRegion
+            .aggregate([
+                {
+                    $match: query
+                },
+                {
+                    $lookup: {
+                        from: modelUsers.collection.name,
+                        localField: 'creator_id',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: modelDepartmentMapUsers.collection.name,
+                        localField: 'user.account',
+                        foreignField: 'account',
+                        as: 'department'
+                    }
+                },
+                {
+                    $addFields: {
+                        user: { $arrayElemAt: ['$user', 0] },
+                        department: { $arrayElemAt: ['$department', 0] }
+                    }
+                }
+            ])
+            .addFields({
+                creator: {
+                    id: '$creator_id',
+                    name: '$user.user_name',
+                    department_name: '$department.department_name'
+                }
+            })
+            .project({ __v: 0, user: 0, department: 0, creator_id: 0 })
         //计算区划路径
         var regionDic = itemService.getRegionDic()
         if (regionDic === null) {
@@ -1037,7 +1378,7 @@ async function getRegions({
                 regionPath = node.region_name + '/' + regionPath
                 node = regionDic[node.parentId] ? regionDic[node.parentId] : null
             }
-            regions[i]._doc.region_path = regionPath
+            regions[i].region_path = regionPath
         }
         return new SuccessModel({ msg: '查询成功', data: regions })
     } catch (err) {
@@ -1085,7 +1426,7 @@ async function createItems({
                 throw new Error('task_code、rule_id、region_code和region_id必须同时存在')
             }
             //检查task_code的合法性
-            let task = await modelTempTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
+            let task = await modelTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
             if (task === null) {
                 throw new Error('task_code不存在: ' + task_code)
             }
@@ -1106,13 +1447,14 @@ async function createItems({
                 item_name: task.task_name,
                 task_code: task_code,
                 rule_id: rule_id,
-                region_code: region_code,
+                // region_code: region_code,
                 region_id: region_id,
-                creator: {
-                    id: user_id,
-                    name: user.user_name,
-                    department_name: department.department_name
-                }
+                // creator: {
+                //     id: user_id,
+                //     name: user.user_name,
+                //     department_name: department.department_name
+                // }
+                creator_id: user_id
             })
             //修改对应事项指南的状态
             if (task.task_status === 0) {
@@ -1127,7 +1469,7 @@ async function createItems({
         //批量创建
         var result = await modelItem.create(newData)
         //批量更新
-        var result1 = await modelTempTask.bulkWrite(bulkOps)
+        await modelTask.bulkWrite(bulkOps)
         //返回结果
         return new SuccessModel({ msg: '创建事项成功', data: result })
     } catch (err) {
@@ -1164,10 +1506,10 @@ async function deleteItems({
                 updateTasks.push(item.task_code)
             }
         }
-        //批量更新
-        await modelTempTask.updateMany({ task_code: { $in: updateTasks } }, { task_status: 0 })
         //批量删除
         var result = await modelItem.deleteMany({ _id: { $in: items } })
+        //批量更新
+        await modelTask.updateMany({ task_code: { $in: updateTasks } }, { task_status: 0 })
         return new SuccessModel({ msg: '删除成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '删除失败', data: err.message })
@@ -1197,7 +1539,7 @@ async function updateItems({
                 _id = null,
                 task_code = null,
                 rule_id = null,
-                region_code = null,
+                // region_code = null,
                 region_id = null
             } = items[i]
             if (_id === null) {
@@ -1212,7 +1554,7 @@ async function updateItems({
             var newData = {}
             if (task_code !== null) {
                 //检查task_code的合法性
-                let task = await modelTempTask.exists({ task_code: task_code })
+                let task = await modelTask.exists({ task_code: task_code })
                 if (task === false) {
                     throw new Error('task_code不存在: ' + task_code)
                 }
@@ -1236,19 +1578,12 @@ async function updateItems({
                 }
                 newData.rule_id = rule_id
             }
-            if (region_code !== null && region_id === null || region_code === null && region_id !== null) {
-                throw new Error('更改事项所属区划的时候需要同时传region_code和region_id')
-            }
-            if (region_code !== null && region_id !== null) {
-                //检查region_code的合法性
-                let region = await modelRegion.findOne({ region_code: region_code }, { __v: 0 })
-                if (region === null) {
-                    throw new Error('region_code不存在')
+            if (region_id !== null) {
+                //检查region_id的合法性
+                let region = await modelRegion.exists({ _id: region_id })
+                if (region === false) {
+                    throw new Error('region_id不存在')
                 }
-                if (region._id != region_id) {
-                    throw new Error('region_code和region_id不匹配')
-                }
-                newData.region_code = region_code
                 newData.region_id = region_id
             }
             bulkOps.push({
@@ -1259,8 +1594,8 @@ async function updateItems({
             })
         }
         //批量更新
-        var result1 = await modelTempTask.bulkWrite(taskBulkOps)
         var result = await modelItem.bulkWrite(bulkOps)
+        await modelTask.bulkWrite(taskBulkOps)
         return new SuccessModel({ msg: '更新成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '更新失败', data: err.message })
@@ -1363,12 +1698,66 @@ async function getRules({
         if (rule_name !== null) query.rule_name = { $regex: rule_name }
         else query.rule_name = { $ne: 'null' }
         if (parentId !== null) query.parentId = { $in: parentId }
-        if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
-        if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        // if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
+        if (creator_name !== null) {
+            let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
+        }
+        // if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
+        if (department_name !== null) {
+            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
+            for (let i = 0, len = accounts.length; i < len; i++) {
+                accounts.push(accounts.shift().account)
+            }
+            let users = await modelUsers.find({ account: { $in: accounts } }, { _id: 1 })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
+        }
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = { $gte: start, $lte: end }
-        var res = await modelRule.find(query, { __v: 0 })
+        // var res = await modelRule.find(query, { __v: 0 })
+        var res = await modelRule
+            .aggregate([
+                {
+                    $match: query
+                },
+                {
+                    $lookup: {
+                        from: modelUsers.collection.name,
+                        localField: 'creator_id',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: modelDepartmentMapUsers.collection.name,
+                        localField: 'user.account',
+                        foreignField: 'account',
+                        as: 'department'
+                    }
+                },
+                {
+                    $addFields: {
+                        user: { $arrayElemAt: ['$user', 0] },
+                        department: { $arrayElemAt: ['$department', 0] }
+                    }
+                }
+            ])
+            .addFields({
+                creator: {
+                    id: '$creator_id',
+                    name: '$user.user_name',
+                    department_name: '$department.department_name'
+                }
+            })
+            .project({ __v: 0, user: 0, department: 0, creator_id: 0 })
         //计算规则路径
         var ruleDic = itemService.getRuleDic()
         if (ruleDic === null) {
@@ -1381,7 +1770,7 @@ async function getRules({
                 rulePath = node.rule_name + '/' + rulePath
                 node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
             }
-            res[i]._doc.rule_path = rulePath
+            res[i].rule_path = rulePath
         }
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
@@ -1434,11 +1823,12 @@ async function createRegion({
             region_name: region_name,
             region_level: region_level,
             parentId: parentId,
-            creator: {
-                id: user_id,
-                name: user.user_name,
-                department_name: department.department_name
-            }
+            // creator: {
+            //     id: user_id,
+            //     name: user.user_name,
+            //     department_name: department.department_name
+            // },
+            creator_id: user_id
         })
         //更新父区划的children数组
         await modelRegion.updateOne({ _id: parentId }, { $push: { children: result._id.toString() } })
@@ -1518,7 +1908,7 @@ async function updateRegions({
             throw new Error('数组长度小于等于0')
         }
         var regionBulkOps = []
-        var itemBulkOps = []
+        // var itemBulkOps = []
         var region_id = []
         for (let i = 0; i < regions.length; i++) {
             //解构，没有的字段默认是null
@@ -1527,7 +1917,8 @@ async function updateRegions({
                 region_code = null,
                 region_name = null,
                 region_level = null,
-                parentId = null
+                parentId = null,
+                creator_id = null
             } = regions[i]
             if (_id === null) {
                 throw new Error('更新区划信息需要传入对应_id')
@@ -1540,31 +1931,42 @@ async function updateRegions({
             region_id.push(_id)
             //更新region
             let newData = {}
-            if (region_code !== region.region_code) {
-                newData.region_code = region_code
-                itemBulkOps.push({
-                    updateMany: {
-                        filter: { region_id: _id },
-                        update: { region_code: region_code }
-                    }
-                })
-            }
+            // if (region_code !== region.region_code) {
+            //     newData.region_code = region_code
+            //     itemBulkOps.push({
+            //         updateMany: {
+            //             filter: { region_id: _id },
+            //             update: { region_code: region_code }
+            //         }
+            //     })
+            // }
+            if (region_code !== null) newData.region_code = region_code
             if (region_name !== null) newData.region_name = region_name
             if (region_level !== null) newData.region_level = region_level
+            if (creator_id !== null) {
+                let e = await modelUsers.exists({ _id: creator_id })
+                if (e === false) {
+                    throw new Error('creator_id错误: ' + creator_id)
+                }
+                newData.creator_id = creator_id
+            }
             if (parentId !== null) {
                 newData.parentId = parentId
-                regionBulkOps.push({
-                    updateOne: {
-                        filter: { _id: region.parentId },
-                        update: { $pull: { children: _id } }
-                    }
-                })
-                regionBulkOps.push({
-                    updateOne: {
-                        filter: { _id: parentId },
-                        update: { $push: { children: _id } }
-                    }
-                })
+                //如果parentId发生改变的话需要同时修改旧父节点和新父节点的children数组
+                if (region.parentId !== parentId) {
+                    regionBulkOps.push({
+                        updateOne: {
+                            filter: { _id: region.parentId },
+                            update: { $pull: { children: _id } }
+                        }
+                    })
+                    regionBulkOps.push({
+                        updateOne: {
+                            filter: { _id: parentId },
+                            update: { $push: { children: _id } }
+                        }
+                    })
+                }
             }
             regionBulkOps.push({
                 updateOne: {
@@ -1575,7 +1977,7 @@ async function updateRegions({
         }
         //批量更新
         var result = await modelRegion.bulkWrite(regionBulkOps)
-        await modelItem.bulkWrite(itemBulkOps)
+        // await modelItem.bulkWrite(itemBulkOps)
         //更新内存中的区划树
         itemService.addUpdateTask('updateRegions', region_id)
         //返回结果
@@ -1726,7 +2128,7 @@ async function getItemGuideAndAuditAdvises({
             throw new Error('需要item_id')
         }
         var item = await modelItem.findOne({ _id: item_id }, { task_code: 1, audit_advises: 1 })
-        var itemGuide = await modelTempTask.findOne({ task_code: item.task_code }, { _id: 0, __v: 0 })
+        var itemGuide = await modelTask.findOne({ task_code: item.task_code }, { _id: 0, __v: 0 })
         var result = itemGuide._doc
         result.audit_advises = item.audit_advises
         return new SuccessModel({ msg: '获取成功', data: result })
@@ -1837,6 +2239,54 @@ async function changeUserRankTemporary({
     }
 }
 
+/**
+ * 获取每种事项状态对应事项的个数
+ * @returns 
+ */
+async function getEveryItemStatusCount() {
+    try {
+        var status = await modelItemStatus.find({}, { _id: 0, __v: 0 })
+        var result = []
+        for (let i = 0, len = status.length; i < len; i++) {
+            let count = await modelItem.find({ item_status: status[i].id }).count()
+            result.push({
+                status_name: status[i].cn_name,
+                count: count
+            })
+        }
+        return new SuccessModel({ msg: '获取成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取失败', data: err.message })
+    }
+}
+
+/**
+ * 设置定时任务执行时间
+ * @param {Array<Number>} dayOfWeek Number数组，0表示周日，1-6表示周一到周六
+ * @param {Number} hour 24小时制
+ * @param {Number} minute 分钟
+ */
+async function setCheckJobRule({
+    dayOfWeek = null,
+    hour = null,
+    minute = null
+}) {
+    if (dayOfWeek === null || hour === null || minute === null) {
+        return new ErrorModel({ msg: '设置失败，需要dayOfWeek、hour和minute字段' })
+    }
+    itemService.setCheckJobRule(dayOfWeek, hour, minute)
+    return new SuccessModel({ msg: '设置成功' })
+}
+
+/**
+ * 获取定时任务执行时间
+ * @returns {Object} { dayOfWeek, hour, minute }
+ */
+async function getCheckJobRule() {
+    var rule = itemService.getCheckJobRule()
+    return new SuccessModel({ msg: '获取成功', data: rule })
+}
+
 // async function getRuleDic({
 //     rule_id = null
 // }) {
@@ -1885,6 +2335,9 @@ module.exports = {
     updateItemGuide,
     addAuditAdvise,
     getItemGuideAndAuditAdvises,
+    getEveryItemStatusCount,
+    setCheckJobRule,
+    getCheckJobRule,
     // getRuleDic,
     // getRegionDic
 }
