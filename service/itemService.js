@@ -1,6 +1,6 @@
 const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
-const modelTask = require('../model/tasks')
+const modelTask = require('../model/task')
 const modelRemoteCheckLog = require('../model/remoteCheckLog')
 const request = require('request')
 const schedule = require('node-schedule')
@@ -662,21 +662,13 @@ async function checkAllRegionsItems(regions, time) {
 
 //初始状态是每周日4点
 var rule = new schedule.RecurrenceRule()
-// rule.dayOfWeek = [0]
-rule.dayOfWeek = [] //现在先不要执行
+rule.year = 2023    //这里设置为2023年只是因为暂时不要现在执行
+rule.dayOfWeek = [0]
 rule.hour = 4
 rule.minute = 0
 
-var checkJob = schedule.scheduleJob(rule, checkAllRegionsItems([], 0))
-
-/**
- * 创建定时任务
- * @param {schedule.RecurrenceRule} rule 定时任务执行时间
- */
-function createCheckJob(rule) {
-    checkJob.cancel()   //先取消之前的定时任务
-    checkJob = schedule.scheduleJob(rule, checkAllRegionsItems([], 0))
-}
+var checkJob = schedule.scheduleJob(rule, function () { checkAllRegionsItems([], 0) })
+console.log('下一次检查时间：' + checkJob.nextInvocation())
 
 /**
  * 设置定时任务执行时间
@@ -688,7 +680,7 @@ function setCheckJobRule(dayOfWeek, hour, minute) {
     rule.dayOfWeek = dayOfWeek
     rule.hour = hour
     rule.minute = minute
-    createCheckJob(rule)
+    schedule.rescheduleJob(checkJob, rule)
 }
 
 /**
