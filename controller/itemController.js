@@ -1707,6 +1707,7 @@ async function getRules({
         if (rule_name !== null) query.rule_name = { $regex: rule_name }
         else query.rule_name = { $ne: 'null' }
         if (parentId !== null) query.parentId = { $in: parentId }
+        query['$and'] = []
         // if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
         if (creator_name !== null) {
             let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
