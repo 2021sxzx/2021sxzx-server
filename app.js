@@ -20,6 +20,7 @@ const permissionRouter = require('./routes/permission');
 const systemFailureRouter = require('./routes/systemFailure')
 const systemBasicRouter = require('./routes/systemBasic.js')
 const userDepartmentRouter = require('./routes/userDepartment');
+const imageRouter = require('./routes/image');
 const department = require('./model/department');
 const departmentMapUser = require('./model/departmentMapUser');
 
@@ -44,6 +45,15 @@ const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit:50000}));
+//用JFUM来upload（张奕凯）
+// var JFUM = require('jfum');
+// var jfum = new JFUM({
+//   // minFileSize: 204800,                      // 200 kB
+//   // maxFileSize: 5242880,                     // 5 mB
+//   acceptFileTypes: /\.(gif|jpe?g|png)$/i    // gif, jpg, jpeg, png
+// });
+// app.options(systemFailureRouter, jfum.optionsHandler.bind(jfum));
+
 // 动态网页的模板设置
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -88,6 +98,7 @@ app.use('/api', roleRouter)
 app.use('/api', permissionRouter)
 app.use('/api', systemFailureRouter)
 app.use('/api', systemBasicRouter)
+app.use('/api', imageRouter)
 app.use('/api', userDepartmentRouter)
 //app.use('/api', verifyRouter)
 

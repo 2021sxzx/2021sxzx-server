@@ -3,6 +3,9 @@ const {
     getAllFailure,
     createSystemFailure
 } = require("../service/systemFailureService")
+const {
+  createImage
+} = require("../service/imageService")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
   /**
@@ -28,9 +31,23 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
    */
      async function createSystemFailureController(data) {
       try {
-        console.log(data)
+        //对图片存入数据库之前处理一下
+        // console.log('222222222222')
+        // console.log(data.failurePicture.fileList)
+        // console.log('222222222222')
+        for (let i = 0; i < data.failurePicture.fileList.length; i++) {
+          data.pictureList[i].size = data.fileSizeList[i]
+          data.pictureList[i].location = "系统故障上传的图片"
+        }
+        data.pictureList.forEach(item=>{
+          console.log('**********************')
+          console.log(item)
+          console.log('**********************')
+          createImage(item)
+        })
+        // console.log(data.failurePicture.fileL)
         await createSystemFailure(data);
-      return new SuccessModel({msg: '获取系统故障成功',data:'success'});
+        return new SuccessModel({msg: '获取系统故障成功',data:'success'});
       } catch (e) {
         return new ErrorModel({msg:e.message})
       }

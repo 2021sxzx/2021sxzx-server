@@ -219,7 +219,7 @@ router.post(
   }
 );
 
-//上传首页网站logo  怎么同一个表单分开传图片呢
+//上传首页网站logo
 storage = multer.diskStorage({
   destination(req,res,cb){
     cb(null,'public/imgs');
@@ -265,7 +265,7 @@ router.post(
 //上传手机端logo
 storage = multer.diskStorage({
   destination(req,res,cb){
-    cb(null,'public/imgs');
+    cb(null,'upload');
   },
   filename(req,file,cb){
     const filenameArr = file.originalname.split('.');
@@ -277,6 +277,8 @@ router.post(
   "/v1/mobilelogo-upload",
   mobilelogoupload.single("file"),
   (req, res) => {
+      // console.log('!!!',req.body instanceof FormData)
+      console.log(req.file)
     res.send(req.file);
   }
 );

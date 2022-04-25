@@ -31,7 +31,8 @@ const { db } = require("../model/systemFailure");
         failure_time: data.create_time,
         failure_des: data.failureDescription,
         failure_name: data.failureName,
-        user_name: data.user_name
+        user_name: data.user_name,
+        failure_picture:data.pictureList
       })
       console.log('success')
       console.log(res)
