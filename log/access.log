@@ -7015,3 +7015,4 @@ zyk ::ffff:127.0.0.1 - - [2022-04-15T02:42:59.633Z] "GET /api/v1/show/ HTTP/1.1"
 - ::ffff:127.0.0.1 - - [2022-04-22T08:55:58.494Z] "POST /api/v1/getRuleDic HTTP/1.1" 200 306 "-" "PostmanRuntime/7.29.0"
 - ::ffff:127.0.0.1 - - [2022-04-22T08:56:02.190Z] "POST /api/v1/getRuleDic HTTP/1.1" 200 43 "-" "PostmanRuntime/7.29.0"
 >>>>>>> 37a402bcecd4d3f8d829ad518c93ad2ac52d4894
+- ::ffff:127.0.0.1 - - [2022-04-25T09:57:52.541Z] "POST /api/v1/getRegions HTTP/1.1" 200 639 "-" "PostmanRuntime/7.29.0"

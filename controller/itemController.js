@@ -42,13 +42,13 @@ async function getUserRank({
         var user = await modelUsers.findOne({ _id: user_id }, { role_name: 1 })
         var permissions = await modelRoleMapPermission.find({ role_name: user.role_name }, { permission_identifier: 1 })
         var identifier = []
-        for (let i = 0; i < permissions.length; i++) 
+        for (let i = 0; i < permissions.length; i++)
             identifier.push(permissions[i].permission_identifier)
-        var status = await modelStatusMapPermissions.find({ permission_identifier: { $in: identifier }})
+        var status = await modelStatusMapPermissions.find({ permission_identifier: { $in: identifier } })
         var statusMap = {}
-        for (let i = 0; i < status.length; i++){
-            for (let j = 0; j < (status[i].status_id).length; j++){
-                if (!((status[i].status_id)[j] in statusMap)){
+        for (let i = 0; i < status.length; i++) {
+            for (let j = 0; j < (status[i].status_id).length; j++) {
+                if (!((status[i].status_id)[j] in statusMap)) {
                     statusMap[(status[i].status_id)[j]] = true
                 }
             }
@@ -57,15 +57,15 @@ async function getUserRank({
         //manage_status和audit_status用来筛选两个页面渲染的事项状态
         //暂时写死
         let result = {
-            'manage_status': [ 0, 1, 2, 3, 4, 5 ],
-            'audit_status': [ 1, 2, 5 ],
+            'manage_status': [0, 1, 2, 3, 4, 5],
+            'audit_status': [1, 2, 5],
             'operate_status': []
         }
         //---------------------------------
-        for (let key in statusMap){
+        for (let key in statusMap) {
             result.operate_status.push(parseInt(key))
         }
-        
+
         return new SuccessModel({ msg: '获取成功', data: result })
     } catch (err) {
         console.log(err)
@@ -179,6 +179,9 @@ async function getItems({
                 users.push(users.shift()._id)
             }
             query['$and'].push({ creator_id: { $in: users } })
+        }
+        if (query['$and'].length <= 0) {
+            delete query['$and']
         }
         create_start_time = (create_start_time !== null) ? create_start_time : 0
         create_end_time = (create_end_time !== null) ? create_end_time : 9999999999999
@@ -756,6 +759,9 @@ async function getItemGuides({
             }
             query['$and'].push({ creator_id: { $in: users } })
         }
+        if (query['$and'].length <= 0) {
+            delete query['$and']
+        }
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = { $gte: start, $lte: end }
@@ -1262,6 +1268,9 @@ async function getRegions({
             }
             query['$and'].push({ creator_id: { $in: users } })
         }
+        if (query['$and'].length <= 0) {
+            delete query['$and']
+        }
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = { $gte: start, $lte: end }
@@ -1717,6 +1726,9 @@ async function getRules({
                 users.push(users.shift()._id)
             }
             query['$and'].push({ creator_id: { $in: users } })
+        }
+        if (query['$and'].length <= 0) {
+            delete query['$and']
         }
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
