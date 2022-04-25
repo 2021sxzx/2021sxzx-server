@@ -153,11 +153,6 @@ async function searchUserAndReturnList (searchValue) {
     const res_ = await Promise.all(
       res.map(async (item) => {
         const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
-        cal = cal === undefined ? '无部门' : cal;
-        if (!item['department_name']) {
-          item['department_name'] = cal;
-        }
-        console.log(item.department_name)
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -184,10 +179,6 @@ async function setActivationAndReturn (account) {
     const res_ = await Promise.all(
       res.map(async (item) => {
         const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
-        if (!item['department_name']) {
-          item['department_name'] = cal;
-        }
-        console.log(item.department_name)
         return {
           _id: item._id,
           user_name: item.user_name,
