@@ -172,6 +172,24 @@ router.post('/v1/getItemGuideAndAuditAdvises', async (req, res, next) => {
     res.json(data)
 })
 
+router.get('/v1/getEveryItemStatusCount', async (req, res, next) => {
+    let data = await itemController.getEveryItemStatusCount()
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.post('/v1/setCheckJobRule', async (req, res, next) => {
+    let data = await itemController.setCheckJobRule(req.body)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
+router.get('/v1/getCheckJobRule', async (req, res, next) => {
+    let data = await itemController.getCheckJobRule()
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 // router.post('/v1/getRuleDic', async (req, res, next) => {
 //     let data = await itemController.getRuleDic(req.body)
 //     setStatusCode(res, data)

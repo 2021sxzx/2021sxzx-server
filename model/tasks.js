@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const tempTaskSchema = new mongoose.Schema({
+const taskSchema = new mongoose.Schema({
     create_time: {            //事项指南创建时间
         type: Number,
         default: Date.now(),
@@ -119,21 +119,26 @@ const tempTaskSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
-    creator: {      //创建人
-        id: {
-            type: String,
-            required: true
-        },
-        name: {
-            type: String,
-            required: true
-        },
-        department_name: {
-            type: String,
-            required: true
-        }
+    creator_id: {
+        type: String,
+        required: true,
+        ref: 'users'
     }
+    // creator: {      //创建人
+    //     id: {
+    //         type: String,
+    //         required: true
+    //     },
+    //     name: {
+    //         type: String,
+    //         required: true
+    //     },
+    //     department_name: {
+    //         type: String,
+    //         required: true
+    //     }
+    // }
 })
 
-const tempTasks = mongoose.model('tempTasks', tempTaskSchema, 'tempTasks')
-module.exports = tempTasks
+const tasks = mongoose.model('tasks', taskSchema, 'tempTasks')
+module.exports = tasks

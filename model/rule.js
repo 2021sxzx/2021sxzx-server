@@ -20,26 +20,33 @@ const ruleSchema = new mongoose.Schema({
         default: ''
     },
     children: {
-        type: Array,
+        type: [{
+            type: String
+        }],
         default: []
     },
     create_time: {  // 创建时间
         type: Number,
         default: Date.now()
     },
-    creator: {      //创建人
-        id: {
-            type: String,
-            required: true
-        },
-        name: {
-            type: String,
-            required: true
-        },
-        department_name: {
-            type: String,
-            required: true
-        }
+    // creator: {      //创建人
+    //     id: {
+    //         type: String,
+    //         required: true
+    //     },
+    //     name: {
+    //         type: String,
+    //         required: true
+    //     },
+    //     department_name: {
+    //         type: String,
+    //         required: true
+    //     }
+    // },
+    creator_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'users'
     }
 })
 

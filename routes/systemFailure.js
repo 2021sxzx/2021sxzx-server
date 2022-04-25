@@ -31,13 +31,13 @@ const systemFailure = require("../model/systemFailure");
   /**
    * 提交一个系统故障
    */
-var JFUM = require('jfum');
-var jfum = new JFUM({
-  // minFileSize: 204800,                      // 200 kB
-  // maxFileSize: 5242880,                     // 5 mB
-  acceptFileTypes: /\.(gif|jpe?g|png)$/i    // gif, jpg, jpeg, png
-});
-router.options('/v1/create-system-failure', jfum.optionsHandler.bind(jfum));
+// var JFUM = require('jfum');
+// var jfum = new JFUM({
+//   // minFileSize: 204800,                      // 200 kB
+//   // maxFileSize: 5242880,                     // 5 mB
+//   acceptFileTypes: /\.(gif|jpe?g|png)$/i    // gif, jpg, jpeg, png
+// });
+// router.options('/v1/create-system-failure', jfum.optionsHandler.bind(jfum));
 
 router.post('/v1/create-system-failure', async (req, res, next) => {
     console.log("-----------create-system-failure-------------")
