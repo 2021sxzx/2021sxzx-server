@@ -148,7 +148,6 @@ async function getItems({
         if (item_status !== null) query.item_status = { $in: item_status }
         if (rule_id !== null) query.rule_id = { $in: rule_id }
         query['$and'] = []
-        // if (region_code !== null) query.region_code = { $in: region_code }
         if (region_code !== null) {
             let regions = await modelRegion.find({ region_code: { $in: region_code } }, { _id: 1 })
             for (let i = 0, len = regions.length; i < len; i++) {
@@ -156,11 +155,9 @@ async function getItems({
             }
             query['$and'].push({ region_id: { $in: regions } })
         }
-        // if (region_id !== null) query.region_id = { $in: region_id }
         if (region_id !== null) {
             query['$and'].push({ region_id: { $in: region_id } })
         }
-        // if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
         if (creator_name !== null) {
             let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
             for (let i = 0, len = users.length; i < len; i++) {
@@ -168,7 +165,6 @@ async function getItems({
             }
             query['$and'].push({ creator_id: { $in: users } })
         }
-        // if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         if (department_name !== null) {
             let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
             for (let i = 0, len = accounts.length; i < len; i++) {
@@ -194,89 +190,15 @@ async function getItems({
         }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
-            // var items = await modelItem.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
-            var items = await modelItem
-                .aggregate([
-                    {
-                        $match: query
-                    },
-                    {
-                        $lookup: {
-                            from: modelRegion.collection.name,
-                            localField: 'region_id',
-                            foreignField: '_id',
-                            as: 'region_info'
-                        }
-                    },
-                    {
-                        $lookup: {
-                            from: modelUsers.collection.name,
-                            localField: 'creator_id',
-                            foreignField: '_id',
-                            as: 'user'
-                        }
-                    },
-                    {
-                        $lookup: {
-                            from: modelDepartmentMapUsers.collection.name,
-                            localField: 'user.account',
-                            foreignField: 'account',
-                            as: 'department'
-                        }
-                    },
-                    {
-                        $addFields: {
-                            user: { $arrayElemAt: ['$user', 0] },
-                            department: { $arrayElemAt: ['$department', 0] },
-                            region_info: { $arrayElemAt: ['$region_info', 0] }
-                        }
-                    }
-                ])
-                .addFields({
-                    creator: {
-                        id: '$creator_id',
-                        name: '$user.user_name',
-                        department_name: '$department.department_name'
-                    },
-                    region_code: '$region_info.region_code'
-                })
-                .project({ __v: 0, user: 0, department: 0, creator_id: 0, region_info: 0 })
-                .skip(page_num * page_size).limit(page_size)
-            //计算规则路径和区划路径
-            var ruleDic = itemService.getRuleDic()
-            var regionDic = itemService.getRegionDic()
-            if (ruleDic === null || regionDic === null) {
-                throw new Error('请刷新重试')
-            }
-            for (let i = 0; i < items.length; i++) {
-                let rulePath = ''
-                let node = ruleDic[items[i].rule_id] ? ruleDic[items[i].rule_id] : null
-                while (node !== null) {
-                    rulePath = node.rule_name + '/' + rulePath
-                    node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
-                }
-                items[i].rule_path = rulePath
-                let regionPath = ''
-                let node1 = regionDic[items[i].region_id] ? regionDic[items[i].region_id] : null
-                while (node1 !== null) {
-                    regionPath = node1.region_name + '/' + regionPath
-                    node1 = regionDic[node1.parentId] ? regionDic[node1.parentId] : null
-                }
-                items[i].region_path = regionPath
-            }
-            //返回结果
-            var dict = {}
-            dict.data = items
-            dict.total = await modelItem.find(query).count()
-            dict.page_size = page_size
-            dict.page_num = page_num
-            return new SuccessModel({ msg: '查询成功', data: dict })
-        }
-        // var items = await modelItem.find(query, { __v: 0 })
-        var items = await modelItem
-            .aggregate([
+            var items = await modelItem.aggregate([
                 {
                     $match: query
+                },
+                {
+                    $skip: page_num * page_size
+                },
+                {
+                    $limit: page_size
                 },
                 {
                     $lookup: {
@@ -308,17 +230,100 @@ async function getItems({
                         department: { $arrayElemAt: ['$department', 0] },
                         region_info: { $arrayElemAt: ['$region_info', 0] }
                     }
+                },
+                {
+                    $addFields: {
+                        creator: {
+                            id: '$creator_id',
+                            name: '$user.user_name',
+                            department_name: '$department.department_name'
+                        },
+                        region_code: '$region_info.region_code'
+                    }
+                },
+                {
+                    $project: { __v: 0, user: 0, department: 0, creator_id: 0, region_info: 0 }
                 }
             ])
-            .addFields({
-                creator: {
-                    id: '$creator_id',
-                    name: '$user.user_name',
-                    department_name: '$department.department_name'
-                },
-                region_code: '$region_info.region_code'
-            })
-            .project({ __v: 0, user: 0, department: 0, creator_id: 0, region_info: 0 })
+            //计算规则路径和区划路径
+            var ruleDic = itemService.getRuleDic()
+            var regionDic = itemService.getRegionDic()
+            if (ruleDic === null || regionDic === null) {
+                throw new Error('请刷新重试')
+            }
+            for (let i = 0; i < items.length; i++) {
+                let rulePath = ''
+                let node = ruleDic[items[i].rule_id] ? ruleDic[items[i].rule_id] : null
+                while (node !== null) {
+                    rulePath = node.rule_name + '/' + rulePath
+                    node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
+                }
+                items[i].rule_path = rulePath
+                let regionPath = ''
+                let node1 = regionDic[items[i].region_id] ? regionDic[items[i].region_id] : null
+                while (node1 !== null) {
+                    regionPath = node1.region_name + '/' + regionPath
+                    node1 = regionDic[node1.parentId] ? regionDic[node1.parentId] : null
+                }
+                items[i].region_path = regionPath
+            }
+            //返回结果
+            var dict = {}
+            dict.data = items
+            dict.total = await modelItem.find(query).count()
+            dict.page_size = page_size
+            dict.page_num = page_num
+            return new SuccessModel({ msg: '查询成功', data: dict })
+        }
+        var items = await modelItem.aggregate([
+            {
+                $match: query
+            },
+            {
+                $lookup: {
+                    from: modelRegion.collection.name,
+                    localField: 'region_id',
+                    foreignField: '_id',
+                    as: 'region_info'
+                }
+            },
+            {
+                $lookup: {
+                    from: modelUsers.collection.name,
+                    localField: 'creator_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            {
+                $lookup: {
+                    from: modelDepartmentMapUsers.collection.name,
+                    localField: 'user.account',
+                    foreignField: 'account',
+                    as: 'department'
+                }
+            },
+            {
+                $addFields: {
+                    user: { $arrayElemAt: ['$user', 0] },
+                    department: { $arrayElemAt: ['$department', 0] },
+                    region_info: { $arrayElemAt: ['$region_info', 0] }
+                }
+            },
+            {
+                $addFields: {
+                    creator: {
+                        id: '$creator_id',
+                        name: '$user.user_name',
+                        department_name: '$department.department_name'
+                    },
+                    region_code: '$region_info.region_code'
+                }
+            },
+            {
+                $project: { __v: 0, user: 0, department: 0, creator_id: 0, region_info: 0 }
+            }
+        ])
         //计算规则路径和区划路径
         var ruleDic = itemService.getRuleDic()
         var regionDic = itemService.getRegionDic()
@@ -666,43 +671,50 @@ async function getItemGuide({
         if (task_code === null) {
             throw new Error('需要task_code字段')
         }
-        // var res = await modelTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
-        var res = await modelTask
-            .aggregate([
-                {
-                    $match: { task_code: task_code }
-                },
-                {
-                    $lookup: {
-                        from: modelUsers.collection.name,
-                        localField: 'creator_id',
-                        foreignField: '_id',
-                        as: 'user'
-                    }
-                },
-                {
-                    $lookup: {
-                        from: modelDepartmentMapUsers.collection.name,
-                        localField: 'user.account',
-                        foreignField: 'account',
-                        as: 'department'
-                    }
-                },
-                {
-                    $addFields: {
-                        user: { $arrayElemAt: ['$user', 0] },
-                        department: { $arrayElemAt: ['$department', 0] }
+        var res = await modelTask.aggregate([
+            {
+                $match: { task_code: task_code }
+            },
+            {
+                $lookup: {
+                    from: modelUsers.collection.name,
+                    localField: 'creator_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            {
+                $lookup: {
+                    from: modelDepartmentMapUsers.collection.name,
+                    localField: 'user.account',
+                    foreignField: 'account',
+                    as: 'department'
+                }
+            },
+            {
+                $addFields: {
+                    user: { $arrayElemAt: ['$user', 0] },
+                    department: { $arrayElemAt: ['$department', 0] }
+                }
+            },
+            {
+                $addFields: {
+                    creator: {
+                        id: '$creator_id',
+                        name: '$user.user_name',
+                        department_name: '$department.department_name'
                     }
                 }
-            ])
-            .addFields({
-                creator: {
-                    id: '$creator_id',
-                    name: '$user.user_name',
-                    department_name: '$department.department_name'
-                }
-            })
-            .project({ __v: 0, user: 0, department: 0, creator_id: 0 })
+            },
+            {
+                $project: { __v: 0, user: 0, department: 0, creator_id: 0 }
+            }
+        ])
+        if (res.length > 0) {
+            res = res[0]
+        } else {
+            res = {}
+        }
         return new SuccessModel({ msg: '查询成功', data: res })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -739,7 +751,6 @@ async function getItemGuides({
         if (task_code !== null) query.task_code = task_code
         if (task_name !== null) query.task_name = { $regex: task_name }
         query['$and'] = []
-        // if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
         if (creator_name !== null) {
             let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
             for (let i = 0, len = users.length; i < len; i++) {
@@ -747,7 +758,6 @@ async function getItemGuides({
             }
             query['$and'].push({ creator_id: { $in: users } })
         }
-        // if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         if (department_name !== null) {
             let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
             for (let i = 0, len = accounts.length; i < len; i++) {
@@ -770,13 +780,16 @@ async function getItemGuides({
         }
         if (page_size !== null && page_num !== null) {
             var result = {}
-            // result.data = await modelTask.find(query, {
-            //     task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
-            // }).skip(page_size * page_num).limit(page_size)
             var tasks = await modelTask
                 .aggregate([
                     {
                         $match: query
+                    },
+                    {
+                        $skip: page_size * page_num
+                    },
+                    {
+                        $limit: page_size
                     },
                     {
                         $lookup: {
@@ -799,27 +812,27 @@ async function getItemGuides({
                             user: { $arrayElemAt: ['$user', 0] },
                             department: { $arrayElemAt: ['$department', 0] }
                         }
+                    },
+                    {
+                        $addFields: {
+                            creator: {
+                                id: '$creator_id',
+                                name: '$user.user_name',
+                                department_name: '$department.department_name'
+                            }
+                        }
+                    },
+                    {
+                        $project: { task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1 }
                     }
                 ])
-                .addFields({
-                    creator: {
-                        id: '$creator_id',
-                        name: '$user.user_name',
-                        department_name: '$department.department_name'
-                    }
-                })
-                .project({ task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1 })
-                .skip(page_size * page_num).limit(page_size)
             result.data = tasks
             result.total = await modelTask.find(query).count()
             result.page_size = page_size
             result.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: result })
         }
-        // var result = await modelTask.find(query, {
-        //     task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1
-        // })
-        var tasks = await modelTask
+        var result = await modelTask
             .aggregate([
                 {
                     $match: query
@@ -845,16 +858,20 @@ async function getItemGuides({
                         user: { $arrayElemAt: ['$user', 0] },
                         department: { $arrayElemAt: ['$department', 0] }
                     }
+                },
+                {
+                    $addFields: {
+                        creator: {
+                            id: '$creator_id',
+                            name: '$user.user_name',
+                            department_name: '$department.department_name'
+                        }
+                    }
+                },
+                {
+                    $project: { task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1 }
                 }
             ])
-            .addFields({
-                creator: {
-                    id: '$creator_id',
-                    name: '$user.user_name',
-                    department_name: '$department.department_name'
-                }
-            })
-            .project({ task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1 })
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
@@ -1248,7 +1265,6 @@ async function getRegions({
             query.parentId = { $in: parentid }
         }
         query['$and'] = []
-        // if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
         if (creator_name !== null) {
             let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
             for (let i = 0, len = users.length; i < len; i++) {
@@ -1256,7 +1272,6 @@ async function getRegions({
             }
             query['$and'].push({ creator_id: { $in: users } })
         }
-        // if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         if (department_name !== null) {
             let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
             for (let i = 0, len = accounts.length; i < len; i++) {
@@ -1279,70 +1294,15 @@ async function getRegions({
         }
         if (page_size !== null && page_num !== null) {
             //只返回部分查询结果
-            // var regions = await modelRegion.find(query, { __v: 0 }).skip(page_num * page_size).limit(page_size)
-            var regions = await modelRegion
-                .aggregate([
-                    {
-                        $match: query
-                    },
-                    {
-                        $lookup: {
-                            from: modelUsers.collection.name,
-                            localField: 'creator_id',
-                            foreignField: '_id',
-                            as: 'user'
-                        }
-                    },
-                    {
-                        $lookup: {
-                            from: modelDepartmentMapUsers.collection.name,
-                            localField: 'user.account',
-                            foreignField: 'account',
-                            as: 'department'
-                        }
-                    },
-                    {
-                        $addFields: {
-                            user: { $arrayElemAt: ['$user', 0] },
-                            department: { $arrayElemAt: ['$department', 0] }
-                        }
-                    }
-                ])
-                .addFields({
-                    creator: {
-                        id: '$creator_id',
-                        name: '$user.user_name',
-                        department_name: '$department.department_name'
-                    }
-                })
-                .project({ __v: 0, user: 0, department: 0, creator_id: 0 })
-                .skip(page_num * page_size).limit(page_size)
-            //计算区划路径
-            var regionDic = itemService.getRegionDic()
-            if (regionDic === null) {
-                throw new Error('请刷新重试')
-            }
-            for (let i = 0; i < regions.length; i++) {
-                let regionPath = ''
-                let node = regionDic[regions[i]._id] ? regionDic[regions[i]._id] : null
-                while (node !== null) {
-                    regionPath = node.region_name + '/' + regionPath
-                    node = regionDic[node.parentId] ? regionDic[node.parentId] : null
-                }
-                regions[i].region_path = regionPath
-            }
-            var dict = {}
-            dict.data = regions
-            dict.total = await modelRegion.find(query).count()
-            dict.page_size = page_size
-            dict.page_num = page_num
-            return new SuccessModel({ msg: '查询成功', data: dict })
-        }
-        // var regions = await modelRegion.find(query, { __v: 0 })
-        var regions = await modelRegion
-            .aggregate([
+            var regions = await modelRegion.aggregate([
                 {
                     $match: query
+                },
+                {
+                    $skip: page_num * page_size
+                },
+                {
+                    $limit: page_size
                 },
                 {
                     $lookup: {
@@ -1365,16 +1325,81 @@ async function getRegions({
                         user: { $arrayElemAt: ['$user', 0] },
                         department: { $arrayElemAt: ['$department', 0] }
                     }
+                },
+                {
+                    $addFields: {
+                        creator: {
+                            id: '$creator_id',
+                            name: '$user.user_name',
+                            department_name: '$department.department_name'
+                        }
+                    }
+                },
+                {
+                    $project: { __v: 0, user: 0, department: 0, creator_id: 0 }
                 }
             ])
-            .addFields({
-                creator: {
-                    id: '$creator_id',
-                    name: '$user.user_name',
-                    department_name: '$department.department_name'
+            //计算区划路径
+            var regionDic = itemService.getRegionDic()
+            if (regionDic === null) {
+                throw new Error('请刷新重试')
+            }
+            for (let i = 0; i < regions.length; i++) {
+                let regionPath = ''
+                let node = regionDic[regions[i]._id] ? regionDic[regions[i]._id] : null
+                while (node !== null) {
+                    regionPath = node.region_name + '/' + regionPath
+                    node = regionDic[node.parentId] ? regionDic[node.parentId] : null
                 }
-            })
-            .project({ __v: 0, user: 0, department: 0, creator_id: 0 })
+                regions[i].region_path = regionPath
+            }
+            var dict = {}
+            dict.data = regions
+            dict.total = await modelRegion.find(query).count()
+            dict.page_size = page_size
+            dict.page_num = page_num
+            return new SuccessModel({ msg: '查询成功', data: dict })
+        }
+        // var regions = await modelRegion.find(query, { __v: 0 })
+        var regions = await modelRegion.aggregate([
+            {
+                $match: query
+            },
+            {
+                $lookup: {
+                    from: modelUsers.collection.name,
+                    localField: 'creator_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            {
+                $lookup: {
+                    from: modelDepartmentMapUsers.collection.name,
+                    localField: 'user.account',
+                    foreignField: 'account',
+                    as: 'department'
+                }
+            },
+            {
+                $addFields: {
+                    user: { $arrayElemAt: ['$user', 0] },
+                    department: { $arrayElemAt: ['$department', 0] }
+                }
+            },
+            {
+                $addFields: {
+                    creator: {
+                        id: '$creator_id',
+                        name: '$user.user_name',
+                        department_name: '$department.department_name'
+                    }
+                }
+            },
+            {
+                $project: { __v: 0, user: 0, department: 0, creator_id: 0 }
+            }
+        ])
         //计算区划路径
         var regionDic = itemService.getRegionDic()
         if (regionDic === null) {
@@ -1708,7 +1733,6 @@ async function getRules({
         else query.rule_name = { $ne: 'null' }
         if (parentId !== null) query.parentId = { $in: parentId }
         query['$and'] = []
-        // if (creator_name !== null) query['creator.name'] = { $regex: creator_name }
         if (creator_name !== null) {
             let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
             for (let i = 0, len = users.length; i < len; i++) {
@@ -1716,7 +1740,6 @@ async function getRules({
             }
             query['$and'].push({ creator_id: { $in: users } })
         }
-        // if (department_name !== null) query['creator.department_name'] = { $regex: department_name }
         if (department_name !== null) {
             let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
             for (let i = 0, len = accounts.length; i < len; i++) {
@@ -1734,43 +1757,45 @@ async function getRules({
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = { $gte: start, $lte: end }
-        // var res = await modelRule.find(query, { __v: 0 })
-        var res = await modelRule
-            .aggregate([
-                {
-                    $match: query
-                },
-                {
-                    $lookup: {
-                        from: modelUsers.collection.name,
-                        localField: 'creator_id',
-                        foreignField: '_id',
-                        as: 'user'
-                    }
-                },
-                {
-                    $lookup: {
-                        from: modelDepartmentMapUsers.collection.name,
-                        localField: 'user.account',
-                        foreignField: 'account',
-                        as: 'department'
-                    }
-                },
-                {
-                    $addFields: {
-                        user: { $arrayElemAt: ['$user', 0] },
-                        department: { $arrayElemAt: ['$department', 0] }
+        var res = await modelRule.aggregate([
+            {
+                $match: query
+            },
+            {
+                $lookup: {
+                    from: modelUsers.collection.name,
+                    localField: 'creator_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            {
+                $lookup: {
+                    from: modelDepartmentMapUsers.collection.name,
+                    localField: 'user.account',
+                    foreignField: 'account',
+                    as: 'department'
+                }
+            },
+            {
+                $addFields: {
+                    user: { $arrayElemAt: ['$user', 0] },
+                    department: { $arrayElemAt: ['$department', 0] }
+                }
+            },
+            {
+                $addFields: {
+                    creator: {
+                        id: '$creator_id',
+                        name: '$user.user_name',
+                        department_name: '$department.department_name'
                     }
                 }
-            ])
-            .addFields({
-                creator: {
-                    id: '$creator_id',
-                    name: '$user.user_name',
-                    department_name: '$department.department_name'
-                }
-            })
-            .project({ __v: 0, user: 0, department: 0, creator_id: 0 })
+            },
+            {
+                $project: { __v: 0, user: 0, department: 0, creator_id: 0 }
+            }
+        ])
         //计算规则路径
         var ruleDic = itemService.getRuleDic()
         if (ruleDic === null) {
@@ -2147,108 +2172,6 @@ async function getItemGuideAndAuditAdvises({
         return new SuccessModel({ msg: '获取成功', data: result })
     } catch (err) {
         return new ErrorModel({ msg: '获取失败', data: err.message })
-    }
-}
-
-/**
- * 更新用户身份
- * @param {Array<Object>} user_rank 待更新的用户身份
- * @returns 
- */
-async function updateUserRank({
-    user_rank = null
-}) {
-    try {
-        if (user_rank === null) {
-            throw new Error('调用updateUserRank需要user_rank数组')
-        }
-        if (!user_rank.length || user_rank.length <= 0) {
-            throw new Error('不是数组或数组长度小于等于0')
-        }
-        //更新用户身份
-        var bulkOps = []
-        for (let i = 0; i < user_rank.length; i++) {
-            var {
-                id = null,
-                cn_name = null,
-                can_see = null,
-                can_operate = null
-            } = user_rank[i]
-            if (id === null) {
-                throw new Error('缺少id')
-            }
-            var newData = {}
-            if (cn_name !== null) newData.cn_name = cn_name
-            if (can_see !== null) newData.can_see = can_see
-            if (can_operate !== null) newData.can_operate = can_operate
-            bulkOps.push({
-                updateOne: {
-                    filter: { id: id },
-                    update: newData
-                }
-            })
-        }
-        //批量更新
-        var result = await modelUserRank.bulkWrite(bulkOps)
-        return new SuccessModel({ msg: '更新成功', data: result })
-    } catch (err) {
-        return new ErrorModel({ msg: '更新失败', data: err.message })
-    }
-}
-
-/**
- * 用于临时提升用户权限
- * @param {Array<Object>} array 
- * @returns 
- */
-async function changeUserRankTemporary({
-    array = null
-}) {
-    try {
-        if (array === null) {
-            throw new Error('调用changeUserRankTemporary需要array字段')
-        }
-        if (!array.length || array.lengt <= 0) {
-            throw new Error('不是数组或数组长度小于等于0')
-        }
-        var userRank = await modelUserRank.find({}, { _id: 0, __v: 0 })
-        var needChange = {}
-        for (let i = 0; i < array.length; i++) {
-            var {
-                user_id = null,
-                can_see_temp = null,
-                can_operate_temp = null
-            } = array[i]
-            var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 })
-            if (user === null) {
-                throw new Error('用户不存在')
-            }
-            for (let j = 0; j < userRank.length; j++) {
-                if (userRank[j].id === user.user_rank) {
-                    needChange[userRank[j].id] = j
-                    if (can_see_temp !== null) userRank[j]._doc.can_see_temp[user_id] = can_see_temp
-                    if (can_operate_temp !== null) userRank[j]._doc.can_operate_temp[user_id] = can_operate_temp
-                    break
-                }
-            }
-        }
-        var bulkOps = []
-        var keys = Object.keys(needChange)
-        for (let i = 0; i < keys.length; i++) {
-            bulkOps.push({
-                updateOne: {
-                    filter: { id: keys[i] },
-                    update: {
-                        can_see_temp: userRank[needChange[keys[i]]]._doc.can_see_temp,
-                        can_operate_temp: userRank[needChange[keys[i]]]._doc.can_operate_temp
-                    }
-                }
-            })
-        }
-        var result = await modelUserRank.bulkWrite(bulkOps)
-        return new SuccessModel({ msg: '修改成功', data: result })
-    } catch (err) {
-        return new ErrorModel({ msg: '修改失败', data: err.message })
     }
 }
 
