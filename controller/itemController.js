@@ -2208,9 +2208,13 @@ async function setCheckJobRule({
     minute = null
 }) {
     if (dayOfWeek === null || hour === null || minute === null) {
-        return new ErrorModel({ msg: '设置失败，需要dayOfWeek、hour和minute字段' })
+        return new ErrorModel({ msg: '需要dayOfWeek、hour和minute字段' })
     }
-    itemService.setCheckJobRule(dayOfWeek, hour, minute)
+    try {
+        itemService.setCheckJobRule(dayOfWeek, hour, minute)
+    } catch (err) {
+        return new ErrorModel({ msg: '设置失败' })
+    }
     return new SuccessModel({ msg: '设置成功' })
 }
 
@@ -2221,6 +2225,19 @@ async function setCheckJobRule({
 async function getCheckJobRule() {
     var rule = itemService.getCheckJobRule()
     return new SuccessModel({ msg: '获取成功', data: rule })
+}
+
+/**
+ * 获取事项指南检查的结果
+ * @returns 
+ */
+async function getCheckResult() {
+    try {
+        var result = await itemService.getCheckResult()
+        return new SuccessModel({ msg: '获取成功', data: result })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取失败', data: err.message })
+    }
 }
 
 // async function getRuleDic({
@@ -2274,6 +2291,7 @@ module.exports = {
     getEveryItemStatusCount,
     setCheckJobRule,
     getCheckJobRule,
+    getCheckResult,
     // getRuleDic,
     // getRegionDic
 }

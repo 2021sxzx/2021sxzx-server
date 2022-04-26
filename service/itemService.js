@@ -590,6 +590,7 @@ var recheckTime = 3     //最大重新检查次数
  * @returns 
  */
 async function checkAllRegionsItems(regions, time) {
+    console.log('开始检查各区划的事项指南信息')
     //检查是否超过最大次数
     if (time > recheckTime) {
         return
@@ -658,6 +659,27 @@ async function checkAllRegionsItems(regions, time) {
     if (recheckRegions.length > 0) {
         checkAllRegionsItems(recheckRegions, time + 1)
     }
+    console.log('检查完毕')
+}
+
+/**
+ * 获取检查结果
+ * @returns {Object} key是区划编码，value是{inLocalNinRemote,inRemoteNinLocal,differences}
+ */
+async function getCheckResult() {
+    var keys = Object.keys(checkResult)
+    if (keys.length > 0) {
+        return checkResult
+    }
+    var logs = await modelRemoteCheckLog.find()
+    var result = {}
+    for (let i = 0, len = logs.length; i < len; i++) {
+        result[logs[i].region_code] = {
+            inLocalNinRemote: logs[i].inLocalNinRemote,
+            inRemoteNinLocal: logs[i].inRemoteNinLocal,
+            differences: logs[i].differences
+        }
+    }
 }
 
 //初始状态是每周日4点
@@ -677,10 +699,17 @@ console.log('下一次检查时间：' + checkJob.nextInvocation())
  * @param {Number} minute 分钟
  */
 function setCheckJobRule(dayOfWeek, hour, minute) {
+    var result = checkJob.reschedule(new schedule.RecurrenceRule({
+        dayOfWeek: dayOfWeek,
+        hour: hour,
+        minute: minute
+    }))
+    if (result === false) {
+        throw new Error('设置失败')
+    }
     rule.dayOfWeek = dayOfWeek
     rule.hour = hour
     rule.minute = minute
-    schedule.rescheduleJob(checkJob, rule)
 }
 
 /**
@@ -700,5 +729,6 @@ module.exports = {
     getRegionDic,
     getRuleDic,
     setCheckJobRule,
-    getCheckJobRule
+    getCheckJobRule,
+    getCheckResult
 }
