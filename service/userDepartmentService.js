@@ -84,18 +84,35 @@ class userDepartmentService {
     return res === null ? '没有处室' : res.department_name;
   }
 
+  async isInDepartment (department_name) {
+    const res = await department.findOne({
+      department_name: department_name
+    });
+    if (!res) {
+      return false;
+    }
+    return true;
+  }
+
   // 添加初始处室数据若为空或者不合法，则默认为办公室
   async addUserAndDepartmentInitial (account, user_name, department_name) {
     const date = new Date().getTime();
-    const isInDepartment = await isInDepartment(department_name);
-
-    department_name = department_name !== undefined && isInDepartment ? department_name : '办公室';
+    let isInDepartment = null;
+    const resq = await department.findOne({
+      department_name: department_name
+    });
+    if (!resq) {
+      isInDepartment = false;
+    } else {
+      isInDepartment = true;
+    }
+    department_name = department_name !== undefined && isInDepartment === true ? department_name : '办公室';
     await departmentMapUser.create({
       account,
       user_name,
       join_time: date,
       department_name
-    })
+    });
     const res = await departmentMapUser.findOne({
       account,
       user_name
@@ -121,16 +138,6 @@ class userDepartmentService {
       msg: '搜索成功',
       data: res
     });
-  }
-
-  async isInDepartment (department_name) {
-    const res = await department.findOne({
-      department_name: department_name
-    });
-    if (!!res) {
-      return false;
-    }
-    return true;
   }
 }
 
