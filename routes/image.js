@@ -33,7 +33,22 @@ function setStatusCode(res,data) {
  * 存图片记录进数据库
  */
  router.get('/v1/logo_image', async (req,res,next) => {
-  const data=[{name:'ic_logo',url:'http://8.134.73.52:5001/imgs/ic_logo.png'}]
+  const data=[
+    {name:'ic_logo',url:'http://8.134.73.52:5001/imgs/ic_logo.png'},
+    {name:'banner_mb',url:'http://8.134.73.52:5001/imgs/banner_mb.png'},
+    {name:'banner_pc',url:'http://8.134.73.52:5001/imgs/banner_pc.jpg'},
+    {name:'ic_delete',url:'http://8.134.73.52:5001/imgs/ic_delete.png'},
+    {name:'ic_dzjg',url:'http://8.134.73.52:5001/imgs/ic_dzjg.png'},
+    {name:'ic_fryw',url:'http://8.134.73.52:5001/imgs/ic_fryw.png'},
+    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
+    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
+    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
+    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
+    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
+    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
+    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
+    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
+  ]
   res.send(data)
 })
 
