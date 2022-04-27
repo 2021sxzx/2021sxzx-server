@@ -34,8 +34,8 @@ const { db } = require("../model/systemFailure");
         user_name: data.user_name,
         failure_picture:data.pictureList
       })
-      console.log('success')
-      console.log(res)
+      // console.log('success')
+      // console.log(res)
   } catch (err) {
       throw new Error(err.message)
   }

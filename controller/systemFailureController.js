@@ -40,9 +40,9 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
           data.pictureList[i].location = "系统故障上传的图片"
         }
         data.pictureList.forEach(item=>{
-          console.log('**********************')
-          console.log(item)
-          console.log('**********************')
+          // console.log('**********************')
+          // console.log(item)
+          // console.log('**********************')
           createImage(item)
         })
         // console.log(data.failurePicture.fileL)

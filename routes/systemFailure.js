@@ -7,7 +7,11 @@ const {
     showSystemFailureController,
     createSystemFailureController
   } = require("../controller/systemFailureController")
+const {
+    deleteImage
+  } = require("../service/imageService")
 const systemFailure = require("../model/systemFailure");
+const imageSource = require("../model/imageSource");
 
   function setStatusCode(res,data) {
     if(data.code === 200) {
@@ -49,6 +53,7 @@ router.post('/v1/create-system-failure', async (req, res, next) => {
     // }
     // console.log(data)
     await createSystemFailureController(data);
+    res.end('200');
 /*    if (req.jfum.error) {
       // req.jfum.error
         console.log('lol')
@@ -143,13 +148,14 @@ router.post('/v1/system-failure-picture-upload',  upload.array('file',6), async 
    * 删除一个系统故障
    */
    router.post('/v1/delete-system-failure', async (req, res, next) => {
-    console.log("first")
+    // console.log("first")
     let data=req.body;
-    console.log(data)
+    // console.log(data);
+    deleteImage(data);
     systemFailure.deleteOne({'_id':data._id}).then((res) =>{
-      console.log('success')
+      console.log('故障删除成功')
     })
-    // let result = await createSystemFailureController(data)
+    res.end()
     // setStatusCode(res, result)
     // res.json(result)
 })
