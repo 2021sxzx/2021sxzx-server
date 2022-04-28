@@ -44,8 +44,9 @@ const imageSource = require("../model/imageSource");
 // router.options('/v1/create-system-failure', jfum.optionsHandler.bind(jfum));
 
 router.post('/v1/create-system-failure', async (req, res, next) => {
-    console.log("-----------create-system-failure-------------")
+    // console.log("-----------create-system-failure-------------")
     let data=req.body;
+    // console.log(data)
     // console.log(data.failurePicture.fileList[0].size)
     // for (let i=0;i<data.failurePicture.fileList.length;i++){
     //   data.pictureList[i].size=data.failurePicture.fileList[i].size
@@ -136,6 +137,9 @@ router.post('/v1/system-failure-picture-upload',  upload.array('file',6), async 
     var data=req.body.test;
     req.body.test=[];
     pictureNameList=[];
+    // console.log("data:")
+    // console.log(data===undefined)
+    if (data===undefined) res.json([]);
     res.end(JSON.stringify(data));//怎么清空req.test
     // res.send(data);
     // console.log(data.failurePicture.fileList[0])

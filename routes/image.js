@@ -30,9 +30,24 @@ function setStatusCode(res,data) {
 })
 
 /**
- * 存图片记录进数据库
+ * 前台所需的图片的信息
  */
  router.get('/v1/logo_image', async (req,res,next) => {
+  const  getSize= async (name)=>{
+    const p=path.join(__dirname,'../public/imgs',name)
+    var size=10;
+    var test=fs.statSync(p,function(err,stats){
+      if(err){console.log(err)}
+      else{
+        // console.log('2')
+        // console.log('stats')
+        // console.log(stats.size)
+        size = stats.size
+      }
+    })//.then(()=>{return size})
+    // console.log(test)
+    return test.size;
+  }
   const data=[
     {name:'ic_logo',url:'http://8.134.73.52:5001/imgs/ic_logo.png'},
     {name:'banner_mb',url:'http://8.134.73.52:5001/imgs/banner_mb.png'},
@@ -41,14 +56,42 @@ function setStatusCode(res,data) {
     {name:'ic_dzjg',url:'http://8.134.73.52:5001/imgs/ic_dzjg.png'},
     {name:'ic_fryw',url:'http://8.134.73.52:5001/imgs/ic_fryw.png'},
     {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
-    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
-    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
-    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
-    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
-    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
-    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
-    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
+    {name:'ic_jycy',url:'http://8.134.73.52:5001/imgs/ic_jycy.png'},
+    {name:'ic_ldbz',url:'http://8.134.73.52:5001/imgs/ic_ldbz.png'},
+    {name:'ic_logo',url:'http://8.134.73.52:5001/imgs/ic_logo.png'},
+    {name:'ic_placeholder',url:'http://8.134.73.52:5001/imgs/ic_placeholder.png'},
+    {name:'ic_qrcode',url:'http://8.134.73.52:5001/imgs/ic_qrcode.png'},
+    {name:'ic_rsrc',url:'http://8.134.73.52:5001/imgs/ic_rsrc.png'},
+    {name:'ic_search',url:'http://8.134.73.52:5001/imgs/ic_search.png'},
+    {name:'ic_shbx',url:'http://8.134.73.52:5001/imgs/ic_shbx.png'},
+    {name:'ic_ygwa',url:'http://8.134.73.52:5001/imgs/ic_ygwa.png'},
+    {name:'ic_zfwzzc',url:'http://8.134.73.52:5001/imgs/ic_zfwzzc.png'},
+    {name:'ic_znkf',url:'http://8.134.73.52:5001/imgs/ic_znkf.png'},
+    {name:'qrcode_app',url:'http://8.134.73.52:5001/imgs/qrcode_app.jpg'},
+    {name:'qrcode_web',url:'http://8.134.73.52:5001/imgs/qrcode_web.png'}
   ]
+  // data.forEach(item=>{
+  //   item.size=getSize1(item.name)
+  // })
+  
+  for (let i = 0; i < data.length; i++) {
+    if (data[i].name === 'banner_pc'||data[i].name === 'qrcode_app'){
+      await getSize(data[i].name+'.jpg').then(    
+        (res)=>{
+          data[i].size=res;
+          // console.log('first'+res)
+        }   
+      )
+    }
+    else{
+      await getSize(data[i].name+'.png').then(    
+        (res)=>{
+          data[i].size=res;
+          // console.log('first'+res)
+        }   
+      )
+    }
+  }
   res.send(data)
 })
 
