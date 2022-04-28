@@ -1,5 +1,6 @@
 const imageSource = require("../model/imageSource");
 const fs=require("fs");
+const path=require("path");
 /**
  * 图片的获取
  */
@@ -27,7 +28,7 @@ const fs=require("fs");
     }
   }
 
-  /**
+/**
  * 删除数据库里面的图片记录和服务器上的图片文件
  */
  async function deleteImage(data) {
@@ -50,8 +51,32 @@ const fs=require("fs");
 }
 
   
+/**
+ * 根据图片名字返回图片，供前端使用
+ */
+ async function getImageHt(name) {
+    const filePath = path.join(__dirname,'../public/imgs',name);
+    console.log(filePath)
+    console.log('------url--------')
+    // 给客户端返回一个文件流 type类型
+    var stream = fs.createReadStream( filePath );
+    var responseData = [];//存储文件流
+    if (stream) {//判断状态
+        stream.on( 'data', function( chunk ) {
+          responseData.push( chunk );
+        });
+        stream.on( 'end', function() {
+           var finalData = Buffer.concat( responseData );
+          //  console.log('------------0')
+          //  console.log(finalData)
+           return finalData;
+        });
+    }
+}
+
 module.exports = {
   getAllImage,
   createImage,
-  deleteImage
+  deleteImage,
+  getImageHt
 };
