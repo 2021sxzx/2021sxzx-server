@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const path=require('path');
 const fs=require('fs');
-const {getAllImage}=require('../service/imageService')
+const {getAllImage,getImageHt}=require('../service/imageService')
 function setStatusCode(res,data) {
   if(data.code === 200) {
     res.statusCode = 200
@@ -122,4 +122,62 @@ router.get('/v1/get-picture', (req, res, next) => {
   }
 })
 
+
+
+// 返回前端
+router.get('/v1/get-picture-ht', (req, res, next) => {
+  const name = req.query.name;
+  const filePath = path.join(__dirname,'../public/imgs',name);
+  // 给客户端返回一个文件流 type类型
+  res.set( 'content-type', {"png": "image/png","jpg": "image/jpeg"} );//设置返回类型
+  async function getImageHt1(name) {
+    const filePath = path.join(__dirname,'../public/imgs',name);
+    // console.log(filePath)
+    // console.log('------url--------')
+    // 给客户端返回一个文件流 type类型
+    var stream = fs.createReadStream( filePath );
+    var responseData = [];//存储文件流
+    if (stream) {//判断状态
+        stream.on( 'data', function( chunk ) {
+          responseData.push( chunk );
+        });
+        stream.on( 'end', function() {
+           var finalData = Buffer.concat( responseData );
+          //  console.log('------------0')
+          //  console.log(finalData)
+           return finalData;
+        });
+    }
+  }
+  var data1='okk';
+  async function c(){
+    const data=await getImageHt1(name)
+    console.log(data)
+  }
+  // c();
+  // const data=getImageHt1(name)
+  // .then(res=>{
+  //   // console.log('data')
+  //   // console.log(res)
+  //   data = res
+  // });
+  // console.log(data)
+  // res.write(data);
+  // res.end(data);
+  res.set( 'content-type', {"png": "image/png","jpg": "image/jpeg"} );//设置返回类型
+  var stream = fs.createReadStream( filePath );
+  var responseData = [];//存储文件流
+  if (stream) {//判断状态
+      stream.on( 'data', function( chunk ) {
+        responseData.push( chunk );
+      });
+      stream.on( 'end', function() {
+         var finalData = Buffer.concat( responseData );
+         console.log('+++++0')
+         console.log(finalData)
+         res.write( finalData );
+         res.end();
+      });
+  }
+})
 module.exports = router;

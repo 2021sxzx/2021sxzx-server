@@ -75,6 +75,10 @@ const taskSchema = new mongoose.Schema({
             address: {        //地址
                 type: String,
                 required: true
+            },
+            office_hour: {    //办公时间
+                type: String,
+                required: true
             }
         }],
         default: [],
@@ -120,7 +124,7 @@ const taskSchema = new mongoose.Schema({
         default: '',
     },
     creator_id: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'users'
     }
