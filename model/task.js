@@ -120,7 +120,7 @@ const taskSchema = new mongoose.Schema({
         default: '',
     },
     creator_id: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'users'
     }
