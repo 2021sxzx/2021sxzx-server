@@ -1660,7 +1660,7 @@ async function getChildRegionsByRuleAndRegion({
         //先判断该区划本身是否有匹配的事项
         var res = await modelItem.exists({
             rule_id: rule_id,
-            region_code: region_code
+            region_id: region._id
         })
         //有事项haveItem是1，否则是0
         region._doc.haveItem = 0
@@ -1674,15 +1674,15 @@ async function getChildRegionsByRuleAndRegion({
         for (let i = 0; i < childRegions.length; i++) {
             var value = regionDic[childRegions[i]]
             //遍历区划，检查该区划包括其全部下级区划在内是否存在rule_id对应的事项
-            var regionCodes = []
+            var regionIds = []
             var q = []
             q.push(value._id)
-            regionCodes.push(value.region_code)
+            regionIds.push(value._id)
             while (q.length > 0) {
                 let len = q.length
                 for (let j = 0; j < len; j++) {
                     let id = q.shift()
-                    regionCodes.push(regionDic[id].region_code)
+                    regionIds.push(regionDic[id]._id)
                     let children = regionDic[id].children
                     Array.prototype.push.apply(q, children)
                 }
@@ -1690,7 +1690,7 @@ async function getChildRegionsByRuleAndRegion({
             //找出匹配的事项
             var res = await modelItem.exists({
                 rule_id: rule_id,
-                region_code: { $in: regionCodes }
+                region_id: { $in: regionIds }
             })
             //子区划中有事项的haveItem是1，否则是0
             let r = Object.assign({}, value)
