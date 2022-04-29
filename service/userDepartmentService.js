@@ -34,7 +34,7 @@ class userDepartmentService {
           department_name: item.department_name
         }
       })
-      let res = departmentMapUser.insertMany(mapArray, (err) => { console.log(err) });
+      let res = await departmentMapUser.insertMany(mapArray, (err) => { console.log(err) });
       return res;
     } catch (error) {
       throw error.message

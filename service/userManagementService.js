@@ -165,7 +165,7 @@ async function batchImportedUser (imported_array) {
         user_rank: 0
       }
     })
-    let res = users.insertMany(mapArray, (err) => { console.log(err) });
+    let res = await users.insertMany(mapArray, (err) => { console.log(err) });
     return res;
   } catch {
     throw e.message
