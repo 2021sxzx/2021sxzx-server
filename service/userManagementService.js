@@ -12,7 +12,10 @@ async function addUser (userInfo) {
     if (!res) {
       return;
     }
-    return await users.create(userInfo)
+    return await users.create({
+      ...userInfo,
+      activation_status: 1
+    });
   } catch (e) {
     throw e.message
   }

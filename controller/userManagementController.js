@@ -12,7 +12,6 @@ const {
 const userDepartmentService = require('../service/userDepartmentService');
 
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
-const { listAllDepartment } = require('../service/userDepartmentService');
 
 /**
  * 用来添加一个用户，然后返回添加后的用户列表
@@ -99,10 +98,6 @@ async function updateUserAndReturnList (user_name, password, role_name, account,
     const res_ = await Promise.all(
       res.map(async (item) => {
         const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
-        if (!item['department_name']) {
-          item['department_name'] = cal;
-        }
-        console.log(item.department_name)
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -133,9 +128,23 @@ async function deleteUserAndReturnList (account) {
     await deleteUser(account);
     await userDepartmentService.deleteUserAndDepartment(account);
     const res = await getUserList();
+    const res_ = await Promise.all(
+      res.map(async (item) => {
+        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        return {
+          _id: item._id,
+          user_name: item.user_name,
+          role_name: item.role_name,
+          account: item.account,
+          password: item.password,
+          activation_status: item.activation_status,
+          department_name: cal
+        }
+      })
+    )
     return new SuccessModel({
       msg: '删除成功',
-      data: res
+      data: res_
     })
   } catch (e) {
     return new ErrorModel({msg: e.message})
