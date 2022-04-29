@@ -335,6 +335,7 @@ function getItemByCode(code) {
         postRequest(getItem_Url, {
             code: code
         }).then(function (body) {
+            body = body.data
             if (body.is_announced !== ANNOUNCED) {
                 resolve(null)
             } else {
@@ -356,6 +357,7 @@ function getItemBySituationCode(situation_code) {
         postRequest(getItem_Url, {
             situation_code: situation_code
         }).then(function (body) {
+            body = body.data
             if (body.is_announced !== ANNOUNCED) {
                 resolve(null)
             } else {
@@ -387,6 +389,7 @@ function getItem(carry_out_code) {
                     for (let i = 0, len = value.situation.length; i < len; i++) {
                         promiseList.push(getItemBySituationCode(value.situation[i].situation_code))
                     }
+                    //并行请求结果
                     Promise.all(promiseList)
                         .then(function (situations) {
                             var result = []
@@ -411,9 +414,14 @@ function getItem(carry_out_code) {
     })
 }
 
+/**
+ * 根据组织机构代码获取全部事项信息
+ * @param {String} org_code 组织机构代码
+ * @returns 
+ */
 function getAllItemBasicByOrg(org_code) {
     return new Promise(function (resolve, reject) {
-        const PAGE_SIZE = 20
+        const PAGE_SIZE = 20    //10或者20
         listItemBasicByOrg(org_code, PAGE_SIZE, 1)
             .then(function (body) {
                 //通过第一次请求的结果计算一共有多少页
@@ -482,7 +490,7 @@ async function checkOrganizationItems(org_code) {
     try {
         var remoteItems = await getAllItemsByOrg(org_code)
     } catch (err) {
-        throw new Error('获取省政务服务系统数据失败，错误信息：\n' + err.message)
+        throw new Error('-----\n获取省政务服务系统数据失败，错误信息：\n' + err.message + '\n-----')
     }
     //把事项的实施编码和办理项编码合成task_code
     var remoteItemCodes = []
@@ -520,7 +528,7 @@ async function checkOrganizationItems(org_code) {
             }
         }
     } catch (err) {
-        throw new Error('数据库操作失败，错误信息：\n' + err.message)
+        throw new Error('-----\n数据库操作失败，错误信息：\n' + err.message + '\n-----')
     }
     return {
         inLocalNinRemote: inLocalNinRemote,
@@ -590,6 +598,7 @@ var recheckTime = 3     //最大重新检查次数
  * @returns 
  */
 async function checkAllRegionsItems(regions, time) {
+    console.log('开始检查各区划的事项指南信息')
     //检查是否超过最大次数
     if (time > recheckTime) {
         return
@@ -658,6 +667,28 @@ async function checkAllRegionsItems(regions, time) {
     if (recheckRegions.length > 0) {
         checkAllRegionsItems(recheckRegions, time + 1)
     }
+    console.log('检查完毕')
+}
+
+/**
+ * 获取检查结果
+ * @returns {Object} key是区划编码，value是{inLocalNinRemote,inRemoteNinLocal,differences}
+ */
+async function getCheckResult() {
+    var keys = Object.keys(checkResult)
+    if (keys.length > 0) {
+        return checkResult
+    }
+    var logs = await modelRemoteCheckLog.find({})
+    var result = {}
+    for (let i = 0, len = logs.length; i < len; i++) {
+        result[logs[i].region_code] = {
+            inLocalNinRemote: logs[i].inLocalNinRemote,
+            inRemoteNinLocal: logs[i].inRemoteNinLocal,
+            differences: logs[i].differences
+        }
+    }
+    return result
 }
 
 //初始状态是每周日4点
@@ -677,10 +708,17 @@ console.log('下一次检查时间：' + checkJob.nextInvocation())
  * @param {Number} minute 分钟
  */
 function setCheckJobRule(dayOfWeek, hour, minute) {
+    var result = checkJob.reschedule(new schedule.RecurrenceRule({
+        dayOfWeek: dayOfWeek,
+        hour: hour,
+        minute: minute
+    }))
+    if (result === false) {
+        throw new Error('设置失败')
+    }
     rule.dayOfWeek = dayOfWeek
     rule.hour = hour
     rule.minute = minute
-    schedule.rescheduleJob(checkJob, rule)
 }
 
 /**
@@ -700,5 +738,6 @@ module.exports = {
     getRegionDic,
     getRuleDic,
     setCheckJobRule,
-    getCheckJobRule
+    getCheckJobRule,
+    getCheckResult
 }

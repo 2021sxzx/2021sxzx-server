@@ -21,3 +21,4 @@ const remoteCheckLogSchema = new mongoose.Schema({
 })
 
 const remoteCheckLog = mongoose.model('remoteCheckLog', remoteCheckLogSchema, 'remoteCheckLog')
+module.exports = remoteCheckLog

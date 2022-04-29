@@ -190,6 +190,64 @@ async function getCommentDetail({pageNum,score}) {
   }
 }
 
+async function getArrayCommentDetail(commentArr) {
+  for(let i=0;i<commentArr.length;i++) {
+    let item_id = commentArr[i].item_id
+    let item = await getItem(item_id)
+    let ruleData = await getRule(item.rule_id)
+    let task = await getTask(item.task_code)
+    commentArr[i].rule = ruleData
+    commentArr[i].task = task
+  }
+  return commentArr
+}
+
+
+/**
+ * 根据查询调价获取用户的评论
+ * @param pageNum
+ * @param score
+ * @returns {Promise<*>}
+ */
+async function getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category}) {
+  try {
+    if(score !== 0) {
+      const Reg = new RegExp(typeData, 'i')
+      let res = await comment.find(
+        {
+          score: {$eq: score}, 
+          create_time: {$gte: startTime, $lte: endTime},
+          [category]: {$regex: Reg}
+        }
+      ).skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
+      return res
+    } else {
+      // let test = await comment.aggregate([
+      //   {
+      //     $lookup: {
+      //       from: 'tempItems',
+      //       localField: 'item_id',
+      //       foreignField: '_id',
+      //       as: 'testData'
+      //     },
+      //   }
+      // ])
+      // console.log(test)
+      const Reg = new RegExp(typeData, 'i')
+      let res = await comment.find(
+        {
+          create_time: {$gte: startTime, $lte: endTime},
+          [category]: {$regex: Reg}
+        }
+      ).skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
+      res = getArrayCommentDetail(res)
+      return res
+    }
+  } catch (e) {
+    return e.message
+  }
+}
+
 /**
  * 根据条件筛选评论数据
  * @param startTime
@@ -199,51 +257,74 @@ async function getCommentDetail({pageNum,score}) {
  * @param typeData
  * @returns {Promise<*>}
  */
-async function searchByCondition({startTime, endTime, score, type, typeData}) {
+async function searchByCondition({startTime, endTime, score, type, typeData, pageNum}) {
   try {
-    let condition = {}
-    condition.pageNum = 0
-    condition.score = score
-    let commentData = await getCommentDetail(condition)
-    let newCommentData = []
-    if(endTime == 0) {
-      newCommentData = commentData.filter((currentItem, currentIndex) => {
-        return parseInt(currentItem.create_time) >= parseInt(startTime)
-      })
-    } else {
-      newCommentData = commentData.filter((currentItem, currentIndex) => {
-        return (parseInt(currentItem.create_time) >= parseInt(startTime) && parseInt(currentItem.create_time) <= parseInt(endTime))
-      })
-    }
-    if(typeData === "") {
-      return newCommentData
-    }
+    let category;
     type = parseInt(type)
-    switch (type) {
+    let res;
+    switch(type) {
       case 0:
-        break
+        break;
       case 1:
-        newCommentData = newCommentData.filter((currentItem, currentIndex) => {
-          return currentItem.idc.indexOf(typeData) !== -1
-        })
-        break
+        category = "idc"
+        res = await getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category})
+        return res
       case 2:
-        newCommentData = newCommentData.filter((currentItem, currentIndex) => {
-          return currentItem.task.task_name.indexOf(typeData) !== -1
-        })
-        break
+        category = "task_name"
+        res = await getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category})
+        return res
       case 3:
-        newCommentData = newCommentData.filter((currentItem, currentIndex) => {
-          return currentItem.task.task_code.indexOf(typeData) !== -1
-        })
-        break
+        category = "task_code"
+        res = await getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category})
+        return res
       case 4:
-        newCommentData = newCommentData.filter((currentItem, currentIndex) => {
-          return currentItem.rule.rule_name.indexOf(typeData) !== -1
-        })
-        break
+        category = "rule_name"
+        res = await getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category})
+        return res
     }
-    return newCommentData
+    // let condition = {}
+    // condition.pageNum = pageNum
+    // condition.score = score
+    // let commentData = await getCommentDetail(condition)
+    // let newCommentData = []
+    // if(endTime == 0) {
+    //   newCommentData = commentData.filter((currentItem, currentIndex) => {
+    //     return parseInt(currentItem.create_time) >= parseInt(startTime)
+    //   })
+    // } else {
+    //   newCommentData = commentData.filter((currentItem, currentIndex) => {
+    //     return (parseInt(currentItem.create_time) >= parseInt(startTime) && parseInt(currentItem.create_time) <= parseInt(endTime))
+    //   })
+    // }
+    // if(typeData === "") {
+    //   return newCommentData
+    // }
+    // type = parseInt(type)
+    // switch (type) {
+    //   case 0:
+    //     break
+    //   case 1:
+    //     newCommentData = newCommentData.filter((currentItem, currentIndex) => {
+    //       return currentItem.idc.indexOf(typeData) !== -1
+    //     })
+    //     break
+    //   case 2:
+    //     newCommentData = newCommentData.filter((currentItem, currentIndex) => {
+    //       return currentItem.task.task_name.indexOf(typeData) !== -1
+    //     })
+    //     break
+    //   case 3:
+    //     newCommentData = newCommentData.filter((currentItem, currentIndex) => {
+    //       return currentItem.task.task_code.indexOf(typeData) !== -1
+    //     })
+    //     break
+    //   case 4:
+    //     newCommentData = newCommentData.filter((currentItem, currentIndex) => {
+    //       return currentItem.rule.rule_name.indexOf(typeData) !== -1
+    //     })
+    //     break
+    // }
+    // return newCommentData
   } catch (e) {
     return e.message
   }
