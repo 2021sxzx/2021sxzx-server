@@ -3,6 +3,7 @@ const router = express.Router();
 
 const {
   addUserAndReturnList,
+  addUserBatchingAndReturnList,
   returnUserList,
   updateUserAndReturnList,
   deleteUserAndReturnList,
@@ -83,5 +84,11 @@ router.post('/v1/setActivation', async function (req, res, next) {
   res.json(result);
 });
 
+router.post('/v1/batchImportUser', async (req, res, next) => {
+  const { imported_array } = req.body;
+  const data = await addUserBatchingAndReturnList(imported_array);
+  setStatusCode(res, data)
+  res.json(data)
+})
 
 module.exports = router;

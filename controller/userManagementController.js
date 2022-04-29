@@ -7,7 +7,8 @@ const {
   deleteUser,
   searchUser,
   isActivation,
-  setActivation
+  setActivation,
+  batchImportedUser
 } = require('../service/userManagementService')
 const userDepartmentService = require('../service/userDepartmentService');
 
@@ -45,6 +46,38 @@ async function addUserAndReturnList (userInfo) {
     })
   } catch (e) {
     return new ErrorModel({msg: e.message});
+  }
+}
+
+/**
+ * 批量添加用户
+ */
+async function addUserBatchingAndReturnList (imported_array) {
+  try {
+    await batchImportedUser(imported_array);
+    await userDepartmentService.addDepartmentBatching(imported_array);
+    const res = await getUserList();
+    const res_ = await Promise.all(
+      res.map(async (item) => {
+        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+
+        return {
+          _id: item._id,
+          user_name: item.user_name,
+          role_name: item.role_name,
+          account: item.account,
+          password: item.password,
+          activation_status: item.activation_status,
+          department_name: cal
+        }
+      })
+    )
+    return new SuccessModel({
+      msg: '添加成功',
+      data: res_
+    })
+  } catch (error) {
+    return new ErrorModel({msg: error.message});
   }
 }
 
@@ -209,6 +242,7 @@ async function setActivationAndReturn (account) {
 
 module.exports = {
   addUserAndReturnList,
+  addUserBatchingAndReturnList,
   returnUserList,
   updateUserAndReturnList,
   deleteUserAndReturnList,

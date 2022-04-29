@@ -153,6 +153,25 @@ async function setActivation (account) {
   }
 }
 
+async function batchImportedUser (imported_array) {
+  try {
+    let mapArray = imported_array.map(item => {
+      return {
+        user_name: item.user_name,
+        role_name: item.role_name,
+        account: item.account,
+        password: item.password,
+        activation_status: 1,
+        user_rank: 0
+      }
+    })
+    let res = users.insertMany(mapArray, (err) => { console.log(err) });
+    return res;
+  } catch {
+    throw e.message
+  }
+}
+
 module.exports = {
   addUser,
   getUserList,
@@ -160,5 +179,6 @@ module.exports = {
   deleteUser,
   searchUser,
   isActivation,
-  setActivation
+  setActivation,
+  batchImportedUser
 }
