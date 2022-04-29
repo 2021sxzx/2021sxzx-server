@@ -12,6 +12,7 @@ const {
 const userDepartmentService = require('../service/userDepartmentService');
 
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
+const { listAllDepartment } = require('../service/userDepartmentService');
 
 /**
  * 用来添加一个用户，然后返回添加后的用户列表
@@ -172,7 +173,8 @@ async function searchUserAndReturnList (searchValue) {
 
 async function setActivationAndReturn (account) {
   try {
-    const res = await setActivation(account);
+    const Act = await setActivation(account);
+    const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
         const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
@@ -184,7 +186,7 @@ async function setActivationAndReturn (account) {
           password: item.password,
           activation_status: item.activation_status,
           department_name: cal
-      }
+        }
       })
     )
     return new SuccessModel({

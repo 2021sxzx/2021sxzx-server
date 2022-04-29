@@ -136,7 +136,7 @@ async function setActivation (account) {
     }, {
       activation_status: tmp
     });
-    res = await users.findOne({
+    let resq = await users.findOne({
       account
     }, {
       _id: 1,
@@ -144,7 +144,7 @@ async function setActivation (account) {
       activation_status: 1
     })
 
-    return res
+    return resq;
   } catch (e) {
     throw e.message
   }
