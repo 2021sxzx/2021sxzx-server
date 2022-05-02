@@ -34,5 +34,9 @@ router.post('/v1/login', async (req, res) => {
 
 });
 
+router.post('/v1/logout', async (req, res) => {
+
+})
+
 
 module.exports = router;
