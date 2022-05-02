@@ -40,7 +40,6 @@ async function postLogout(logoutData) {
     } catch (e) {
         return new ErrorModel({ msg: e.message })
     }
-
 }
 
 module.exports = {
