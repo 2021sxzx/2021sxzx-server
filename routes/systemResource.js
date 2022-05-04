@@ -3,7 +3,8 @@ const router = express.Router();
 const {
     getCpuPercentageController,
     getMemoryController,
-    getDiskController
+    getDiskController,
+    viewProcessMessageController
   } = require("../controller/systemResourceController")
 
 function setStatusCode(res,data) {
@@ -46,6 +47,18 @@ function setStatusCode(res,data) {
   // data="type:"+Object.prototype.toString.call(data)
   setStatusCode(res,data)
   res.json(data)
+  // res.json(Object.prototype.toString.call(data))
+})
+
+/**
+ * 获取进程数
+ */
+ router.get('/v1/viewProcessMessage', async (req,res,next) => {
+  let data = await viewProcessMessageController()
+  // data="type:"+Object.prototype.toString.call(data)
+  setStatusCode(res,data)
+  // res.send(data)
+  res.json(data.data)
   // res.json(Object.prototype.toString.call(data))
 })
 

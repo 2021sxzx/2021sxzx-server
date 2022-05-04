@@ -1,7 +1,8 @@
 const {
     getCpuPercentage,
     getMemory,
-    getDisk
+    getDisk,
+    viewProcessMessage
   } = require("../service/systemResourceService")
   const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -45,8 +46,23 @@ const {
       }
     }
 
+  /**
+   * 查看磁盘信息
+   * @returns {Promise<ErrorModel|SuccessModel>}
+   */
+        async function viewProcessMessageController() {
+          try {
+            let data = await viewProcessMessage();
+            console.log('data:',data)
+            return new SuccessModel({msg: '获取进程信息成功', data:data});
+          } catch (e) {
+            return new ErrorModel({msg:e.message})
+          }
+        }
+    
   module.exports = {
     getCpuPercentageController,
     getMemoryController,
-    getDiskController
+    getDiskController,
+    viewProcessMessageController
   }
