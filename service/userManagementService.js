@@ -12,7 +12,10 @@ async function addUser (userInfo) {
     if (!res) {
       return;
     }
-    return await users.create(userInfo)
+    return await users.create({
+      ...userInfo,
+      activation_status: 1
+    });
   } catch (e) {
     throw e.message
   }
@@ -136,7 +139,7 @@ async function setActivation (account) {
     }, {
       activation_status: tmp
     });
-    res = await users.findOne({
+    let resq = await users.findOne({
       account
     }, {
       _id: 1,
@@ -144,8 +147,27 @@ async function setActivation (account) {
       activation_status: 1
     })
 
-    return res
+    return resq;
   } catch (e) {
+    throw e.message
+  }
+}
+
+async function batchImportedUser (imported_array) {
+  try {
+    let mapArray = imported_array.map(item => {
+      return {
+        user_name: item.user_name,
+        role_name: item.role_name,
+        account: item.account,
+        password: item.password,
+        activation_status: 1,
+        user_rank: 0
+      }
+    })
+    let res = await users.insertMany(mapArray, (err) => { console.log(err) });
+    return res;
+  } catch {
     throw e.message
   }
 }
@@ -157,5 +179,6 @@ module.exports = {
   deleteUser,
   searchUser,
   isActivation,
-  setActivation
+  setActivation,
+  batchImportedUser
 }

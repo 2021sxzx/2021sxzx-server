@@ -22,6 +22,25 @@ class userDepartmentService {
     });
   }
 
+  // 批量添加用户的处室
+  async addDepartmentBatching (imported_array) {
+    try {
+      const date = new Date().getTime();
+      let mapArray = imported_array.map(item => {
+        return {
+          account: item.account,
+          user_name: item.user_name,
+          join_time: date,
+          department_name: item.department_name
+        }
+      })
+      let res = await departmentMapUser.insertMany(mapArray, (err) => { console.log(err) });
+      return res;
+    } catch (error) {
+      throw error.message
+    }
+  }
+
   // 删除处室
   async deleteDepartment (department_name) {
     const isEmpty = await departmentMapUser.findOne({

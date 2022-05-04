@@ -35,12 +35,11 @@ async function postLogin(loginData) {
 async function postLogout(logoutData) {
 
     try {
-        let data = await logout(logoutData)
+        let data = await logout(logoutData);
         return new SuccessModel({ msg: '登出成功', data: data });
     } catch (e) {
         return new ErrorModel({ msg: e.message })
     }
-
 }
 
 module.exports = {

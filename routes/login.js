@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    postLogin
+    postLogin,
+    postLogout
 } = require("../controller/loginController")
 
 
@@ -29,10 +30,22 @@ router.post('/v1/login', async (req, res) => {
     } else if (data.code === 404) {
         console.log(data.msg);
         res.status(403).send(data.msg);
-
     }
-
 });
+
+router.post('/v1/logout', async (req, res) => {
+  let logoutData = req.body;
+  let data = await postLogout(logoutData);
+  setStatusCode(res, data);
+  if (data.code === 200) {
+    // 设置过期时间，让cookie被清除
+    res.clearCookie('auth-token');
+    res.json(data);
+  } else if (data.code === 404) {
+    console.log(data.msg);
+    res.status(403).send(data.msg);
+  }
+})
 
 
 module.exports = router;

@@ -69,12 +69,12 @@ async function getParam() {
  * @returns {Promise<ErrorModel|SuccessModel>}
  */
 async function getSearchComment(searchData) {
-  let {startTime, endTime, score, type, typeData} = searchData
+  let {startTime, endTime, score, type, typeData, pageNum} = searchData
   if(!startTime) {
     startTime = 0
   }
   if(!endTime) {
-    endTime = 0
+    endTime = Number.MAX_SAFE_INTEGER
   }
   if(!score) {
     score = 0
@@ -85,8 +85,11 @@ async function getSearchComment(searchData) {
   if(!typeData) {
     typeData = ""
   }
+  if(!pageNum)  {
+    pageNum = 1
+  }
   try {
-    let data = await searchByCondition({startTime, endTime, score, type, typeData})
+    let data = await searchByCondition({startTime, endTime, score, type, typeData, pageNum})
     return new SuccessModel({msg: '查询成功', data: data});
   } catch (e) {
     return new ErrorModel({msg: e.message})
