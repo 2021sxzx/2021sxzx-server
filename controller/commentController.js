@@ -4,6 +4,7 @@ const {
   getAllUserComment2,
   getAllUserComment,
   searchByCondition,
+  getCommentDetailService,
 } = require("../service/commentService");
 const { SuccessModel, ErrorModel } = require("../utils/resultModel");
 
@@ -103,10 +104,20 @@ async function getSearchComment(searchData) {
   }
 }
 
+async function getCommentDetail(searchData) {
+  try {
+    let data = await getCommentDetailService(searchData);
+    return new SuccessModel({ msg: "查询成功", data: data });
+  } catch (e) {
+    return new ErrorModel({ msg: e.message });
+  }
+}
+
 module.exports = {
   saveUserComment,
   getUserComments,
   getParam,
   getUserComments2,
   getSearchComment,
+  getCommentDetail,
 };

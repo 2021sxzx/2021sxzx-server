@@ -570,6 +570,14 @@ async function searchByCondition({
   }
 }
 
+async function getCommentDetailService(searchData) {
+  const [commentData] = await comment.find({ _id: searchData._id }).lean();
+  const itemData = await getItem(commentData.item_id);
+  const ruleData = await getRule(itemData.rule_id);
+  commentData.rule = { rule_name: ruleData.rule_name };
+  return commentData;
+}
+
 module.exports = {
   saveComment,
   getCommentParam,
@@ -577,4 +585,5 @@ module.exports = {
   getAllUserComment2,
   getAllUserComment,
   searchByCondition,
+  getCommentDetailService,
 };
