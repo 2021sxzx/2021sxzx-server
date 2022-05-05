@@ -1,6 +1,7 @@
 const comment = require("../model/comment");
 const item = require("../model/item");
 // const itemRule = require("../model/itemRule")
+const mongoose = require("mongoose");
 const task = require("../model/task");
 const rule = require("../model/rule");
 
@@ -11,6 +12,11 @@ const rule = require("../model/rule");
  */
 async function saveComment(commentData) {
   try {
+    const itemData = await item.find({
+      _id: mongoose.Types.ObjectId(commentData.item_id),
+    });
+    commentData.task_code = itemData[0].task_code;
+    commentData.task_name = itemData[0].item_name;
     let res = await comment.create(commentData);
     return res;
   } catch (e) {
@@ -28,10 +34,14 @@ async function getAllUserComment({ pageNum, score }) {
   try {
     if (pageNum == 0) {
       if (score !== 0) {
-        let res = await comment.find({ score: { $eq: score } }).lean();
+        let res = await comment
+          .find({ score: { $eq: score } })
+          .skip(0)
+          .limit(10)
+          .lean();
         return res;
       } else {
-        let res = await comment.find().lean();
+        let res = await comment.find().skip(0).limit(10).lean();
         return res;
       }
     } else {
@@ -201,18 +211,6 @@ async function getCommentDetail({ pageNum, score }) {
   }
 }
 
-async function getArrayCommentDetail(commentArr) {
-  for (let i = 0; i < commentArr.length; i++) {
-    let item_id = commentArr[i].item_id;
-    let item = await getItem(item_id);
-    let ruleData = await getRule(item.rule_id);
-    let task = await getTask(item.task_code);
-    commentArr[i].rule = ruleData;
-    commentArr[i].task = task;
-  }
-  return commentArr;
-}
-
 /**
  * 根据查询调价获取用户的评论
  * @param pageNum
@@ -228,175 +226,237 @@ async function getAllUserCommentByCondition({
   category,
 }) {
   try {
-    if (score !== 0) {
+    // if (score !== 0) {
+    //   const Reg = new RegExp(typeData, "i");
+    //   const res = await comment.aggregate([
+    //     {
+    //       $lookup: {
+    //         from: "tempItems",
+    //         localField: "item_id",
+    //         foreignField: "_id",
+    //         as: "itemData",
+    //       },
+    //     },
+    //     {
+    //       $addFields: {
+    //         itemData: { $arrayElemAt: ["$itemData", 0] },
+    //       },
+    //     },
+    //     {
+    //       $lookup: {
+    //         from: "tempRule",
+    //         localField: "itemData.rule_id",
+    //         foreignField: "rule_id",
+    //         as: "rule",
+    //       },
+    //     },
+    //     {
+    //       $addFields: {
+    //         rule: { $arrayElemAt: ["$rule", 0] },
+    //       },
+    //     },
+    //     {
+    //       $lookup: {
+    //         from: "tempTasks",
+    //         //     let: { task_code_test: "task_code" },
+    //         //     pipeline: [
+    //         //       {
+    //         //         $project: { _id: 1 },
+    //         //       },
+    //         //       {
+    //         //         $match: {
+    //         //           task_code: { $eq: "task_code_test" },
+    //         //         },
+    //         //       },
+    //         //     ],
+    //         localField: "itemData.task_code",
+    //         foreignField: "task_code",
+    //         as: "task",
+    //       },
+    //     },
+    //     {
+    //       $match: {
+    //         score: { $eq: score },
+    //         [category]: { $regex: Reg },
+    //         create_time: { $gte: startTime, $lte: endTime },
+    //       },
+    //     },
+    //     {
+    //       $addFields: {
+    //         task: { $arrayElemAt: ["$task", 0] },
+    //       },
+    //     },
+    //     {
+    //       $project: {
+    //         _id: 1,
+    //         create_time: 1,
+    //         idc: 1,
+    //         show_status: 1,
+    //         check_status: 1,
+    //         content: 1,
+    //         idc_type: 1,
+    //         score: 1,
+    //         item_id: 1,
+    //         rule: 1,
+    //         "task._id": 1,
+    //         "task.task_code": 1,
+    //         "task.task_name": 1,
+    //       },
+    //     },
+    //     {
+    //       $skip: (pageNum - 1) * 10,
+    //     },
+    //     {
+    //       $limit: pageNum * 10,
+    //     },
+    //   ]);
+    //   return res;
+    // } else {
+    //   const Reg = new RegExp(typeData, "i");
+    //   const res = await comment.aggregate([
+    //     {
+    //       $lookup: {
+    //         from: "tempItems",
+    //         localField: "item_id",
+    //         foreignField: "_id",
+    //         as: "itemData",
+    //       },
+    //     },
+    //     {
+    //       $addFields: {
+    //         itemData: { $arrayElemAt: ["$itemData", 0] },
+    //       },
+    //     },
+    //     {
+    //       $lookup: {
+    //         from: "tempRule",
+    //         localField: "itemData.rule_id",
+    //         foreignField: "rule_id",
+    //         as: "rule",
+    //       },
+    //     },
+    //     {
+    //       $addFields: {
+    //         rule: { $arrayElemAt: ["$rule", 0] },
+    //       },
+    //     },
+    //     {
+    //       $lookup: {
+    //         from: "tempTasks",
+    //         //     let: { task_code_test: "task_code" },
+    //         //     pipeline: [
+    //         //       {
+    //         //         $project: { _id: 1 },
+    //         //       },
+    //         //       {
+    //         //         $match: {
+    //         //           task_code: { $eq: "task_code_test" },
+    //         //         },
+    //         //       },
+    //         //     ],
+    //         localField: "itemData.task_code",
+    //         foreignField: "task_code",
+    //         as: "task",
+    //       },
+    //     },
+    //     {
+    //       $addFields: {
+    //         task: { $arrayElemAt: ["$task", 0] },
+    //       },
+    //     },
+    //     {
+    //       $match: {
+    //         [category]: { $regex: Reg },
+    //         create_time: { $gte: startTime, $lte: endTime },
+    //       },
+    //     },
+    //     {
+    //       $project: {
+    //         _id: 1,
+    //         create_time: 1,
+    //         idc: 1,
+    //         show_status: 1,
+    //         check_status: 1,
+    //         content: 1,
+    //         idc_type: 1,
+    //         score: 1,
+    //         item_id: 1,
+    //         rule: 1,
+    //         "task._id": 1,
+    //         "task.task_code": 1,
+    //         "task.task_name": 1,
+    //       },
+    //     },
+    //     {
+    //       $skip: (pageNum - 1) * 10,
+    //     },
+    //     {
+    //       $limit: pageNum * 10,
+    //     },
+    //   ]);
+    //   return res;
+    // }
+    if (pageNum == 0) {
       const Reg = new RegExp(typeData, "i");
-      const res = await comment.aggregate([
-        {
-          $lookup: {
-            from: "tempItems",
-            localField: "item_id",
-            foreignField: "_id",
-            as: "itemData",
-          },
-        },
-        {
-          $addFields: {
-            itemData: { $arrayElemAt: ["$itemData", 0] },
-          },
-        },
-        {
-          $lookup: {
-            from: "tempRule",
-            localField: "itemData.rule_id",
-            foreignField: "rule_id",
-            as: "rule",
-          },
-        },
-        {
-          $addFields: {
-            rule: { $arrayElemAt: ["$rule", 0] },
-          },
-        },
-        {
-          $lookup: {
-            from: "tempTasks",
-            //     let: { task_code_test: "task_code" },
-            //     pipeline: [
-            //       {
-            //         $project: { _id: 1 },
-            //       },
-            //       {
-            //         $match: {
-            //           task_code: { $eq: "task_code_test" },
-            //         },
-            //       },
-            //     ],
-            localField: "itemData.task_code",
-            foreignField: "task_code",
-            as: "task",
-          },
-        },
-        {
-          $match: {
-            score: { $eq: score },
+      if (score !== 0) {
+        let res = await comment
+          .find({
+            $and: [
+              {
+                score: { $eq: score },
+              },
+              {
+                [category]: { $regex: Reg },
+              },
+              { create_time: { $gte: startTime, $lte: endTime } },
+            ],
+          })
+          .skip(0)
+          .limit(10)
+          .lean();
+        return res;
+      } else {
+        let res = await comment
+          .find({
             [category]: { $regex: Reg },
             create_time: { $gte: startTime, $lte: endTime },
-          },
-        },
-        {
-          $addFields: {
-            task: { $arrayElemAt: ["$task", 0] },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            create_time: 1,
-            idc: 1,
-            show_status: 1,
-            check_status: 1,
-            content: 1,
-            idc_type: 1,
-            score: 1,
-            item_id: 1,
-            rule: 1,
-            "task._id": 1,
-            "task.task_code": 1,
-            "task.task_name": 1,
-          },
-        },
-        {
-          $skip: (pageNum - 1) * 10,
-        },
-        {
-          $limit: pageNum * 10,
-        },
-      ]);
-      return res;
+          })
+          .skip(0)
+          .limit(10)
+          .lean();
+        return res;
+      }
     } else {
       const Reg = new RegExp(typeData, "i");
-      const res = await comment.aggregate([
-        {
-          $lookup: {
-            from: "tempItems",
-            localField: "item_id",
-            foreignField: "_id",
-            as: "itemData",
-          },
-        },
-        {
-          $addFields: {
-            itemData: { $arrayElemAt: ["$itemData", 0] },
-          },
-        },
-        {
-          $lookup: {
-            from: "tempRule",
-            localField: "itemData.rule_id",
-            foreignField: "rule_id",
-            as: "rule",
-          },
-        },
-        {
-          $addFields: {
-            rule: { $arrayElemAt: ["$rule", 0] },
-          },
-        },
-        {
-          $lookup: {
-            from: "tempTasks",
-            //     let: { task_code_test: "task_code" },
-            //     pipeline: [
-            //       {
-            //         $project: { _id: 1 },
-            //       },
-            //       {
-            //         $match: {
-            //           task_code: { $eq: "task_code_test" },
-            //         },
-            //       },
-            //     ],
-            localField: "itemData.task_code",
-            foreignField: "task_code",
-            as: "task",
-          },
-        },
-        {
-          $addFields: {
-            task: { $arrayElemAt: ["$task", 0] },
-          },
-        },
-        {
-          $match: {
+      console.log(category);
+      if (score !== 0) {
+        let res = await comment
+          .find({
+            $and: [
+              {
+                score: { $eq: score },
+              },
+              {
+                [category]: { $regex: Reg },
+              },
+              { create_time: { $gte: startTime, $lte: endTime } },
+            ],
+          })
+          .skip((pageNum - 1) * 10)
+          .limit(pageNum * 10)
+          .lean();
+        return res;
+      } else {
+        let res = await comment
+          .find({
             [category]: { $regex: Reg },
             create_time: { $gte: startTime, $lte: endTime },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            create_time: 1,
-            idc: 1,
-            show_status: 1,
-            check_status: 1,
-            content: 1,
-            idc_type: 1,
-            score: 1,
-            item_id: 1,
-            rule: 1,
-            "task._id": 1,
-            "task.task_code": 1,
-            "task.task_name": 1,
-          },
-        },
-        {
-          $skip: (pageNum - 1) * 10,
-        },
-        {
-          $limit: pageNum * 10,
-        },
-      ]);
-      return res;
+          })
+          .skip((pageNum - 1) * 10)
+          .limit(pageNum * 10)
+          .lean();
+        return res;
+      }
     }
   } catch (e) {
     return e.message;
@@ -426,7 +486,8 @@ async function searchByCondition({
     let res;
     switch (type) {
       case 0:
-        break;
+        res = await getAllUserComment({ pageNum, score });
+        return res;
       case 1:
         category = "idc";
         res = await getAllUserCommentByCondition({
@@ -439,7 +500,7 @@ async function searchByCondition({
         });
         return res;
       case 2:
-        category = "task.task_name";
+        category = "task_name";
         res = await getAllUserCommentByCondition({
           pageNum,
           score,
@@ -450,18 +511,7 @@ async function searchByCondition({
         });
         return res;
       case 3:
-        category = "task.task_code";
-        res = await getAllUserCommentByCondition({
-          pageNum,
-          score,
-          typeData,
-          startTime,
-          endTime,
-          category,
-        });
-        return res;
-      case 4:
-        category = "rule.rule_name";
+        category = "task_code";
         res = await getAllUserCommentByCondition({
           pageNum,
           score,
@@ -525,5 +575,6 @@ module.exports = {
   getCommentParam,
   getCommentDetail,
   getAllUserComment2,
+  getAllUserComment,
   searchByCondition,
 };

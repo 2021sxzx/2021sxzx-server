@@ -1,8 +1,8 @@
 const {
   saveComment,
-  getCommentDetail,
   getCommentParam,
   getAllUserComment2,
+  getAllUserComment,
   searchByCondition,
 } = require("../service/commentService");
 const { SuccessModel, ErrorModel } = require("../utils/resultModel");
@@ -35,7 +35,7 @@ async function getUserComments(commentData) {
     if (!score) {
       score = 0;
     }
-    let data = await getCommentDetail({ pageNum, score });
+    let data = await getAllUserComment({ pageNum, score });
     return new SuccessModel({ msg: "获取评论成功", data: data });
   } catch (e) {
     return new ErrorModel({ msg: e.message });
@@ -74,7 +74,7 @@ async function getSearchComment(searchData) {
     startTime = "0";
   }
   if (!endTime) {
-    endTime = Number.MAX_SAFE_INTEGER.toString();
+    endTime = Number.MAX_SAFE_INTEGER;
   }
   if (!score) {
     score = 0;

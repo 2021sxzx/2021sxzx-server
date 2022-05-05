@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 // 评论表的定义
 const commentSchema = new mongoose.Schema({
   create_time: {
-    type: String,
+    type: Number,
   },
   idc: {
     // 证件号
@@ -39,6 +39,14 @@ const commentSchema = new mongoose.Schema({
     // 事项编码
     type: mongoose.Schema.Types.ObjectId,
     required: true,
+  },
+  task_code: {
+    type: String,
+    require: true,
+  },
+  task_name: {
+    type: String,
+    require: true,
   },
 });
 
