@@ -1,8 +1,8 @@
-const comment = require("../model/comment")
-const item = require("../model/item")
+const comment = require("../model/comment");
+const item = require("../model/item");
 // const itemRule = require("../model/itemRule")
-const task = require("../model/task")
-const rule = require("../model/rule")
+const task = require("../model/task");
+const rule = require("../model/rule");
 
 /**
  * 保存用户的评论数据
@@ -11,10 +11,10 @@ const rule = require("../model/rule")
  */
 async function saveComment(commentData) {
   try {
-    let res = await comment.create(commentData)
-    return res
+    let res = await comment.create(commentData);
+    return res;
   } catch (e) {
-    throw new Error(e.message)
+    throw new Error(e.message);
   }
 }
 
@@ -24,27 +24,35 @@ async function saveComment(commentData) {
  * @param score
  * @returns {Promise<*>}
  */
-async function getAllUserComment({pageNum, score}) {
+async function getAllUserComment({ pageNum, score }) {
   try {
-    if(pageNum == 0){
-      if(score !== 0) {
-        let res = await comment.find({score: {$eq: score}}).lean()
-        return res
+    if (pageNum == 0) {
+      if (score !== 0) {
+        let res = await comment.find({ score: { $eq: score } }).lean();
+        return res;
       } else {
-        let res = await comment.find().lean()
-        return res
+        let res = await comment.find().lean();
+        return res;
       }
     } else {
-      if(score !== 0) {
-        let res = await comment.find({score: {$eq: score}}).skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
-        return res
+      if (score !== 0) {
+        let res = await comment
+          .find({ score: { $eq: score } })
+          .skip((pageNum - 1) * 10)
+          .limit(pageNum * 10)
+          .lean();
+        return res;
       } else {
-        let res = await comment.find().skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
-        return res
+        let res = await comment
+          .find()
+          .skip((pageNum - 1) * 10)
+          .limit(pageNum * 10)
+          .lean();
+        return res;
       }
     }
   } catch (e) {
-    return e.message
+    return e.message;
   }
 }
 
@@ -54,10 +62,10 @@ async function getAllUserComment({pageNum, score}) {
  */
 async function getAllUserComment2() {
   try {
-    let res = await comment.find()
-    return res
+    let res = await comment.find();
+    return res;
   } catch (e) {
-    return e.message
+    return e.message;
   }
 }
 
@@ -70,33 +78,33 @@ async function getCommentParam() {
     let res = await comment.aggregate([
       {
         $group: {
-          _id: '$score',
+          _id: "$score",
           count: {
-            $sum: 1
+            $sum: 1,
           },
         },
       },
       {
         $sort: {
-          _id: 1
-        }
-      }
-    ])
-    let res2 = []
-    let avgScore = 0
-    res.map(item => {
-      let obj = {}
-      obj.score = item['_id']
-      obj.count = item['count']
-      avgScore += item['_id'] * item['count']
-      res2.push(obj)
-    })
-    let count = await getCommentTotal()
-    avgScore /= count
-    let res3 = {totalNum: count, avgScore: avgScore, scoreInfo: res2}
-    return res3
+          _id: 1,
+        },
+      },
+    ]);
+    let res2 = [];
+    let avgScore = 0;
+    res.map((item) => {
+      let obj = {};
+      obj.score = item["_id"];
+      obj.count = item["count"];
+      avgScore += item["_id"] * item["count"];
+      res2.push(obj);
+    });
+    let count = await getCommentTotal();
+    avgScore /= count;
+    let res3 = { totalNum: count, avgScore: avgScore, scoreInfo: res2 };
+    return res3;
   } catch (e) {
-    throw new Error(e.message)
+    throw new Error(e.message);
   }
 }
 
@@ -106,9 +114,9 @@ async function getCommentParam() {
  */
 async function getCommentTotal() {
   try {
-    return await comment.find().count()
+    return await comment.find().count();
   } catch (e) {
-    throw new Error(e.message)
+    throw new Error(e.message);
   }
 }
 
@@ -117,12 +125,15 @@ async function getCommentTotal() {
  * @param item_id 事项编码
  * @returns {Promise<*>}
  */
-async function getTask(task_code){
+async function getTask(task_code) {
   try {
-    let data = await task.find({task_code: task_code},{ _id: 1, task_code: 1, task_name: 1})
-    return data[0]
+    let data = await task.find(
+      { task_code: task_code },
+      { _id: 1, task_code: 1, task_name: 1 }
+    );
+    return data[0];
   } catch (e) {
-    return e.message
+    return e.message;
   }
 }
 
@@ -146,12 +157,12 @@ async function getTask(task_code){
  * @param item_id 事项编码
  * @returns {Promise<*>}
  */
-async function getItem(item_id){
+async function getItem(item_id) {
   try {
-    let data = await item.find({_id: item_id})
+    let data = await item.find({ _id: item_id });
     return data[0];
   } catch (e) {
-    return e.message
+    return e.message;
   }
 }
 
@@ -162,10 +173,10 @@ async function getItem(item_id){
  */
 async function getRule(rule_id) {
   try {
-    let data = await rule.find({rule_id: rule_id})
-    return data[0]
+    let data = await rule.find({ rule_id: rule_id });
+    return data[0];
   } catch (e) {
-    return e.message
+    return e.message;
   }
 }
 
@@ -173,35 +184,34 @@ async function getRule(rule_id) {
  * 将评论对应的事项的详细信息全部返回
  * @returns {Promise<*>}
  */
-async function getCommentDetail({pageNum,score}) {
+async function getCommentDetail({ pageNum, score }) {
   try {
-    let commentArr = await getAllUserComment({pageNum, score})
-    for(let i=0;i<commentArr.length;i++) {
-      let item_id = commentArr[i].item_id
-      let item = await getItem(item_id)
-      let ruleData = await getRule(item.rule_id)
-      let task = await getTask(item.task_code)
-      commentArr[i].rule = ruleData
-      commentArr[i].task = task
+    let commentArr = await getAllUserComment({ pageNum, score });
+    for (let i = 0; i < commentArr.length; i++) {
+      let item_id = commentArr[i].item_id;
+      let item = await getItem(item_id);
+      let ruleData = await getRule(item.rule_id);
+      let task = await getTask(item.task_code);
+      commentArr[i].rule = ruleData;
+      commentArr[i].task = task;
     }
-    return commentArr
+    return commentArr;
   } catch (e) {
-    return e.message
+    return e.message;
   }
 }
 
 async function getArrayCommentDetail(commentArr) {
-  for(let i=0;i<commentArr.length;i++) {
-    let item_id = commentArr[i].item_id
-    let item = await getItem(item_id)
-    let ruleData = await getRule(item.rule_id)
-    let task = await getTask(item.task_code)
-    commentArr[i].rule = ruleData
-    commentArr[i].task = task
+  for (let i = 0; i < commentArr.length; i++) {
+    let item_id = commentArr[i].item_id;
+    let item = await getItem(item_id);
+    let ruleData = await getRule(item.rule_id);
+    let task = await getTask(item.task_code);
+    commentArr[i].rule = ruleData;
+    commentArr[i].task = task;
   }
-  return commentArr
+  return commentArr;
 }
-
 
 /**
  * 根据查询调价获取用户的评论
@@ -209,42 +219,187 @@ async function getArrayCommentDetail(commentArr) {
  * @param score
  * @returns {Promise<*>}
  */
-async function getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category}) {
+async function getAllUserCommentByCondition({
+  pageNum,
+  score,
+  typeData,
+  startTime,
+  endTime,
+  category,
+}) {
   try {
-    if(score !== 0) {
-      const Reg = new RegExp(typeData, 'i')
-      let res = await comment.find(
+    if (score !== 0) {
+      const Reg = new RegExp(typeData, "i");
+      const res = await comment.aggregate([
         {
-          score: {$eq: score}, 
-          create_time: {$gte: startTime, $lte: endTime},
-          [category]: {$regex: Reg}
-        }
-      ).skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
-      return res
+          $lookup: {
+            from: "tempItems",
+            localField: "item_id",
+            foreignField: "_id",
+            as: "itemData",
+          },
+        },
+        {
+          $addFields: {
+            itemData: { $arrayElemAt: ["$itemData", 0] },
+          },
+        },
+        {
+          $lookup: {
+            from: "tempRule",
+            localField: "itemData.rule_id",
+            foreignField: "rule_id",
+            as: "rule",
+          },
+        },
+        {
+          $addFields: {
+            rule: { $arrayElemAt: ["$rule", 0] },
+          },
+        },
+        {
+          $lookup: {
+            from: "tempTasks",
+            //     let: { task_code_test: "task_code" },
+            //     pipeline: [
+            //       {
+            //         $project: { _id: 1 },
+            //       },
+            //       {
+            //         $match: {
+            //           task_code: { $eq: "task_code_test" },
+            //         },
+            //       },
+            //     ],
+            localField: "itemData.task_code",
+            foreignField: "task_code",
+            as: "task",
+          },
+        },
+        {
+          $match: {
+            score: { $eq: score },
+            [category]: { $regex: Reg },
+            create_time: { $gte: startTime, $lte: endTime },
+          },
+        },
+        {
+          $addFields: {
+            task: { $arrayElemAt: ["$task", 0] },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            create_time: 1,
+            idc: 1,
+            show_status: 1,
+            check_status: 1,
+            content: 1,
+            idc_type: 1,
+            score: 1,
+            item_id: 1,
+            rule: 1,
+            "task._id": 1,
+            "task.task_code": 1,
+            "task.task_name": 1,
+          },
+        },
+        {
+          $skip: (pageNum - 1) * 10,
+        },
+        {
+          $limit: pageNum * 10,
+        },
+      ]);
+      return res;
     } else {
-      // let test = await comment.aggregate([
-      //   {
-      //     $lookup: {
-      //       from: 'tempItems',
-      //       localField: 'item_id',
-      //       foreignField: '_id',
-      //       as: 'testData'
-      //     },
-      //   }
-      // ])
-      // console.log(test)
-      const Reg = new RegExp(typeData, 'i')
-      let res = await comment.find(
+      const Reg = new RegExp(typeData, "i");
+      const res = await comment.aggregate([
         {
-          create_time: {$gte: startTime, $lte: endTime},
-          [category]: {$regex: Reg}
-        }
-      ).skip((pageNum - 1) * 10).limit(pageNum * 10).lean()
-      res = getArrayCommentDetail(res)
-      return res
+          $lookup: {
+            from: "tempItems",
+            localField: "item_id",
+            foreignField: "_id",
+            as: "itemData",
+          },
+        },
+        {
+          $addFields: {
+            itemData: { $arrayElemAt: ["$itemData", 0] },
+          },
+        },
+        {
+          $lookup: {
+            from: "tempRule",
+            localField: "itemData.rule_id",
+            foreignField: "rule_id",
+            as: "rule",
+          },
+        },
+        {
+          $addFields: {
+            rule: { $arrayElemAt: ["$rule", 0] },
+          },
+        },
+        {
+          $lookup: {
+            from: "tempTasks",
+            //     let: { task_code_test: "task_code" },
+            //     pipeline: [
+            //       {
+            //         $project: { _id: 1 },
+            //       },
+            //       {
+            //         $match: {
+            //           task_code: { $eq: "task_code_test" },
+            //         },
+            //       },
+            //     ],
+            localField: "itemData.task_code",
+            foreignField: "task_code",
+            as: "task",
+          },
+        },
+        {
+          $addFields: {
+            task: { $arrayElemAt: ["$task", 0] },
+          },
+        },
+        {
+          $match: {
+            [category]: { $regex: Reg },
+            create_time: { $gte: startTime, $lte: endTime },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            create_time: 1,
+            idc: 1,
+            show_status: 1,
+            check_status: 1,
+            content: 1,
+            idc_type: 1,
+            score: 1,
+            item_id: 1,
+            rule: 1,
+            "task._id": 1,
+            "task.task_code": 1,
+            "task.task_name": 1,
+          },
+        },
+        {
+          $skip: (pageNum - 1) * 10,
+        },
+        {
+          $limit: pageNum * 10,
+        },
+      ]);
+      return res;
     }
   } catch (e) {
-    return e.message
+    return e.message;
   }
 }
 
@@ -257,30 +412,65 @@ async function getAllUserCommentByCondition({pageNum, score, typeData, startTime
  * @param typeData
  * @returns {Promise<*>}
  */
-async function searchByCondition({startTime, endTime, score, type, typeData, pageNum}) {
+async function searchByCondition({
+  startTime,
+  endTime,
+  score,
+  type,
+  typeData,
+  pageNum,
+}) {
   try {
     let category;
-    type = parseInt(type)
+    type = parseInt(type);
     let res;
-    switch(type) {
+    switch (type) {
       case 0:
         break;
       case 1:
-        category = "idc"
-        res = await getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category})
-        return res
+        category = "idc";
+        res = await getAllUserCommentByCondition({
+          pageNum,
+          score,
+          typeData,
+          startTime,
+          endTime,
+          category,
+        });
+        return res;
       case 2:
-        category = "task_name"
-        res = await getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category})
-        return res
+        category = "task.task_name";
+        res = await getAllUserCommentByCondition({
+          pageNum,
+          score,
+          typeData,
+          startTime,
+          endTime,
+          category,
+        });
+        return res;
       case 3:
-        category = "task_code"
-        res = await getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category})
-        return res
+        category = "task.task_code";
+        res = await getAllUserCommentByCondition({
+          pageNum,
+          score,
+          typeData,
+          startTime,
+          endTime,
+          category,
+        });
+        return res;
       case 4:
-        category = "rule_name"
-        res = await getAllUserCommentByCondition({pageNum, score, typeData, startTime, endTime, category})
-        return res
+        category = "rule.rule_name";
+        res = await getAllUserCommentByCondition({
+          pageNum,
+          score,
+          typeData,
+          startTime,
+          endTime,
+          category,
+        });
+        return res;
     }
     // let condition = {}
     // condition.pageNum = pageNum
@@ -326,7 +516,7 @@ async function searchByCondition({startTime, endTime, score, type, typeData, pag
     // }
     // return newCommentData
   } catch (e) {
-    return e.message
+    return e.message;
   }
 }
 
@@ -335,5 +525,5 @@ module.exports = {
   getCommentParam,
   getCommentDetail,
   getAllUserComment2,
-  searchByCondition
-}
+  searchByCondition,
+};
