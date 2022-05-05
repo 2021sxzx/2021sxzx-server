@@ -396,6 +396,22 @@ async function getAllUserCommentByCondition({
     //   ]);
     //   return res;
     // }
+    let res = await comment.aggregate([
+      {
+        $group: {
+          _id: "$score",
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]);
+    const total = res[0].count;
     if (pageNum == 0) {
       const Reg = new RegExp(typeData, "i");
       if (score !== 0) {
@@ -414,7 +430,11 @@ async function getAllUserCommentByCondition({
           .skip(0)
           .limit(10)
           .lean();
-        return res;
+        const result = {
+          data: res,
+          total: total,
+        };
+        return result;
       } else {
         let res = await comment
           .find({
@@ -424,7 +444,11 @@ async function getAllUserCommentByCondition({
           .skip(0)
           .limit(10)
           .lean();
-        return res;
+        const result = {
+          data: res,
+          total: total,
+        };
+        return result;
       }
     } else {
       const Reg = new RegExp(typeData, "i");
@@ -445,7 +469,11 @@ async function getAllUserCommentByCondition({
           .skip((pageNum - 1) * 10)
           .limit(pageNum * 10)
           .lean();
-        return res;
+        const result = {
+          data: res,
+          total: total,
+        };
+        return result;
       } else {
         let res = await comment
           .find({
@@ -455,7 +483,11 @@ async function getAllUserCommentByCondition({
           .skip((pageNum - 1) * 10)
           .limit(pageNum * 10)
           .lean();
-        return res;
+        const result = {
+          data: res,
+          total: total,
+        };
+        return result;
       }
     }
   } catch (e) {
