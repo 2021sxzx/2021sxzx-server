@@ -32,6 +32,7 @@ async function saveComment(commentData) {
  */
 async function getAllUserComment({ pageNum, score }) {
   try {
+    let total = await getCommentTotal();
     if (pageNum == 0) {
       if (score !== 0) {
         let res = await comment
@@ -39,10 +40,18 @@ async function getAllUserComment({ pageNum, score }) {
           .skip(0)
           .limit(10)
           .lean();
-        return res;
+        const result = {
+          data: res,
+          total: total,
+        };
+        return result;
       } else {
         let res = await comment.find().skip(0).limit(10).lean();
-        return res;
+        const result = {
+          data: res,
+          total: total,
+        };
+        return result;
       }
     } else {
       if (score !== 0) {
@@ -51,14 +60,22 @@ async function getAllUserComment({ pageNum, score }) {
           .skip((pageNum - 1) * 10)
           .limit(pageNum * 10)
           .lean();
-        return res;
+        const result = {
+          data: res,
+          total: total,
+        };
+        return result;
       } else {
         let res = await comment
           .find()
           .skip((pageNum - 1) * 10)
           .limit(pageNum * 10)
           .lean();
-        return res;
+        const result = {
+          data: res,
+          total: total,
+        };
+        return result;
       }
     }
   } catch (e) {
@@ -83,9 +100,23 @@ async function getAllUserComment2() {
  * 获取用户评价的参数
  * @returns {Promise<{scoreInfo: [], avgScore: number, totalNum: *}>}
  */
-async function getCommentParam() {
+async function getCommentParam({ type, typeData }) {
   try {
-    let res = await comment.aggregate([
+    let category;
+    let Reg;
+    if (type) {
+      type = parseInt(type);
+      if (type === 1) category = "task_name";
+      else category = "task_code";
+      console.log(category);
+      Reg = new RegExp(typeData, "i");
+    }
+    const arr = [
+      {
+        $match: {
+          [category]: { $regex: Reg },
+        },
+      },
       {
         $group: {
           _id: "$score",
@@ -99,7 +130,9 @@ async function getCommentParam() {
           _id: 1,
         },
       },
-    ]);
+    ];
+    let res = await comment.aggregate(arr);
+
     let res2 = [];
     let avgScore = 0;
     res.map((item) => {
@@ -110,7 +143,10 @@ async function getCommentParam() {
       res2.push(obj);
     });
     let count = await getCommentTotal();
-    avgScore /= count;
+    if (type) {
+      count = await comment.find({ [category]: { $regex: Reg } }).count();
+    }
+    if (count !== 0) avgScore /= count;
     let res3 = { totalNum: count, avgScore: avgScore, scoreInfo: res2 };
     return res3;
   } catch (e) {
@@ -396,22 +432,6 @@ async function getAllUserCommentByCondition({
     //   ]);
     //   return res;
     // }
-    let res = await comment.aggregate([
-      {
-        $group: {
-          _id: "$score",
-          count: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $sort: {
-          _id: 1,
-        },
-      },
-    ]);
-    const total = res[0].count;
     if (pageNum == 0) {
       const Reg = new RegExp(typeData, "i");
       if (score !== 0) {
@@ -430,6 +450,19 @@ async function getAllUserCommentByCondition({
           .skip(0)
           .limit(10)
           .lean();
+        let total = await comment
+          .find({
+            $and: [
+              {
+                score: { $eq: score },
+              },
+              {
+                [category]: { $regex: Reg },
+              },
+              { create_time: { $gte: startTime, $lte: endTime } },
+            ],
+          })
+          .count();
         const result = {
           data: res,
           total: total,
@@ -444,6 +477,12 @@ async function getAllUserCommentByCondition({
           .skip(0)
           .limit(10)
           .lean();
+        let total = await comment
+          .find({
+            [category]: { $regex: Reg },
+            create_time: { $gte: startTime, $lte: endTime },
+          })
+          .count();
         const result = {
           data: res,
           total: total,
@@ -469,6 +508,19 @@ async function getAllUserCommentByCondition({
           .skip((pageNum - 1) * 10)
           .limit(pageNum * 10)
           .lean();
+        let total = await comment
+          .find({
+            $and: [
+              {
+                score: { $eq: score },
+              },
+              {
+                [category]: { $regex: Reg },
+              },
+              { create_time: { $gte: startTime, $lte: endTime } },
+            ],
+          })
+          .count();
         const result = {
           data: res,
           total: total,
@@ -483,6 +535,12 @@ async function getAllUserCommentByCondition({
           .skip((pageNum - 1) * 10)
           .limit(pageNum * 10)
           .lean();
+        let total = await comment
+          .find({
+            [category]: { $regex: Reg },
+            create_time: { $gte: startTime, $lte: endTime },
+          })
+          .count();
         const result = {
           data: res,
           total: total,

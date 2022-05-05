@@ -55,9 +55,9 @@ async function getUserComments2() {
  * 获取评论的平均数和总数
  * @returns {Promise<ErrorModel|SuccessModel>}
  */
-async function getParam() {
+async function getParam(searchData) {
   try {
-    let data = await getCommentParam();
+    let data = await getCommentParam(searchData);
     return new SuccessModel({ msg: "获取评论参数成功", data: data });
   } catch (e) {
     return new ErrorModel({ msg: e.message });

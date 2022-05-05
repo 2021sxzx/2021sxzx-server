@@ -60,7 +60,8 @@ router.post("/v1/searchComment", async (req, res, next) => {
  * 用户评价的参数获取
  */
 router.get("/v1/commentParam", async (req, res, next) => {
-  let data = await getParam();
+  let searchData = req.query;
+  let data = await getParam(searchData);
   setStatusCode(res, data);
   res.json(data);
 });
