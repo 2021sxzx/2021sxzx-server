@@ -159,7 +159,7 @@ async function searchByCondition({ myselfID, today, thisWeek }) {
         // console.log(currentItem.create_time.substring(0, 10),'||',d.toJSON().substring(0,10))
         return currentItem.create_time.substring(0, 10) === d.toJSON().substring(0,10);
       });
-      console.log(newSystemLogData)
+      // console.log(newSystemLogData)
     }
     if (thisWeek === true) {
       let date1 = new Date();

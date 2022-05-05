@@ -19,6 +19,7 @@ const sideBarRouter = require('./routes/sideBar');
 const permissionRouter = require('./routes/permission');
 const systemFailureRouter = require('./routes/systemFailure')
 const systemBasicRouter = require('./routes/systemBasic.js')
+const systemBackupRouter=require('./routes/systemBackup')
 const userDepartmentRouter = require('./routes/userDepartment');
 const imageRouter = require('./routes/image');
 const department = require('./model/department');
@@ -98,6 +99,7 @@ app.use('/api', roleRouter)
 app.use('/api', permissionRouter)
 app.use('/api', systemFailureRouter)
 app.use('/api', systemBasicRouter)
+app.use('/api', systemBackupRouter)
 app.use('/api', imageRouter)
 app.use('/api', userDepartmentRouter)
 //app.use('/api', verifyRouter)
