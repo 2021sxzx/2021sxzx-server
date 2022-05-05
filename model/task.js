@@ -107,6 +107,34 @@ const taskSchema = new mongoose.Schema({
             materials_name: {
                 type: String,
                 required: true,
+            },
+            origin: {
+                type: Number,
+                required: true
+            },
+            copy: {
+                type: Number,
+                required: true
+            },
+            material_form: {
+                type: String,
+                required: true
+            },
+            page_format: {
+                type: String,
+                required: false
+            },
+            material_necessity: {
+                type: String,
+                required: true
+            },
+            material_type: {
+                type: String,
+                required: true
+            },
+            submissionrequired: {
+                type: String,
+                required: true
             }
         }],
         default: [],

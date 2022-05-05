@@ -196,6 +196,12 @@ router.get('/v1/getCheckResult', async (req, res, next) => {
     res.json(data)
 })
 
+router.get('/v1/getItemUsers', async (req, res, next) => {
+    let data = await itemController.getItemUsers()
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 // router.post('/v1/getRuleDic', async (req, res, next) => {
 //     let data = await itemController.getRuleDic(req.body)
 //     setStatusCode(res, data)

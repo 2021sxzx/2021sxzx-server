@@ -32,7 +32,21 @@ async function getItemStatusScheme() {
 }
 
 /**
+ * 获取用户列表
+ * @returns 
+ */
+async function getItemUsers() {
+    try {
+        var users = await modelUsers.find({}, { _id: 1, user_name: 1, role_name: 1 })
+        return new SuccessModel({ msg: '获取成功', data: users })
+    } catch (err) {
+        return new ErrorModel({ msg: '获取失败', data: err.message})
+    }
+}
+
+/**
  * 获取用户身份
+ * @param {String} user_id 用户id
  * @returns 
  */
 async function getUserRank({
@@ -1003,18 +1017,20 @@ async function createItemGuide({
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
-            filePath = path.join(filePath, task_code + '.png')
+            let fileName = task_code + '_' + Date.now().toString() + '.png'
+            filePath = path.join(filePath, fileName)
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('/imgs/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = path.join('/imgs/itemGuideQRCode', fileName)
             // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
+        console.log(newData)
         var result = await modelTask.create(newData)
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
-        // console.log(err.message)
+        console.log(err)
         return new ErrorModel({ msg: '创建失败', data: err.message })
     }
 }
@@ -1106,25 +1122,25 @@ async function updateItemGuide({
             }
         }
         var newData = {
-            task_code: null,
-            task_name: null,
-            wsyy: null,
-            service_object_type: null,
-            conditions: null,
-            legal_basis: null,
-            legal_period: null,
-            legal_period_type: null,
-            promised_period: null,
-            promised_period_type: null,
-            windows: null,
-            apply_content: null,
-            ckbllc: null,
-            wsbllc: null,
-            mobile_applt_website: null,
-            submit_documents: null,
-            zxpt: null,
-            qr_code: null,
-            zzzd: null
+            // task_code: null,
+            // task_name: null,
+            // wsyy: null,
+            // service_object_type: null,
+            // conditions: null,
+            // legal_basis: null,
+            // legal_period: null,
+            // legal_period_type: null,
+            // promised_period: null,
+            // promised_period_type: null,
+            // windows: null,
+            // apply_content: null,
+            // ckbllc: null,
+            // wsbllc: null,
+            // mobile_applt_website: null,
+            // submit_documents: null,
+            // zxpt: null,
+            // qr_code: null,
+            // zzzd: null
         }
         var bulkOps = []
         if (new_task_code !== null) {
@@ -1173,11 +1189,12 @@ async function updateItemGuide({
             if (!fs.existsSync(filePath)) {
                 fs.mkdirSync(filePath)
             }
-            filePath = path.join(filePath, task_code + '.png')
+            let fileName = task_code + '_' + Date.now().toString() + '.png'
+            filePath = path.join(filePath, fileName)
             var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
             var dataBuffer = Buffer.from(base64Data, 'base64')
             fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('/imgs/itemGuideQRCode', task_code + '.png')
+            newData.qr_code = path.join('/imgs/itemGuideQRCode', fileName)
             // newData.qr_code = qr_code
         }
         if (zzzd !== null) newData.zzzd = zzzd
@@ -2237,9 +2254,9 @@ async function getCheckResult() {
     try {
         var result = await itemService.getCheckResult()
         var array = new Array(3)
-        array[0] = { type: '缺少', guides: [] }
-        array[1] = { type: '新增', guides: [] }
-        array[2] = { type: '不同', guides: [] }
+        array[0] = { type: '省政务新增', guides: [] }
+        array[1] = { type: '省政务已删除', guides: [] }
+        array[2] = { type: '内容不一致', guides: [] }
         var keys = Object.keys(result)
         for (let i = 0, len = keys.length; i < len; i++) {
             Array.prototype.push.apply(array[0].guides, result[keys[i]].inRemoteNinLocal)
@@ -2304,6 +2321,7 @@ module.exports = {
     setCheckJobRule,
     getCheckJobRule,
     getCheckResult,
+    getItemUsers
     // getRuleDic,
     // getRegionDic
 }
