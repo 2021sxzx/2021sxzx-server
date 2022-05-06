@@ -102,21 +102,31 @@ async function getAllUserComment2() {
  */
 async function getCommentParam({ type, typeData }) {
   try {
+    const Reg = new RegExp(typeData, "i");
     let category;
-    let Reg;
     if (type) {
       type = parseInt(type);
       if (type === 1) category = "task_name";
       else category = "task_code";
       console.log(category);
-      Reg = new RegExp(typeData, "i");
     }
     const arr = [
-      {
-        $match: {
-          [category]: { $regex: Reg },
-        },
-      },
+      type
+        ? {
+            $match: {
+              [category]: { $regex: Reg },
+            },
+          }
+        : {
+            $match: {
+              $or: [
+                {
+                  task_code: { $regex: Reg },
+                },
+                { task_code: { $regex: Reg } },
+              ],
+            },
+          },
       {
         $group: {
           _id: "$score",
@@ -131,6 +141,7 @@ async function getCommentParam({ type, typeData }) {
         },
       },
     ];
+    console.log(arr);
     let res = await comment.aggregate(arr);
 
     let res2 = [];
@@ -145,6 +156,12 @@ async function getCommentParam({ type, typeData }) {
     let count = await getCommentTotal();
     if (type) {
       count = await comment.find({ [category]: { $regex: Reg } }).count();
+    } else if (!type && typeData) {
+      count = await comment
+        .find({
+          $or: [{ task_code: { $regex: Reg } }, { task_name: { $regex: Reg } }],
+        })
+        .count();
     }
     if (count !== 0) avgScore /= count;
     let res3 = { totalNum: count, avgScore: avgScore, scoreInfo: res2 };
