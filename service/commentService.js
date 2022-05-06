@@ -449,7 +449,47 @@ async function getAllUserCommentByCondition({
     //   ]);
     //   return res;
     // }
-    if (pageNum == 0) {
+    if (Array.isArray(category)) {
+      const Reg = new RegExp(typeData, "i");
+      const arr = [
+        {
+          score: { $eq: score },
+        },
+        {
+          $or: [
+            {
+              idc: { $regex: Reg },
+            },
+            {
+              task_code: { $regex: Reg },
+            },
+            {
+              task_name: { $regex: Reg },
+            },
+          ],
+        },
+        { create_time: { $gte: startTime, $lte: endTime } },
+      ];
+      if (score === 0) arr.shift();
+      let res = await comment
+        .find({
+          $and: arr,
+        })
+        .skip(0)
+        .limit(10)
+        .lean();
+      let total = await comment
+        .find({
+          $and: arr,
+        })
+        .count();
+      const result = {
+        data: res,
+        total: total,
+      };
+      return result;
+    }
+    if (pageNum == 1) {
       const Reg = new RegExp(typeData, "i");
       if (score !== 0) {
         let res = await comment
@@ -486,6 +526,7 @@ async function getAllUserCommentByCondition({
         };
         return result;
       } else {
+        console.log(34343434);
         let res = await comment
           .find({
             [category]: { $regex: Reg },
@@ -508,7 +549,6 @@ async function getAllUserCommentByCondition({
       }
     } else {
       const Reg = new RegExp(typeData, "i");
-      console.log(category);
       if (score !== 0) {
         let res = await comment
           .find({
@@ -593,7 +633,15 @@ async function searchByCondition({
     let res;
     switch (type) {
       case 0:
-        res = await getAllUserComment({ pageNum, score });
+        category = ["idc", "task_name", "task_code"];
+        res = await getAllUserCommentByCondition({
+          pageNum,
+          score,
+          typeData,
+          startTime,
+          endTime,
+          category,
+        });
         return res;
       case 1:
         category = "idc";
