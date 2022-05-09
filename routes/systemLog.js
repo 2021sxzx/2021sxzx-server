@@ -3,7 +3,9 @@ const router = express.Router();
 const {
     getAllSystemLogDetail,
     getSearchSystemLog,
-    showSystemLogController
+    showSystemLogController,
+    getSystemLog2,
+    getItemBrowseCount
   } = require("../controller/systemLogController")
 
 function setStatusCode(res,data) {
@@ -35,10 +37,22 @@ router.post('/v1/searchLog',async (req,res,next) => {
   res.json(data)
 })
 
-router.get('/v1/test',async (req,res,next) => {
-    let d = new Date().toJSON().substring(0,10);
-    setStatusCode(res,d)
-    res.json(d)
+router.get('/v1/metaDataLog',async (req,res,next) => {
+    let data = await getSystemLog2()
+    setStatusCode(res,data)
+    res.json(data.data)
+})
+
+router.get('/v1/itemBrowseCount',async (req,res,next) => {
+  let data = await getItemBrowseCount()
+  setStatusCode(res,data)
+  res.json(data.data)
+})
+
+router.get('/v1/metaDataLog1',async (req,res,next) => {
+    let data = [[1,25],[2,60],[3,10]]
+    // setStatusCode(res,data)
+    res.json(data)
 })
 
 

@@ -82,13 +82,14 @@ function chargeTypeChange(value) {
   }
 }
 /**
- * 专门为解决bug写的返回全部系统日志（不包括操作人）的接口
+ * 专门为系统元数据写的返回全部系统日志（不包括操作人）的接口
  * @returns {Promise<*|*>}
  */
  async function getAllSystemLog2() {
   try {
-    let res = await systemLog.find();
-    return res;
+    var data = fs.readFileSync('log/access.log');
+    data=data.toString().split("\n");
+    return data;
   } catch (e) {
     return e.message;
   }

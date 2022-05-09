@@ -73,7 +73,6 @@ function setStatusCode(res,data) {
   // data.forEach(item=>{
   //   item.size=getSize1(item.name)
   // })
-  
   for (let i = 0; i < data.length; i++) {
     if (data[i].name === 'banner_pc'||data[i].name === 'qrcode_app'){
       await getSize(data[i].name+'.jpg').then(    
@@ -92,7 +91,18 @@ function setStatusCode(res,data) {
       )
     }
   }
-  res.send(data)
+  if (req.query.imageInfo){//一个个比对
+    const newData=[]
+    for (let i = 0; i < data.length; i++) {
+      if(data[i].size!=req.query.imageInfo[i].size){
+        newData.push(data[i]);
+      }
+    }
+    res.send(newData)
+  }
+  else {
+    res.send(data)
+  }
 })
 
 
