@@ -35,11 +35,67 @@ async function getItemStatusScheme() {
  * 获取用户列表
  * @returns 
  */
-async function getItemUsers() {
+ async function getItemUsers({
+    department_name = null,
+    user_name = null
+}) {
     try {
-        var users = await modelUsers.find({}, { _id: 1, user_name: 1, role_name: 1 })
+        var query = {}
+        if (user_name !== null) query.user_name = { $regex: user_name }
+        if (department_name !== null) {
+            query['$and'] = []
+            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
+            for (let i = 0, len = accounts.length; i < len; i++) {
+                accounts.push(accounts.shift().account)
+            }
+            query['$and'].push({ account: { $in: accounts } })
+        }        
+        var users = await modelUsers.aggregate([
+            {
+                $match: query
+            },
+            {
+                $lookup: {
+                    from: modelDepartmentMapUsers.collection.name,
+                    localField: 'account',
+                    foreignField: 'account',
+                    as: 'department'
+                }
+            },
+            {
+                $addFields: {
+                    department: { $arrayElemAt: ['$department', 0] }
+                }
+            },
+            {
+                $addFields: {
+                    department_name: '$department.department_name'
+                }
+            },
+            {
+                $project: { _id: 1, user_name: 1, role_name: 1, department_name: 1 }
+            }
+        ])
         return new SuccessModel({ msg: '获取成功', data: users })
     } catch (err) {
+        console.log(err)
+        return new ErrorModel({ msg: '获取失败', data: err.message})
+    }
+}
+
+/**
+ * 获取用户列表
+ * @param {String} user_id 用户id
+ * @returns 
+ */
+ async function getUserNameById({
+     user_id = null
+ }) {
+    try {
+        var userName = await modelUsers.findOne({ _id: user_id }, { _id: 0, user_name: 1 })
+        return new SuccessModel({ msg: '获取成功', data: userName })
+    } catch (err) {
+        console.log(err)
         return new ErrorModel({ msg: '获取失败', data: err.message})
     }
 }
@@ -1077,6 +1133,7 @@ async function deleteItemGuides({
  * @returns 
  */
 async function updateItemGuide({
+    user_id = null,
     task_code = null,
     new_task_code = null,
     task_name = null,
@@ -1158,6 +1215,7 @@ async function updateItemGuide({
             }
             newData.service_object_type = str
         }
+        if (user_id !== null) newData.creator_id = user_id
         if (conditions !== null) newData.conditions = conditions
         if (legal_basis !== null) newData.legal_basis = legal_basis
         if (legal_period !== null) newData.legal_period = legal_period
@@ -1479,6 +1537,7 @@ async function createItems({
             if (region._id != region_id) {
                 throw new Error('region_code和region_id不匹配: ' + region_code + '\t' + region_id)
             }
+            console.log(task)
             newData.push({
                 item_name: task.task_name,
                 task_code: task_code,
@@ -1490,7 +1549,7 @@ async function createItems({
                 //     name: user.user_name,
                 //     department_name: department.department_name
                 // }
-                creator_id: user_id
+                creator_id: task.creator_id
             })
             //修改对应事项指南的状态
             if (task.task_status === 0) {
@@ -2275,6 +2334,8 @@ async function getCheckResult() {
 
 module.exports = {
     getItemStatusScheme,
+    getItemUsers,
+    getUserNameById,
     getUserRank,
     getRuleTree,
     getRegionTree,
