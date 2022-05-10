@@ -5,6 +5,16 @@ const mongoose = require("mongoose");
 const task = require("../model/task");
 const rule = require("../model/rule");
 
+function showIdc(str) {
+  if (str.length > 0) {
+    const len = str.length;
+    let start = str.slice(0, 4);
+    let end = str.slice(len - 4);
+    start = start.padEnd(len - 4, "*");
+    return start + end;
+  }
+}
+
 /**
  * 保存用户的评论数据
  * @param commentData
@@ -18,12 +28,18 @@ async function saveComment(commentData) {
     commentData.task_code = itemData[0].task_code;
     commentData.task_name = itemData[0].item_name;
     let res = await comment.create(commentData);
+    res.idc = showIdc(res.idc);
     return res;
   } catch (e) {
     throw new Error(e.message);
   }
 }
 
+function arrayShowIdc(arr) {
+  arr.forEach((item) => {
+    item.idc = showIdc(item.idc);
+  });
+}
 /**
  * 获取用户的评论
  * @param pageNum
@@ -40,6 +56,7 @@ async function getAllUserComment({ pageNum, score }) {
           .skip(0)
           .limit(10)
           .lean();
+        arrayShowIdc(res);
         const result = {
           data: res,
           total: total,
@@ -51,6 +68,7 @@ async function getAllUserComment({ pageNum, score }) {
           data: res,
           total: total,
         };
+        arrayShowIdc(res);
         return result;
       }
     } else {
@@ -60,6 +78,7 @@ async function getAllUserComment({ pageNum, score }) {
           .skip((pageNum - 1) * 10)
           .limit(pageNum * 10)
           .lean();
+        arrayShowIdc(res);
         const result = {
           data: res,
           total: total,
@@ -71,6 +90,7 @@ async function getAllUserComment({ pageNum, score }) {
           .skip((pageNum - 1) * 10)
           .limit(pageNum * 10)
           .lean();
+        arrayShowIdc(res);
         const result = {
           data: res,
           total: total,
@@ -90,6 +110,7 @@ async function getAllUserComment({ pageNum, score }) {
 async function getAllUserComment2() {
   try {
     let res = await comment.find();
+    arrayShowIdc(res);
     return res;
   } catch (e) {
     return e.message;
@@ -642,6 +663,7 @@ async function searchByCondition({
           endTime,
           category,
         });
+        arrayShowIdc(res.data);
         return res;
       case 1:
         category = "idc";
@@ -653,6 +675,7 @@ async function searchByCondition({
           endTime,
           category,
         });
+        arrayShowIdc(res.data);
         return res;
       case 2:
         category = "task_name";
@@ -664,6 +687,7 @@ async function searchByCondition({
           endTime,
           category,
         });
+        arrayShowIdc(res.data);
         return res;
       case 3:
         category = "task_code";
@@ -675,6 +699,7 @@ async function searchByCondition({
           endTime,
           category,
         });
+        arrayShowIdc(res.data);
         return res;
     }
     // let condition = {}
@@ -729,6 +754,7 @@ async function getCommentDetailService(searchData) {
   const [commentData] = await comment.find({ _id: searchData._id }).lean();
   const itemData = await getItem(commentData.item_id);
   const ruleData = await getRule(itemData.rule_id);
+  commentData.idc = showIdc(commentData.idc);
   commentData.rule = { rule_name: ruleData.rule_name };
   return commentData;
 }
