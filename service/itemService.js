@@ -256,9 +256,42 @@ function getRuleDic() {
     }
 }
 
+//---------------------------------------------------------------------
+//以下为定期检查事项指南详情的代码
+
+const getToken_Url = 'http://api2.gzonline.gov.cn:9090/oauth/token'
+const getChildRegionList_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/two/OrganizationService/getChildRegionList'
+const getOrganListByRegionCode_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/two/OrganizationService/getOrganListByRegionCode'
 const listItemBasicByOrg_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/two/power/listItemBasicByOrg'
 const getItem_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/two/power/getItem'
 const ANNOUNCED = '3'   //已公示的事项的状态码
+const client_id = 'basicUser20190821144223063'
+const client_secret = 'e9e413e43b8d43cd8e71243cdbec5cd6'
+var token = ''
+const TYPE = 'PARALLEL'   //SERIAL或者PARALLEL
+
+/**
+ * 获取token
+ * @returns 
+ */
+function getToken() {
+    return new Promise(function (resolve, reject) {
+        var url = getToken_Url + '?client_id=' + client_id + '&client_secret=' + client_secret
+        var option = {
+            url: url,
+            method: 'GET',
+            json: true,
+            timeout: 20000
+        }
+        request(option, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                resolve(body.access_token)
+            } else {
+                reject(error)
+            }
+        })
+    })
+}
 
 /**
  * 发post请求
@@ -267,40 +300,96 @@ const ANNOUNCED = '3'   //已公示的事项的状态码
  * @returns 
  */
 function postRequest(url, requestData) {
-    return new Promise(function (resolve, reject) {
-        request({
-            url: url,
+    return new Promise(async function (resolve, reject) {
+        if (token === '') {
+            try {
+                token = await getToken()
+            } catch (err) {
+                console.log('GET TOKEN ERROR')
+                token = ''
+                resolve('RETRY')
+            }
+        }
+        var newUrl = url + '?access_token=' + token
+        var option = {
+            url: newUrl,
             method: 'POST',
             json: true,
-            headers: {
-                'content-type': 'application/json'
-            },
-            body: requestData
-        }, function (error, response, body) {
+            headers: { 'content-type': 'application/json' },
+            form: requestData,
+            timeout: 20000
+        }
+        request(option, function (error, response, body) {
             if (!error && response.statusCode == 200) {
                 resolve(body)
             } else {
-                reject(response)
+                if (!error) {
+                    console.log('POST: ' + newUrl + ' 失败')
+                    console.log('请求体: ' + JSON.stringify(requestData))
+                    console.log(response)
+                }
+                else if (error.code !== 'ESOCKETTIMEDOUT') {
+                    console.log('POST: ' + newUrl + ' 失败')
+                    console.log('请求体: ' + JSON.stringify(requestData))
+                    console.log(error)
+                }
+                token = ''
+                resolve('RETRY')
             }
         })
     })
 }
 
 /**
- * 发get请求
- * @param {String} url 地址
+ * 根据区划编码获取下级区划信息
+ * @param {String} region_code 区划编码
  * @returns 
  */
-function getRequest(url) {
-    return new Promise(function (resolve, reject) {
-        request(url, function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                resolve(body)
-            } else {
-                reject(response)
-            }
-        })
-    })
+async function getChildRegionList(region_code) {
+    try {
+        var body = {}
+        var retry = 10
+        do {
+            body = await postRequest(getChildRegionList_Url, {
+                region_code: region_code
+            })
+            retry -= 1
+        } while (body === 'RETRY' && retry > 0)
+        if (body === 'RETRY') {
+            console.log('获取' + region_code + '的下级区划信息失败，重试了' + retry + '次')
+            return null
+        }
+        return body
+    } catch (error) {
+        console.log('根据' + region_code + '获取下级区划信息失败')
+        throw new Error(error.message)
+    }
+}
+
+/**
+ * 根据区划编码获取组织机构信息
+ * @param {String} region_code 区划编码
+ * @returns 
+ */
+async function getOrganListByRegionCode(region_code) {
+    try {
+        var body = {}
+        var retry = 10
+        do {
+            body = await postRequest(getOrganListByRegionCode_Url, {
+                region_code: region_code
+            })
+            retry -= 1
+        } while (body === 'RETRY' && retry > 0)
+        if (body === 'RETRY') {
+            console.log('获取' + region_code + '的组织机构信息失败，重试了' + retry + '次')
+            return null
+        }
+        return body
+    } catch (error) {
+        console.log('根据' + region_code + '获取组织机构信息失败')
+        throw new Error(error.message)
+    }
 }
 
 /**
@@ -310,19 +399,28 @@ function getRequest(url) {
  * @param {Number} page_num 页码（从1开始）
  * @returns 
  */
-function listItemBasicByOrg(org_code, page_size, page_num) {
-    return new Promise(function (resolve, reject) {
-        postRequest(listItemBasicByOrg_Url, {
-            org_code: org_code,
-            task_state: ANNOUNCED,
-            page_size: page_size,
-            page_num: page_num
-        }).then(function (body) {
-            resolve(body)
-        }).catch(function (reason) {
-            reject(reason)
-        })
-    })
+async function listItemBasicByOrg(org_code, page_size, page_num) {
+    try {
+        var body = {}
+        var retry = 10
+        do {
+            body = await postRequest(listItemBasicByOrg_Url, {
+                org_code: org_code,
+                task_state: ANNOUNCED,
+                page_size: page_size,
+                page_num: page_num
+            })
+            retry -= 1
+        } while (body === 'RETRY' && retry > 0)
+        if (body === 'RETRY') {
+            console.log('获取' + org_code + '第' + page_num + '页的事项列表失败，重试了' + retry + '次')
+            return null
+        }
+        return body
+    } catch (error) {
+        console.log('根据' + org_code + '获取服务机构的事项列表失败')
+        throw new Error(error.message)
+    }
 }
 
 /**
@@ -330,21 +428,35 @@ function listItemBasicByOrg(org_code, page_size, page_num) {
  * @param {String} code 事项编码
  * @returns 
  */
-function getItemByCode(code) {
-    return new Promise(function (resolve, reject) {
-        postRequest(getItem_Url, {
-            code: code
-        }).then(function (body) {
-            body = body.data
-            if (body.is_announced !== ANNOUNCED) {
-                resolve(null)
-            } else {
-                resolve(body)
-            }
-        }).catch(function (reason) {
-            reject(reason)
-        })
-    })
+async function getItemByCode(code) {
+    try {
+        var body = {}
+        var retry = 10
+        do {
+            body = await postRequest(getItem_Url, {
+                code: code
+            })
+            retry -= 1
+        } while (body === 'RETRY' && retry > 0)
+        if (body === 'RETRY') {
+            console.log('获取' + code + '的事项详细信息失败，重试了' + retry + '次')
+            return null
+        }
+        if (!body.data) {
+            console.log('请求' + code + '事项详细信息有问题，返回的body如下：')
+            console.log(body)
+            return null
+        }
+        if (body.data.state !== ANNOUNCED || body.data.service_item_type === '9' || body.data.service_item_type === '13' || body.data.service_item_type === '14') {
+            return null
+        } else {
+            return body.data
+        }
+    } catch (error) {
+        console.log('根据' + code + '获取事项详细信息失败')
+        console.log(body)
+        throw new Error(error.message)
+    }
 }
 
 /**
@@ -352,21 +464,35 @@ function getItemByCode(code) {
  * @param {String} situation_code 情形（办理项）编码
  * @returns 
  */
-function getItemBySituationCode(situation_code) {
-    return new Promise(function (resolve, reject) {
-        postRequest(getItem_Url, {
-            situation_code: situation_code
-        }).then(function (body) {
-            body = body.data
-            if (body.is_announced !== ANNOUNCED) {
-                resolve(null)
-            } else {
-                resolve(body)
-            }
-        }).catch(function (reason) {
-            reject(reason)
-        })
-    })
+async function getItemBySituationCode(situation_code) {
+    try {
+        var body = {}
+        var retry = 10
+        do {
+            body = await postRequest(getItem_Url, {
+                situation_code: situation_code
+            })
+            retry -= 1
+        } while (body === 'RETRY' && retry > 0)
+        if (body === 'RETRY') {
+            console.log('获取' + situation_code + '的办理项详细信息失败，重试了' + retry + '次')
+            return null
+        }
+        if (!body.data) {
+            console.log('请求' + situation_code + '情形（办理项）详细信息有问题，返回的body如下：')
+            console.log(body)
+            return null
+        }
+        if (body.data.state !== ANNOUNCED || body.data.service_item_type === '9' || body.data.service_item_type === '13' || body.data.service_item_type === '14') {
+            return null
+        } else {
+            return body.data
+        }
+    } catch (error) {
+        console.log('根据' + situation_code + '获取情形（办理项）详细信息失败')
+        console.log(body)
+        throw new Error(error.message)
+    }
 }
 
 /**
@@ -374,80 +500,222 @@ function getItemBySituationCode(situation_code) {
  * @param {String} carry_out_code 实施编码
  * @returns 
  */
-function getItem(carry_out_code) {
-    return new Promise(function (resolve, reject) {
-        getItemByCode(carry_out_code)
-            .then(function (value) {
-                var items = []
-                //如果事项没有公示就返回空数组
-                if (value === null) {
-                    resolve(items)
+async function getItem(carry_out_code) {
+    try {
+        var value = await getItemByCode(carry_out_code)
+        //如果事项没有公示就返回空数组
+        if (value === null) {
+            return []
+        }
+        //如果事项有若干个办理项，就返回办理项数组
+        if (value.situation.length > 0) {
+            var situations = []
+            //并行
+            if (TYPE === 'PARALLEL') {
+                var promiseList = []
+                for (let i = 0, len = value.situation.length; i < len; i++) {
+                    promiseList.push(getItemBySituationCode(value.situation[i].situation_code))
                 }
-                //如果事项有若干个办理项，就返回办理项数组
-                if (value.situation.length > 0) {
-                    var promiseList = []
-                    for (let i = 0, len = value.situation.length; i < len; i++) {
-                        promiseList.push(getItemBySituationCode(value.situation[i].situation_code))
-                    }
-                    //并行请求结果
-                    Promise.all(promiseList)
-                        .then(function (situations) {
-                            var result = []
-                            for (let i = 0, len = situations.length; i < len; i++) {
-                                if (situations[i] !== null) {
-                                    result.push(situations[i])
-                                }
-                            }
-                            resolve(result)
-                        })
-                        .catch(function (reason) {
-                            reject(reason)
-                        })
+                situations = await Promise.all(promiseList)
+            }
+            //------
+            //串行
+            else {
+                for (let i = 0, len = value.situation.length; i < len; i++) {
+                    let s = await getItemBySituationCode(value.situation[i].situation_code)
+                    situations.push(s)
                 }
-                //如果事项没有办理项，就返回他自己
-                items.push(value)
-                resolve(items)
-            })
-            .catch(function (reason) {
-                reject(reason)
-            })
-    })
+            }
+            //------
+            var result = []
+            for (let i = 0, len = situations.length; i < len; i++) {
+                if (situations[i] !== null) {
+                    result.push(situations[i])
+                }
+            }
+            return result
+        }
+        //如果事项没有办理项，就返回他自己
+        return [value]
+    } catch (error) {
+        console.log('根据' + carry_out_code + '获取事项/情形（办理项）详细信息失败')
+        throw new Error(error.message)
+    }
 }
 
 /**
- * 根据组织机构代码获取全部事项信息
+ * 获取当前区划及其下级区划
+ * @param {String} region_code 区划编码
+ * @returns {Array<String>} 数组元素是区划编码
+ */
+async function getChildRegions(region_code) {
+    try {
+        var regions = []
+        regions.push(region_code)
+        var result = await getChildRegionList(region_code)
+        console.log('已获取' + region_code + '的下级区划')
+        var childRegions = result.data ? result.data : []
+        for (let j = 0; j < childRegions.length; j++) {
+            regions.push(childRegions[j].CODE)
+        }
+        return regions
+    } catch (error) {
+        console.log('获取' + region_code + '及其全部下级区划失败')
+        throw new Error(error.message)
+    }
+}
+
+/**
+ * 获取当前区划及其全部下级区划
+ * @param {String} region_code 区划编码
+ * @returns {Array<String>} 数组元素是区划编码
+ */
+async function getAllChildRegions(region_code) {
+    try {
+        var regions = []
+        regions.push(region_code)
+        var arr = []
+        arr.push(region_code)
+        while (arr.length > 0) {
+            var result = []
+            //并行
+            if (TYPE === 'PARALLEL') {
+                console.log('获取' + arr + '的下级区划')
+                var promiseList = []
+                for (let i = 0, len = arr.length; i < len; i++) {
+                    let region = arr.shift()
+                    promiseList.push(getChildRegionList(region))
+                }
+                result = await Promise.all(promiseList)
+                console.log('获取成功')
+            }
+            //------
+            //串行
+            else {
+                for (let i = 0, len = arr.length; i < len; i++) {
+                    let region = arr.shift()
+                    let r = await getChildRegionList(region)
+                    console.log('已获取' + region + '的下级区划')
+                    result.push(r)
+                }
+            }
+            //------
+            for (let i = 0, len = result.length; i < len; i++) {
+                var childRegions = result[i].data ? result[i].data : []
+                for (let j = 0; j < childRegions.length; j++) {
+                    regions.push(childRegions[j].CODE)
+                    arr.push(childRegions[j].CODE)
+                }
+            }
+        }
+        return regions
+    } catch (error) {
+        console.log('获取' + region_code + '及其全部下级区划失败')
+        throw new Error(error.message)
+    }
+}
+
+/**
+ * 获取全部区划的人社局组织机构代码
+ * @param {Array<String>} regionCodes 区划数组
+ * @returns {Array<Object>} [ { region_code: String, org_code: Array<String> } ]
+ */
+async function getOrganOfRegions(regionCodes) {
+    try {
+        var value = []
+        //并行
+        if (TYPE === 'PARALLEL') {
+            var promiseList = []
+            for (let i = 0, len = regionCodes.length; i < len; i++) {
+                promiseList.push(getOrganListByRegionCode(regionCodes[i]))
+            }
+            value = await Promise.all(promiseList)
+        }
+        //------
+        //串行
+        else {
+            for (let i = 0, len = regionCodes.length; i < len; i++) {
+                let v = await getOrganListByRegionCode(regionCodes[i])
+                console.log('已获取' + regionCodes[i] + '的组织机构代码')
+                value.push(v)
+            }
+        }
+        //------
+        var result = []
+        for (let i = 0, len = value.length; i < len; i++) {
+            //在区划的全部组织机构中匹配人力资源和社会保障局
+            var organs = value[i].data ? value[i].data : []
+            for (let j = 0, len1 = organs.length; j < len1; j++) {
+                //匹配到说明是市或者区
+                if (organs[j].name.indexOf('人力资源和社会保障局') !== -1) {
+                    var org = []
+                    org.push(organs[j].org_code)
+                    result.push({ region_code: regionCodes[i], org_code: org })
+                    break
+                }
+                //遍历完匹配不到说明是街道或居委
+                else if (j === len1 - 1) {
+                    var org = []
+                    organs.forEach(function (element) {
+                        org.push(element.org_code)
+                    })
+                    result.push({ region_code: regionCodes[i], org_code: org })
+                }
+            }
+            if (organs.length <= 0) {
+                result.push({ region_code: regionCodes[i], org_code: [] })
+            }
+        }
+        return result
+    } catch (error) {
+        console.log('获取全部区划的人社局组织机构代码失败')
+        throw new Error(error.message)
+    }
+}
+
+/**
+ * 根据组织机构代码获取全部事项的基本信息
  * @param {String} org_code 组织机构代码
  * @returns 
  */
-function getAllItemBasicByOrg(org_code) {
-    return new Promise(function (resolve, reject) {
-        const PAGE_SIZE = 20    //10或者20
-        listItemBasicByOrg(org_code, PAGE_SIZE, 1)
-            .then(function (body) {
-                //通过第一次请求的结果计算一共有多少页
-                var total = body.total
-                var maxPageNum = Math.ceil(total / PAGE_SIZE)
-                var promiseList = []
-                for (let i = 1; i <= maxPageNum; i++) {
-                    promiseList.push(listItemBasicByOrg(org_code, PAGE_SIZE, i))
-                }
-                //并行请求结果
-                Promise.all(promiseList)
-                    .then(function (value) {
-                        var items = []
-                        for (let i = 0, len = value.length; i < len; i++) {
-                            Array.prototype.push.apply(items, value[i].data)
-                        }
-                        resolve(items)  //返回一个区划的全部事项
-                    })
-                    .catch(function (reason) {
-                        reject(reason)
-                    })
-            })
-            .catch(function (reason) {
-                reject(reason)
-            })
-    })
+async function getAllItemBasicByOrg(org_code) {
+    try {
+        const PAGE_SIZE = 20
+        var body = await listItemBasicByOrg(org_code, PAGE_SIZE, 1)
+        if (body === null) {
+            reject('获取' + org_code + '的全部事项基本信息失败')
+        }
+        //通过第一次请求的结果计算一共有多少页
+        var total = body.total
+        var maxPageNum = Math.ceil(total / PAGE_SIZE)
+        console.log('org_code: ' + org_code + '\ttotal: ' + total + '\tmaxPageNum: ' + maxPageNum)
+        var value = []
+        //并行
+        if (TYPE === 'PARALLEL') {
+            var promiseList = []
+            for (let i = 1; i <= maxPageNum; i++) {
+                promiseList.push(listItemBasicByOrg(org_code, PAGE_SIZE, i))
+            }
+            value = await Promise.all(promiseList)
+        }
+        //------
+        //串行
+        else {
+            for (let i = 1; i <= maxPageNum; i++) {
+                let v = await listItemBasicByOrg(org_code, PAGE_SIZE, i)
+                value.push(v)
+            }
+        }
+        //------
+        var items = []
+        for (let i = 0, len = value.length; i < len; i++) {
+            Array.prototype.push.apply(items, value[i].data ? value[i].data : [])
+        }
+        return items
+    } catch (error) {
+        console.log('根据' + org_code + '获取全部事项的基本信息失败')
+        throw new Error(error.message)
+    }
 }
 
 /**
@@ -455,30 +723,37 @@ function getAllItemBasicByOrg(org_code) {
  * @param {String} org_code 组织机构代码
  * @returns 
  */
-function getAllItemsByOrg(org_code) {
-    return new Promise(function (resolve, reject) {
-        getAllItemBasicByOrg(org_code)
-            .then(function (value) {
-                var promiseList = []
-                for (let i = 0, len = value.length; i < len; i++) {
-                    promiseList.push(getItem(value[i].carry_out_code))
-                }
-                Promise.all(promiseList)
-                    .then(function (items) {
-                        var result = []
-                        for (let i = 0, len = items.length; i < len; i++) {
-                            Array.prototype.push.apply(result, items[i])
-                        }
-                        resolve(result)
-                    })
-                    .catch(function (reason) {
-                        reject(reason)
-                    })
-            })
-            .catch(function (reason) {
-                reject(reason)
-            })
-    })
+async function getAllItemsByOrg(org_code) {
+    try {
+        var value = await getAllItemBasicByOrg(org_code)
+        var items = []
+        //并行
+        if (TYPE === 'PARALLEL') {
+            var promiseList = []
+            for (let i = 0, len = value.length; i < len; i++) {
+                promiseList.push(getItem(value[i].carry_out_code))
+            }
+            items = await Promise.all(promiseList)
+        }
+        //------
+        //串行
+        else {
+            for (let i = 0, len = value.length; i < len; i++) {
+                let it = await getItem(value[i].carry_out_code)
+                items.push(it)
+            }
+        }
+        //------
+        var result = []
+        for (let i = 0, len = items.length; i < len; i++) {
+            Array.prototype.push.apply(result, items[i])
+        }
+        console.log('org_code: ' + org_code + '\titems: ' + result.length)
+        return result
+    } catch (error) {
+        console.log('根据' + org_code + '获取全部事项/办理项的详细信息失败')
+        throw new Error(error.message)
+    }
 }
 
 /**
@@ -490,7 +765,7 @@ async function checkOrganizationItems(org_code) {
     try {
         var remoteItems = await getAllItemsByOrg(org_code)
     } catch (err) {
-        throw new Error('-----\n获取省政务服务系统数据失败，错误信息：\n' + err.message + '\n-----')
+        throw new Error(err.message)
     }
     //把事项的实施编码和办理项编码合成task_code
     var remoteItemCodes = []
@@ -528,7 +803,8 @@ async function checkOrganizationItems(org_code) {
             }
         }
     } catch (err) {
-        throw new Error('-----\n数据库操作失败，错误信息：\n' + err.message + '\n-----')
+        console.log('检查失败')
+        throw new Error(err.message)
     }
     return {
         inLocalNinRemote: inLocalNinRemote,
@@ -604,21 +880,43 @@ async function checkAllRegionsItems(regions, time) {
         return
     }
     //如果传入空数组就是检查全部区划，否则只检查regions数组内的区划
-    if (regions.length <= 0) {
-        try {
-            regions = await modelRegion.find({}, { region_code: 1, region_name: 1, org_code: 1 })
-        } catch (err) {
-            throw new Error('获取区划信息失败，错误信息：\n' + err.message)
+    try {
+        if (regions.length <= 0) {
+            regions = await getAllChildRegions('440100000000')
+            //检查一下区划信息
+            var inLocalNinRemote = []   //数据库有但是省政务没有
+            var inRemoteNinLocal = []   //省政务有但是数据库没有
+            try {
+                inLocalNinRemote = await modelRegion.find({ region_code: { $nin: regions } }, { region_code: 1 })
+                for (let i = 0, len = inLocalNinRemote.length; i < len; i++) {
+                    let region = inLocalNinRemote.shift()
+                    inLocalNinRemote.push(region.region_code)
+                }
+                for (let i = 0, len = regions.length; i < len; i++) {
+                    let exist = await modelRegion.exists({ region_code: regions[i] })
+                    if (exist === false) {
+                        inRemoteNinLocal.push(regions[i])
+                    }
+                }
+            } catch (err) {
+                console.log('检查区划信息失败')
+                throw new Error(err.message)
+            }
+
         }
+        var orgs = await getOrganOfRegions(regions)
+    } catch (err) {
+        throw new Error(err.message)
     }
     //遍历regions数组
-    for (let i = 0, len = regions.length; i < len; i++) {
-        var region = regions.shift()
+    for (let i = 0, len = orgs.length; i < len; i++) {
+        var region = orgs[i]
         try {
             var result = await checkOrganizationItems(region.org_code)
             checkResult[region.region_code] = result
         } catch (err) {
-            console.log('检查' + region.region_name + '事项出错，错误信息：\n' + err.message)
+            console.log('检查' + region.region_name + '事项出错，错误信息：')
+            console.log(err.message)
             recheckRegions.push(region.region_code)
         }
     }
@@ -634,9 +932,9 @@ async function checkAllRegionsItems(regions, time) {
                     insertOne: {
                         document: {
                             region_code: regionCodes[i],
-                            inLocalNinRemote: inLocalNinRemote,
-                            inRemoteNinLocal: inRemoteNinLocal,
-                            differences: differences
+                            inLocalNinRemote: checkResult[regionCodes[i]].inLocalNinRemote,
+                            inRemoteNinLocal: checkResult[regionCodes[i]].inRemoteNinLocal,
+                            differences: checkResult[regionCodes[i]].differences
                         }
                     }
                 })
@@ -646,22 +944,24 @@ async function checkAllRegionsItems(regions, time) {
                     updateOne: {
                         filter: { region_code: regionCodes[i] },
                         update: {
-                            inLocalNinRemote: inLocalNinRemote,
-                            inRemoteNinLocal: inRemoteNinLocal,
-                            differences: differences
+                            inLocalNinRemote: checkResult[regionCodes[i]].inLocalNinRemote,
+                            inRemoteNinLocal: checkResult[regionCodes[i]].inRemoteNinLocal,
+                            differences: checkResult[regionCodes[i]].differences
                         }
                     }
                 })
             }
         } catch (err) {
-            console.log('查询' + regionCodes[i] + '相关数据失败，错误信息：\n' + err.message)
+            console.log('查询' + regionCodes[i] + '相关数据失败，错误信息：')
+            console.log(err.message)
         }
     }
     try {
         var bulkOpsResult = await modelRemoteCheckLog.bulkWrite(bulkOps)
     } catch (err) {
-        console.log(bulkOpsResult)
-        console.log('数据库操作失败，只更新了部分数据，错误信息：\n' + err.message)
+        // console.log(bulkOpsResult)
+        console.log('数据库操作失败，只更新了部分数据，错误信息：')
+        console.log(err.message)
     }
     //中途有出错的区划需要重新检查
     if (recheckRegions.length > 0) {
