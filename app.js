@@ -63,12 +63,13 @@ app.set('view engine', 'jade');
 // 日志的设置使用
 app.use(logger('dev'));
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.log'), { flags: 'a' });
-// app.use(logger('combined', {
-//   stream: accessLogStream
-// }));
 //往日志添加用户信息
 logger.token('id',function getId(req){return req.headers.user_id});
-app.use(logger(':id :remote-addr - :remote-user [:date[iso]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
+logger.token('localDate',function getDate(){
+  var date=new Date(new Date().getTime()+8 * 3600 * 1000);
+  return date.toISOString()
+});
+app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
   stream: accessLogStream
 }));
 // post请求的参数的获取, express会将解析之后, 转换成对象的post请求参数放到请求对象的body属性中

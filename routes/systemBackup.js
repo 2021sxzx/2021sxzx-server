@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const {
-    getMongoFileController
+  getMongoBackupCycleController,
+    changeBackupCycleController
   } = require("../controller/systemBackupController.js")
 
 function setStatusCode(res,data) {
@@ -21,6 +22,26 @@ function setStatusCode(res,data) {
   let data = await getMongoFileController()
 //   setStatusCode(res,data)
   res.json('data')
+})
+
+/**
+ * 获取系统自动备份的周期
+ */
+ router.get('/v1/mongo-backup-cycle', async (req,res,next) => {
+  let data = await getMongoBackupCycleController()
+//   setStatusCode(res,data)
+  res.json(data)
+})
+
+/**
+ * 修改系统自动备份的周期
+ */
+router.post('/v1/change-backup-cycle', async (req,res,next) => {
+    let data = req.body;
+    // console.log(data);
+    await changeBackupCycleController(data)
+//   setStatusCode(res,data)
+    res.json(data)
 })
 
 
