@@ -8,7 +8,7 @@ const commentSchema = new mongoose.Schema({
   idc: {
     // 证件号
     type: String,
-    required: true,
+    default: "",
   },
   show_status: {
     // 评论显示状态

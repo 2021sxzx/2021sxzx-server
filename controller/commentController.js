@@ -7,7 +7,6 @@ const {
   getCommentDetailService,
 } = require("../service/commentService");
 const { SuccessModel, ErrorModel } = require("../utils/resultModel");
-
 /**
  * 保存用户的评论
  * @param commentData 用户的评价数据
