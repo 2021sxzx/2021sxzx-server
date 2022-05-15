@@ -1,4 +1,4 @@
-// const systemLog = require("../model/systemLog");
+const systemConfiguration = require("../model/systemConfiguration");
 // const users = require("../model/users");
 const fs = require("fs");
 var osu = require("node-os-utils");
@@ -9,6 +9,7 @@ var mem = osu.mem;
 // const exec = childProcess.exec
 "use strict";
 var exec = require("child_process").exec;
+const schedule = require('node-schedule')
 
 /**
  * 获取中央处理器占用率
@@ -120,9 +121,22 @@ function viewProcessMessage2() {
  */
  async function viewProcessMessage () {//name, cb
   return 12;
-  var a=''
+  var a='haha'
   let data=await new Promise(function(resolve, reject) {
-    var cmd = "netstat -nat|grep -i '80'|wc -l";//监听80端口拿进程数
+    var cmd = "node -v";//监听80端口拿进程数
+    exec(cmd,function(err, stdout, stderr) {
+      if (err) {
+          console.log(err);
+          reject(err);
+      } else if (stderr.length > 0) {
+          reject(new Error(stderr.toString()));
+      } else {
+          // a=stdout;
+          console.log('stdout:',stdout);
+          resolve();
+      }
+  })
+/*     var cmd = "netstat -nat|grep -i '80'|wc -l";//监听80端口拿进程数
     exec(cmd,{
         maxBuffer: 1024 * 2000
     }, function(err, stdout, stderr) {
@@ -136,15 +150,74 @@ function viewProcessMessage2() {
             // console.log('stdout:',stdout);
             resolve();
         }
-    });
+    }); */
   });
   return a;
 }
- 
 
+
+/**
+ * 监听资源
+ * @returns {Promise<*|*>}
+ */
+async function resourceMonitor() {
+    try {
+        // var rule = new schedule.RecurrenceRule()
+        let data=await systemConfiguration.find({'name':'resource_threshold'});
+        var error=[];//或者能够在向首页发送通知的时候写入日志里面
+        var checkJob = schedule.scheduleJob('*/10 * * * * *', function () {
+            // console.log(data[0].configuration.CPU);
+            let cpuRule=data[0].configuration.CPU;
+            let cpu=getCpuPercentage().then(res=>{
+              if(cpuRule.threshold>res.toString()){
+                console.log('res:', res);
+              }else{
+                console.log(cpuRule.result,res)
+              }
+            });
+            let memoryRule=data[0].configuration.Memory;
+            let memory=getMemory().then(res=>{
+              if(memoryRule.threshold>res.usedMemPercentage){
+                console.log('res:', res.usedMemPercentage);
+              }else{
+                console.log(memoryRule.result,res.usedMemPercentage)
+              }
+            });
+            let diskRule=data[0].configuration.Disk;
+            let disk=getDisk().then(res=>{
+              var calc = {
+                used:0,
+                sum: 0,
+              };
+              function myFunction(item, index){
+                this.used+=  Math.floor(item.used/1024/1024/1024 * 100) / 100;
+                this.sum+=  Math.floor(item.size/1024/1024/1024 * 100) / 100;
+              }
+              res.forEach(myFunction,calc)
+              let diskPercentage=calc.used/calc.sum*100
+              if(diskRule.threshold>diskPercentage){
+                console.log('res:', diskPercentage);
+              }else{
+                console.log(diskRule.result,diskPercentage)
+              }
+            });
+            // console.log(cpu);
+/*            let disk=getDisk();
+            console.log(disk);
+            let memory=getMemory();
+            console.log(memory);*/
+        })
+        if(error.length){console.log('+++++++++++++++++++++++++++')}
+        // console.log('下一次检查时间：' + checkJob.nextInvocation())
+    } catch (e) {
+        return e;
+    }
+}
+// resourceMonitor();
 module.exports = {
   getCpuPercentage,
   getMemory,
   getDisk,
-  viewProcessMessage
+  viewProcessMessage,
+  resourceMonitor
 };

@@ -1202,7 +1202,15 @@ async function updateItemGuide({
                 }
             })
         }
-        if (task_name !== null) newData.task_name = task_name
+        if (task_name !== null) {
+            newData.task_name = task_name
+            bulkOps.push({
+                updateOne: {
+                    filter: { task_code: new_task_code },
+                    update: { item_name: task_name }
+                }
+            })
+        }
         if (wsyy !== null) newData.wsyy = wsyy
         if (service_object_type !== null) {
             let str = ''
@@ -1649,8 +1657,8 @@ async function updateItems({
             var newData = {}
             if (task_code !== null) {
                 //检查task_code的合法性
-                let task = await modelTask.exists({ task_code: task_code })
-                if (task === false) {
+                let task = await modelTask.findOne({ task_code: task_code })
+                if (task === null) {
                     throw new Error('task_code不存在: ' + task_code)
                 }
                 //检查是否需要更改对应事项指南的状态
@@ -1664,6 +1672,7 @@ async function updateItems({
                     })
                 }
                 newData.task_code = task_code
+                newData.item_name = task.task_name
             }
             if (rule_id !== null) {
                 //检查rule_id的合法性

@@ -1,22 +1,37 @@
 // const systemFailure = require("../model/systemFailure");
 const {
-    getMongoFile
+  getMongoBackupCycle,
+    changeBackupCycleService
 } = require("../service/systemBackupService.js")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
   /**
-   * 查看系统故障
+   * 查看系统备份周期
    * @returns {Promise<ErrorModel|SuccessModel>}
    */
-   async function getMongoFileController() {
+   async function getMongoBackupCycleController() {
     try {
-      let data = await getMongoFile();
-      return new SuccessModel({msg: '获取系统故障成功', data:data});
+      let data = await getMongoBackupCycle();
+      return new SuccessModel({msg: '获取系统备份周期成功', data:data});
     } catch (e) {
       return new ErrorModel({msg:e.message})
     }
   }
 
+/**
+ * 修改系统备份周期
+ * @returns {Promise<ErrorModel|SuccessModel>}
+ */
+async function changeBackupCycleController(data) {
+    try {
+        await changeBackupCycleService(data);
+        return new SuccessModel({msg: '获取系统备份周期成功', data:data});
+    } catch (e) {
+        return new ErrorModel({msg:e.message})
+    }
+}
+
   module.exports = {
-    getMongoFileController
+    getMongoBackupCycleController,
+      changeBackupCycleController
   }

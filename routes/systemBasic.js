@@ -187,6 +187,12 @@ router.post(
   (req, res) => {
     console.log("-----------backstagelogo------------")
     console.log(req.file)
+    if(!/(gif|jpg|jpeg|png|GIF|JPG|PNG)$/.test(req.file.mimetype)){
+      return res.send({
+        code:400,
+        msg:"文件必须为图片类型"
+      })
+    }
     res.send(req.file);
 
   //   const form = formidable();
