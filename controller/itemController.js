@@ -340,7 +340,7 @@ async function getItems({
             //返回结果
             var dict = {}
             dict.data = data
-            dict.total = items[0].count[0].total ? items[0].count[0].total : 0
+            dict.total = items[0].count.length > 0 ? items[0].count[0].total : 0
             dict.page_size = page_size
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
@@ -890,7 +890,7 @@ async function getItemGuides({
             ])
             var result = {}
             result.data = tasks[0].data
-            result.total = tasks[0].count[0].total ? tasks[0].count[0].total : 0
+            result.total = tasks[0].count.length ? tasks[0].count[0].total : 0
             result.page_size = page_size
             result.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: result })
@@ -1427,7 +1427,7 @@ async function getRegions({
             }
             var dict = {}
             dict.data = data
-            dict.total = regions[0].count[0].total ? regions[0].count[0].total : 0
+            dict.total = regions[0].count.length ? regions[0].count[0].total : 0
             dict.page_size = page_size
             dict.page_num = page_num
             return new SuccessModel({ msg: '查询成功', data: dict })
