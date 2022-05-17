@@ -39,9 +39,9 @@ function setStatusCode(res,data) {
 router.post('/v1/change-backup-cycle', async (req,res,next) => {
     let data = req.body;
     // console.log(data);
-    await changeBackupCycleController(data)
+    let message=await changeBackupCycleController(data)
 //   setStatusCode(res,data)
-    res.json(data)
+    res.json(message)
 })
 
 

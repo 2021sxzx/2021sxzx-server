@@ -64,7 +64,7 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.log'), { flags: 'a' });
 //往日志添加用户信息
-logger.token('id',function getId(req){return req.headers.user_id});
+logger.token('id',function getId(req){return req.headers.userid});
 logger.token('localDate',function getDate(){
   var date=new Date(new Date().getTime()+8 * 3600 * 1000);
   return date.toISOString()

@@ -24,8 +24,8 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
  */
 async function changeBackupCycleController(data) {
     try {
-        await changeBackupCycleService(data);
-        return new SuccessModel({msg: '获取系统备份周期成功', data:data});
+        let message=await changeBackupCycleService(data);
+        return new SuccessModel({msg: '修改系统备份周期成功', data:message});
     } catch (e) {
         return new ErrorModel({msg:e.message})
     }

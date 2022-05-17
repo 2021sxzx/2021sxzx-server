@@ -36,15 +36,19 @@ const logger=require('morgan')
  */
 async function changeBackupCycleService(data) {
     try {
-        console.log(data.time);
-        await systemConfiguration.updateOne({'name':'backup_cycle'},{
+        // console.log('data.time:',data.time);
+/*         await systemConfiguration.updateOne({name:'backup_cycle'},{
             _id:_id,
             name:name,
             configuration:{cycle:data.time},
-        })
+        }) */
+        await systemConfiguration.updateOne({name:'backup_cycle'},{
+          $set: {configuration:{cycle:data.time}}
+      })
         var config = await systemConfiguration.findOne({'name': 'backup_cycle'});
-        console.log("config:");
-        console.log(config);
+        return 'success'
+        // console.log("config:");
+        // console.log(config);
     } catch (e) {
         return e.message;
     }
