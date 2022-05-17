@@ -120,10 +120,10 @@ function viewProcessMessage2() {
  * @returns {Promise<*|*>}
  */
  async function viewProcessMessage () {//name, cb
-  return 12;
+  // return 12;
   var a='haha'
   let data=await new Promise(function(resolve, reject) {
-    var cmd = "node -v";//监听80端口拿进程数
+    /* var cmd = "node -v";//监听80端口拿进程数
     exec(cmd,function(err, stdout, stderr) {
       if (err) {
           console.log(err);
@@ -135,8 +135,8 @@ function viewProcessMessage2() {
           console.log('stdout:',stdout);
           resolve();
       }
-  })
-/*     var cmd = "netstat -nat|grep -i '80'|wc -l";//监听80端口拿进程数
+    }) */
+    var cmd = "netstat -nat|grep -i '80'|wc -l";//监听80端口拿进程数
     exec(cmd,{
         maxBuffer: 1024 * 2000
     }, function(err, stdout, stderr) {
@@ -150,7 +150,7 @@ function viewProcessMessage2() {
             // console.log('stdout:',stdout);
             resolve();
         }
-    }); */
+    });
   });
   return a;
 }
