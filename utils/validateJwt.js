@@ -3,19 +3,16 @@ const rediscl = require('../config/redis');
 
 
 const jwt_secret = "jwtfanhere";
+// token过期时间 设置为10分钟，10分钟后过期，判断登出
 const jwt_expiration = 60 * 10;
 const jwt_refresh_expiration = 60 * 10;
-
 //访问敏感路由时验证用户
 function validate_jwt(req, res, next) {
-
     if (req.path === '/api/v1/login') {
         next();
     } else {
         let accesstoken = req.cookies.access_token || null;
         let refreshtoken = req.cookies.refresh_token || null;
-        console.log(accesstoken);
-
         // 如果cookies中有token和refreshtoken
         if (accesstoken && refreshtoken) {
             // 验证token
@@ -28,7 +25,6 @@ function validate_jwt(req, res, next) {
                         let redis_token = rediscl.get(decoded.account, function (err, val) {
                             return err ? null : val ? val : null;
                         });
-
                         // 如果redis没找到token或refreshtoken错误
                         if (
                             !redis_token ||
@@ -37,9 +33,7 @@ function validate_jwt(req, res, next) {
                             // refreshtoken错误，可能是网站受到攻击
                             //reject("Nice try ;-)");
                             res.status(403).send('认证无效，请重新登录。');
-
                         } else {
-
                             // 如果refreshtoken过期
                             if (redis_token.expires < new Date()) {
                                 // 颁发新的refreshtoken
@@ -49,9 +43,7 @@ function validate_jwt(req, res, next) {
                                     // secure: true,
                                     httpOnly: true
                                 });
-
                                 let refresh_token_maxage = new Date() + jwt_refresh_expiration;
-
                                 //保存在redis中
                                 rediscl.set(
                                     decoded.account,
@@ -62,17 +54,14 @@ function validate_jwt(req, res, next) {
                                     rediscl.print
                                 );
                             }
-
                             // 生成新的token
                             let token = jwt.sign({ account: decoded.uid }, jwt_secret, {
                                 expiresIn: jwt_expiration
                             });
-
                             res.cookie("access_token", token, {
                                 // secure: true,
                                 httpOnly: true
                             });
-
                             next();
                         }
                     } else {

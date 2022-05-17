@@ -53,17 +53,57 @@ class unitService {
 
   // 修改单位下的处室名称
   async updateDepartmentInUnit (unit_name, department_name, new_department_name) {
-    
+    const res = await unit.updateOne({
+      unit_name,
+    }, {
+      department_name: new_department_name
+    })
+    return res;
   }
 
   // 根据单位找到所属部门
-  async findDepartmentByUnit () {}
+  async findDepartmentByUnit (unit_name) {
+    const res = await unitMapDepartment.find({
+      unit_name
+    }, {
+      department_name: 1
+    });
+    return res;
+  }
 
   // 单位下面添加部门
-  async addDepartmentInUnit () {}
+  async addDepartmentInUnit (unit_name, department_name) {
+    const isExist = await unitMapDepartment.findOne({
+      unit_name,
+      department_name
+    });
+    // 不允许重复添加
+    if (!isExist) {
+      return;
+    }
+    const res = await unitMapDepartment.create({
+      unit_name,
+      department_name
+    })
+    return res;
+  }
 
   // 单位下面删除部门
-  async deleteDepartmentInUnit () {}
+  async deleteDepartmentInUnit (unit_name, department_name) {
+    const isExist = await unitMapDepartment.findOne({
+      unit_name,
+      department_name
+    });
+    // 不允许重复删除
+    if (!isExist) {
+      return;
+    }
+    const res = await unitMapDepartment.deleteOne({
+      unit_name,
+      department_name
+    })
+    return res;
+  }
 
   // 单位下面的部门列表
   async departmentListInUnit () {}

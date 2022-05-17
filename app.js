@@ -85,7 +85,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(validate_jwt);
 */
 
-
 // 处理路由
 app.use('/api', usersRouter);
 app.use('/api', commentRouter);
