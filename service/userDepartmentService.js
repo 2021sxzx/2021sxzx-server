@@ -1,6 +1,7 @@
 const departmentMapUser = require('../model/departmentMapUser');
 const department = require('../model/department');
-const { users } = require('systeminformation');
+const users = require('../model/users');
+// const { users } = require('systeminformation');
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
 class userDepartmentService {
@@ -103,6 +104,9 @@ class userDepartmentService {
     return res === null ? '没有处室' : res.department_name;
   }
 
+  // 查找处室有哪些人
+  async findPeopleByDepartment () {}
+
   async isInDepartment (department_name) {
     const res = await department.findOne({
       department_name: department_name
@@ -158,6 +162,9 @@ class userDepartmentService {
       data: res
     });
   }
+
+  /******************上面的接口全部废弃****************************************/
+  
 }
 
 module.exports = new userDepartmentService();

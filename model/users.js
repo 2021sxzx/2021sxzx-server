@@ -30,8 +30,13 @@ const usersSchema = new mongoose.Schema({
   user_rank: { //用户身份
     type: Number,
     default: 0 //默认是业务员
+  },
+  // 单位id
+  department_id: {
+    type: String,
+    require: true
   }
-})
+});
 
 const users = mongoose.model('users', usersSchema);
 module.exports = users;

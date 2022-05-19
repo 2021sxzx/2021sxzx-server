@@ -13,8 +13,13 @@ const departmentSchema = new mongoose.Schema({
   subordinate_departments:{   //下属部门
     type:Array,
     default:[]
+  },
+  // 所属单位id
+  unit_id: {
+    type: String,
+    require: true
   }
 })
 
 const department = mongoose.model('department',departmentSchema)
-module.exports = department
+module.exports = department;

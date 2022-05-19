@@ -3,6 +3,32 @@ const roleMapPermission = require('../model/roleMapPermission')
 const users = require('../model/users')
 const permission = require('../model/permission')
 
+async function findRank (role_name) {
+  try {
+    const rank = role.find({role_name});
+    if (!rank) {
+      return
+    } else {
+      return rank.role_rank;
+    }
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
+
+// 判断是否可以CRUD的函数 
+function compareRankAndJudge (role_rank1, role_rank2) {
+  try {
+    if (role_rank1 > role_rank2 || Math.abs(role_rank1 - role_rank2) !== 1) {
+      return false;
+    } else {
+      return true;
+    }
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
+
 /**
  * 添加角色【肯定也要随之添加权限】
  * @param role_name
@@ -10,9 +36,12 @@ const permission = require('../model/permission')
  * @param permission_identifier_array [Array]
  * @return {Promise} 返回值是一个角色，没有角色对应的权限
  * 得要是一个数组，就不太好了。因为不好携带
+ * 
+ * 还必须知道这里操控用户的rank值，只能添加下一级的rank的角色
+ * 操控用户的rank值：adder_rank
  */
-async function addRole (role_name, role_describe, permission_identifier_array) {
-  try {   
+async function addRole (role_name, role_describe, permission_identifier_array, role_rank, adder_rank) {
+  try {
     // // 控制保证必须有输入权限
     // if (new Set(permission_identifier_array).length <= 1) {
     //   throw new Error("权限数组不够噢")
@@ -39,8 +68,9 @@ async function addRole (role_name, role_describe, permission_identifier_array) {
 
     // 添加角色
     const res = await role.create({
-      role_name: role_name,
-      role_describe: role_describe
+      role_name,
+      role_describe,
+      role_rank,
     })
 
     // 返回一个角色，没有权限
@@ -60,11 +90,12 @@ async function addRole (role_name, role_describe, permission_identifier_array) {
 async function getRole (role_name, role_describe) {
   try {
     const roleObj = await role.findOne({
-      role_name: role_name, 
+      role_name: role_name,
       role_describe: role_describe
     }, {
       role_name: 1,
-      role_describe: 1
+      role_describe: 1,
+      role_rank: 1
     })
     return roleObj;
   } catch (error) {
@@ -98,7 +129,7 @@ async function updateRole (role_name_old, role_name, role_describe) {
     }, {
       role_name: role_name,
       role_describe: role_describe
-    })
+    });
 
     await roleMapPermission.updateMany({
       role_name: role_name_old
@@ -110,7 +141,7 @@ async function updateRole (role_name_old, role_name, role_describe) {
     });
     return res
   } catch (e) {
-    return new Error(e.message)
+    throw new Error(e.message)
   }
 }
 

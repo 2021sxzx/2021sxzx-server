@@ -5,6 +5,12 @@ const unitSchema = new mongoose.Schema({
     type: String,
     default: '',
     require: true
+  },
+  // 做一个拷贝，unit_id为_id就可
+  unit_id: {
+    type: String,
+    default: '',
+    require: true
   }
 });
 

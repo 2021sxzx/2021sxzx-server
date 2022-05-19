@@ -1761,3 +1761,11 @@
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-17T11:02:29.730Z] "GET /api/v1/itemBrowseCount/ HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.47"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-17T11:02:34.633Z] "GET /api/v1/show/ HTTP/1.1" - - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.47"
 >>>>>>> f9c060266c06fd43caa0770a0575a2e38c0cbbf8
+- ::ffff:127.0.0.1 - - [2022-05-19T10:26:40.641Z] "GET /api/v1/user HTTP/1.1" 200 1533 "-" "PostmanRuntime/7.29.0"
+- ::ffff:127.0.0.1 - - [2022-05-19T10:33:41.079Z] "GET /api/v1/Department HTTP/1.1" - - "-" "PostmanRuntime/7.29.0"
+- ::ffff:127.0.0.1 - - [2022-05-19T10:35:36.794Z] "GET /api/v1/Department HTTP/1.1" - - "-" "PostmanRuntime/7.29.0"
+- ::ffff:127.0.0.1 - - [2022-05-19T10:35:45.185Z] "GET /api/v1/user HTTP/1.1" - - "-" "PostmanRuntime/7.29.0"
+- ::ffff:127.0.0.1 - - [2022-05-19T10:52:51.080Z] "GET /api/v1/user HTTP/1.1" - - "-" "PostmanRuntime/7.29.0"
+- ::ffff:127.0.0.1 - - [2022-05-19T10:53:00.448Z] "GET /api/v1/user HTTP/1.1" - - "-" "PostmanRuntime/7.29.0"
+- ::ffff:127.0.0.1 - - [2022-05-19T11:08:00.596Z] "GET /api/v1/user HTTP/1.1" - - "-" "PostmanRuntime/7.29.0"
+- ::ffff:127.0.0.1 - - [2022-05-19T14:49:58.288Z] "GET /api/v1/user HTTP/1.1" 200 1533 "-" "PostmanRuntime/7.29.0"

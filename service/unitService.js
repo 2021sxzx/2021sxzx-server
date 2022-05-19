@@ -1,6 +1,8 @@
 const unit = require('../model/unit');
 const unitMapDepartment = require('../model/unitMapDepartment');
 const department = require('../model/department');
+const departmentMapUser = require('../model/departmentMapUser');
+const { SuccessModel } = require('../utils/resultModel');
 
 class unitService {
   // 部门下添加单位
@@ -15,11 +17,16 @@ class unitService {
       return;
     }
 
-    const res = await unitMapDepartment.create({
+    await unitMapDepartment.create({
       unit_name,
       department_name
-    })
-    return res;
+    });
+
+    const res = await this.unitList();
+    return new SuccessModel({
+      msg: "添加成功",
+      data: res
+    });
   }
 
   // 删除单位
@@ -30,6 +37,12 @@ class unitService {
     }
     await unit.deleteOne({unit_name});
     await unitMapDepartment.deleteMany({unit_name});
+
+    const res = await this.unitList();
+    return new SuccessModel({
+      msg: "删除成功",
+      data: res
+    })
   }
 
   // 修改单位
@@ -40,6 +53,11 @@ class unitService {
     await unitMapDepartment.updateMany({unit_name}, {
       unit_name: new_unit_name
     });
+    const res = await this.unitList();
+    return new SuccessModel({
+      msg: "修改成功",
+      data: res
+    })
   }
 
   // 搜索单位
@@ -48,27 +66,37 @@ class unitService {
     const res = await unit.find({
       unit_name: {$regex: reg}
     });
-    return res;
+    return new SuccessModel({
+      msg: "搜索成功",
+      data: res
+    })
   }
 
   // 修改单位下的处室名称
   async updateDepartmentInUnit (unit_name, department_name, new_department_name) {
     const res = await unit.updateOne({
       unit_name,
+      department_name
     }, {
       department_name: new_department_name
     })
-    return res;
+    return new SuccessModel({
+      msg: "修改成功",
+      data: res
+    })
   }
 
-  // 根据单位找到所属部门
-  async findDepartmentByUnit (unit_name) {
+  // 根据部门找到所属单位
+  async findDepartmentByUnit (department_name) {
     const res = await unitMapDepartment.find({
-      unit_name
+      department_name
     }, {
-      department_name: 1
+      unit_name: 1
     });
-    return res;
+    return new SuccessModel({
+      msg: "查找成功",
+      data: res
+    })
   }
 
   // 单位下面添加部门
@@ -81,11 +109,16 @@ class unitService {
     if (!isExist) {
       return;
     }
-    const res = await unitMapDepartment.create({
+    await unitMapDepartment.create({
       unit_name,
       department_name
-    })
-    return res;
+    });
+
+    const res = await this.departmentListInUnit(unit_name);
+    return new SuccessModel({
+      msg: "添加成功",
+      data: res
+    });
   }
 
   // 单位下面删除部门
@@ -98,15 +131,26 @@ class unitService {
     if (!isExist) {
       return;
     }
-    const res = await unitMapDepartment.deleteOne({
+    await unitMapDepartment.deleteOne({
       unit_name,
       department_name
     })
-    return res;
+    const res = await this.departmentListInUnit(unit_name);
+    return new SuccessModel({
+      msg: "删除成功",
+      data: res
+    });
   }
 
   // 单位下面的部门列表
-  async departmentListInUnit () {}
+  async departmentListInUnit (unit_name) {
+    const res = await unitMapDepartment.find({
+      unit_name
+    }, {
+      department_name: 1
+    });
+    return res;
+  }
 
   // 整个单位列表
   async unitList () {
