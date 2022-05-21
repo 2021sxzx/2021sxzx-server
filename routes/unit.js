@@ -21,6 +21,6 @@ router.post('/v1/unit', wrap(unitController.addUnit));
 router.delete('/v1/unit', wrap(unitController.deleteUnit));
 router.patch('/v1/unit', wrap(unitController.updateUnit));
 router.post('/v1/searchUnit', wrap(unitController.searchUnit));
-router.get('/v1/lookupUnit', wrap(unitController.lookupUnit));
+// router.get('/v1/lookupUnit', wrap(unitController.lookupUnit));
 
 module.exports = router;

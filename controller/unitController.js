@@ -34,12 +34,12 @@ class unitController {
     res.json(result);
   }
 
-  async lookupUnit (req, res) {
-    const { unit_id } = req.query;
-    const result = await unitService.lookupUnit(unit_id);
-    setStatusCode(res, result);
-    res.json(result);
-  }
+  // async lookupUnit (req, res) {
+  //   const { unit_id } = req.query;
+  //   const result = await unitService.lookupUnit(unit_id);
+  //   setStatusCode(res, result);
+  //   res.json(result);
+  // }
 
   async getUnit (req, res) {
     const result = await unitService.unitTree();

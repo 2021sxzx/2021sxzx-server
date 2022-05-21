@@ -9,7 +9,8 @@ const {
   isActivation,
   setActivation,
   batchImportedUser
-} = require('../service/userManagementService')
+} = require('../service/userManagementService');
+const unitService = require('../service/unitService');
 const userDepartmentService = require('../service/userDepartmentService');
 
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
@@ -22,13 +23,12 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 async function addUserAndReturnList (userInfo) {
   try {
     await addUser(userInfo);
-    await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name, userInfo.department_name);
+    // await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name, userInfo.department_name);
 
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
-
+        const cal = await unitService.lookupUnit(item.unit_id);
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -36,7 +36,7 @@ async function addUserAndReturnList (userInfo) {
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_name: cal
         }
       })
     )
@@ -55,11 +55,11 @@ async function addUserAndReturnList (userInfo) {
 async function addUserBatchingAndReturnList (imported_array) {
   try {
     await batchImportedUser(imported_array);
-    await userDepartmentService.addDepartmentBatching(imported_array);
+    // await userDepartmentService.addDepartmentBatching(imported_array);
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
 
         return {
           _id: item._id,
@@ -68,7 +68,7 @@ async function addUserBatchingAndReturnList (imported_array) {
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_id: cal
         }
       })
     )
@@ -90,7 +90,7 @@ async function returnUserList () {
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
         // if (!item['department_name']) {
         //   item['department_name'] = cal;
         // }
@@ -103,7 +103,7 @@ async function returnUserList () {
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_name: cal
         }
       })
     )
@@ -130,7 +130,7 @@ async function updateUserAndReturnList (user_name, password, role_name, account,
     const res = await getUserList()
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -159,11 +159,11 @@ async function updateUserAndReturnList (user_name, password, role_name, account,
 async function deleteUserAndReturnList (account) {
   try {
     await deleteUser(account);
-    await userDepartmentService.deleteUserAndDepartment(account);
+    // await userDepartmentService.deleteUserAndDepartment(account);
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -192,7 +192,7 @@ async function searchUserAndReturnList (searchValue) {
     const res = await searchUser(searchValue);
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -219,7 +219,7 @@ async function setActivationAndReturn (account) {
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
         return {
           _id: item._id,
           user_name: item.user_name,

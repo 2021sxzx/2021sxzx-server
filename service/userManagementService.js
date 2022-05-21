@@ -33,7 +33,8 @@ async function getUserList () {
       password: 1,
       role_name: 1,
       account: 1,
-      activation_status: 1
+      activation_status: 1,
+      unit_id: 1
     })
   } catch (e) {
     throw e.message
@@ -106,7 +107,8 @@ async function searchUser (searchValue) {
       password: 1,
       role_name: 1,
       account: 1,
-      activation_status: 1
+      activation_status: 1,
+      unit_id: 1
     })
   } catch (e) {
     throw e.message
@@ -162,7 +164,7 @@ async function batchImportedUser (imported_array) {
         account: item.account,
         password: item.password,
         activation_status: 1,
-        user_rank: 0
+        user_rank: 0,
       }
     })
     let res = await users.insertMany(mapArray, (err) => { console.log(err) });

@@ -8,11 +8,12 @@ class unitService {
   // 添加单位
   async addUnit (unit_name, parent_unit) {
     // 使用时间戳来做自增id
-    const res = await unit.create({
+    await unit.create({
       unit_name,
       unit_id: Date.now(),
       parent_unit,
     });
+    const res = await this.unitTree();
     return new SuccessModel({
       msg: '添加成功',
       data: res
@@ -23,12 +24,16 @@ class unitService {
   async deleteUnit (unit_id) {
     const isExist = await unit.find({ unit_id });
     const isHaveChild = await unit.find({parent_unit: unit_id});
-    if (isExist.length === 0 || isHaveChild.length === 0) {
+    const isUsed = await users.find({ unit_id });
+    console.log(isExist.length);
+    console.log(isHaveChild.length);
+    if (isExist.length === 0 || isHaveChild.length !== 0 || isUsed.length !== 0) {
       return new ErrorModel({
         msg: '删除失败',
       });
     }
-    const res = await unit.deleteOne({ unit_id });
+    await unit.deleteOne({ unit_id });
+    const res = await this.unitTree();
     return new SuccessModel({
       msg: '删除成功',
       data: res
@@ -37,22 +42,24 @@ class unitService {
 
   // 修改单位
   async updateUnit (unit_id, new_unit_name) {
-    const res = await unit.updateOne({ unit_id }, {
+    await unit.updateOne({ unit_id }, {
       unit_name: new_unit_name
     });
+    const res = await this.unitTree();
     return new SuccessModel({
       msg: '更新成功',
       data: res
     });
   }
 
-  // 查询单位
+  // 查询单位名称
   async lookupUnit (unit_id) {
+    console.log(unit_id);
+    if (Number.isNaN(unit_id)) {
+      return '无单位';
+    }
     const res = await unit.findOne({ unit_id });
-    return new SuccessModel({
-      msg: '查询成功',
-      data: res
-    });
+    return !(res.unit_name === null || res.unit_name === undefined) ? res.unit_name : '无单位';
   }
 
   // 查找父单位
@@ -112,8 +119,9 @@ class unitService {
   async createUnitToken (unit_id) {
     let token = `${unit_id}`;
     let parent = null;
+    let that = this;
     while (1) {
-      parent = await this.findParent(unit_id);
+      parent = await that.findParent(unit_id);
       if (!parent) {
         break;
       } else {

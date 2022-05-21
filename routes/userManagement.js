@@ -57,7 +57,7 @@ router.post('/v1/user', async (req, res, next) => {
     account: req.body.account,
     password: req.body.password,
     role_name: req.body.role_name,
-    department_name: req.body.department_name
+    unit_id: req.body.unit_id
   })
   setStatusCode(res, data)
   res.json(data)
