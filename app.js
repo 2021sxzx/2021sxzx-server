@@ -7,6 +7,7 @@ const logger = require('morgan');
 
 
 const usersRouter = require('./routes/users');
+const unitRouter = require('./routes/unit');
 const commentRouter = require("./routes/comment")
 const systemLogRouter = require("./routes/systemLog")
 const taskRouter = require("./routes/taskRoutes")
@@ -22,6 +23,7 @@ const systemBasicRouter = require('./routes/systemBasic.js')
 const systemBackupRouter=require('./routes/systemBackup')
 const userDepartmentRouter = require('./routes/userDepartment');
 const imageRouter = require('./routes/image');
+
 const department = require('./model/department');
 const departmentMapUser = require('./model/departmentMapUser');
 
@@ -36,9 +38,9 @@ const redisClient = require('./config/redis');
 // const item = require("./model/item")
 // const itemGuide = require("./model/task")
 
-(async () => {
-  await redisClient.connect()
-})();
+// (async () => {
+//   await redisClient.connect()
+// })();
 mongoose.connect(MONGO_CONFIG.url);
 
 const app = express();
@@ -87,6 +89,7 @@ app.use(validate_jwt);
 
 // 处理路由
 app.use('/api', usersRouter);
+app.use('/api', unitRouter);
 app.use('/api', commentRouter);
 app.use('/api', taskRouter)
 app.use('/api', systemLogRouter)

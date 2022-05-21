@@ -12,6 +12,10 @@ const roleSchema = new mongoose.Schema({
     type: String,
     maxlength:[500, '角色描述长度不能超过500个字符'],
     default:'角色描述暂未添加'
+  },
+  role_rank: {
+    type: Number,
+    default: 1
   }
 })
 

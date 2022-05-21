@@ -32,7 +32,7 @@ const usersSchema = new mongoose.Schema({
     default: 0 //默认是业务员
   },
   // 单位id
-  department_id: {
+  unit_id: {
     type: String,
     require: true
   }
