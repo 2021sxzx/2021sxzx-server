@@ -12,7 +12,6 @@ const {
 const {
   calcaulatePermission
 } = require('../service/roleService')
-const role = require('../model/role');
 
 const {
   isActivation,
@@ -34,11 +33,12 @@ router.get('/test', async (req, res, next) => {
  * 添加角色
  */
 router.post('/v1/role', async (req, res, next) => {
-  const {role_name, role_describe, permission_identifier_array} = req.body
+  const {role_name, role_describe, permission_identifier_array, role_rank} = req.body
   let data = await addRoleAndReturnObject(
     role_name,
     role_describe,
-    permission_identifier_array
+    permission_identifier_array,
+    role_rank
   )
   setStatusCode(res, data)
   res.json(data)
@@ -49,7 +49,7 @@ router.post('/v1/role', async (req, res, next) => {
  */
 router.delete('/v1/role', async (req, res, next) => {
   let role = req.body
-  let data = await deleteRoleAndReturnObject(role.role_name, role.role_describe);
+  let data = await deleteRoleAndReturnObject(Number(role.role_id));
   setStatusCode(res, data)
   res.json(data)
 })
@@ -59,7 +59,7 @@ router.delete('/v1/role', async (req, res, next) => {
  */
 router.patch('/v1/role', async (req, res, next) => {
   let role = req.body
-  let data = await updateRoleAndReturnObject(role.role_name_old, role.role_name, role.role_describe)
+  let data = await updateRoleAndReturnObject(role.role_name, Number(role.role_id), role.role_describe)
   setStatusCode(res, data)
   res.json(data)
 })
@@ -68,7 +68,8 @@ router.patch('/v1/role', async (req, res, next) => {
  * 获取角色列表
  */
 router.get('/v1/role', async (req, res, next) => {
-  let data = await returnRoleList()
+  const {role_id} = req.query;
+  let data = await returnRoleList(Number(role_id))
   setStatusCode(res, data)
   res.json(data)
 })

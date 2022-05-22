@@ -17,17 +17,19 @@ const { SuccessModel, ErrorModel } = require('../utils/resultModel')
  * 添加一个角色，并且返回一个角色供前端渲染
  * @param {*} role_name
  * @param {*} role_describe
- * @param  {...any} permission_identifier_array
+ * @param {*} role_rank
+ * @param  {Array} permission_identifier_array
  */
 async function addRoleAndReturnObject (
   role_name,
   role_describe,
-  permission_identifier_array
+  permission_identifier_array,
+  role_rank
 ) {
   try {
-    await addRole(role_name, role_describe, permission_identifier_array)
-    const res = await getRole(role_name, role_describe);
-    const calPermission = await calcaulatePermission(role_name);
+    await addRole(role_name, role_describe, permission_identifier_array, role_rank);
+    const res = await getRole(role_id);
+    const calPermission = await calcaulatePermission(role_id);
     console.log({
       ...res,
       permission: calPermission
@@ -37,7 +39,8 @@ async function addRoleAndReturnObject (
       data: {
         role_name: res.role_name,
         role_describe: res.role_describe,
-        permission: calPermission
+        permission: calPermission,
+        role_id: res.role_id
       }
     })
   } catch (e) {
@@ -53,9 +56,9 @@ async function addRoleAndReturnObject (
  * @param {*} role_name
  * @param {*} role_describe
  */
-async function updateRoleAndReturnObject (role_name_old, role_name, role_describe) {
+async function updateRoleAndReturnObject (role_name, role_id, role_describe) {
   try {
-    const res = await updateRole(role_name_old, role_name, role_describe)
+    const res = await updateRole(role_name, role_id, role_describe)
     return new SuccessModel({
       msg: '更新用户角色成功',
       data: res
@@ -72,13 +75,13 @@ async function updateRoleAndReturnObject (role_name_old, role_name, role_describ
  * 返回一个角色权限列表
  * @returns {Promise<Array[]>}
  */
-async function returnRoleList () {
+async function returnRoleList (role_id) {
   try {
-    const roleList = await getRoleList()
+    const roleList = await getRoleList(role_id)
     const permissionList = await Promise.all(
       await roleList.map(async (item) => {
-        const permissions = await calcaulatePermission(item.role_name);
-        const permissionIdentifierArray = await calcaulatePermissionIdentifier(item.role_name);
+        const permissions = await calcaulatePermission(item.role_id);
+        const permissionIdentifierArray = await calcaulatePermissionIdentifier(item.role_id);
         return {
           permissions,
           permissionIdentifierArray
@@ -90,10 +93,11 @@ async function returnRoleList () {
     for (let i = 0; i < roleList.length; i++) {
       res.push({
         role_name: roleList[i].role_name,
+        role_id: roleList[i].role_id,
         role_describe: roleList[i].role_describe,
         permission: permissionList[i].permissions,
         permission_identifier_array: permissionList[i].permissionIdentifierArray
-      })
+      });
     }
   
     return new SuccessModel({
@@ -110,12 +114,12 @@ async function returnRoleList () {
 
 /**
  * 删除角色
- * @param {*} role_name 
+ * @param {*} role_id 
  * @returns {Promise<*>} 
  */
-async function deleteRoleAndReturnObject (role_name, role_describe) {
+async function deleteRoleAndReturnObject (role_id) {
   try {
-    const res = await deleteRole(role_name, role_describe)
+    const res = await deleteRole(role_id)
     return new SuccessModel({
       msg: '删除成功',
       data: res
@@ -155,7 +159,7 @@ async function searchRoleAndReturnObject (searchValue) {
     
     let Permission = await Promise.all(
       Role.map(async item => {
-        const res = await calcaulatePermission(item.role_name);
+        const res = await calcaulatePermission(item.role_id);
         return res;
       })
     )
@@ -164,6 +168,7 @@ async function searchRoleAndReturnObject (searchValue) {
       return {
         role_name: item.role_name,
         role_describe: item.role_describe,
+        role_id: item.role_id,
         permission: Permission[index]
       }
     })
@@ -185,10 +190,10 @@ async function searchRoleAndReturnObject (searchValue) {
  * @param {*} role_name 
  * @param {*} permission_identifier_array 
  */
-async function updatePermission (role_name, permission_identifier_array) {
+async function updatePermission (role_id, permission_identifier_array) {
   try {
-    await deletePermission(role_name)
-    const res = await addPermission(role_name, permission_identifier_array)
+    await deletePermission(role_id)
+    const res = await addPermission(role_id, permission_identifier_array)
     return res
   } catch (error) {
     throw new ErrorModel({

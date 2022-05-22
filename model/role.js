@@ -16,8 +16,12 @@ const roleSchema = new mongoose.Schema({
   role_rank: {
     type: Number,
     default: 1
+  },
+  role_id: {
+    type: Number,
+    default: Date.now()
   }
 })
 
-const role = mongoose.model('role', roleSchema)
-module.exports = role
+const role = mongoose.model('role', roleSchema);
+module.exports = role;

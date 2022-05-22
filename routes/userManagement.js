@@ -34,7 +34,8 @@ router.all('*', function(req, res, next) {
 
 // 获取用户
 router.get('/v1/user', async (req, res, next) => {
-  const data = await returnUserList();
+  const {role_id} = req.query;
+  const data = await returnUserList(Number(role_id));
   setStatusCode(res, data)
   res.json(data)
 })  

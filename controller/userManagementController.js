@@ -12,6 +12,7 @@ const {
 } = require('../service/userManagementService');
 const unitService = require('../service/unitService');
 const userDepartmentService = require('../service/userDepartmentService');
+const roleService = require('../service/roleService');
 
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -85,9 +86,9 @@ async function addUserBatchingAndReturnList (imported_array) {
  * 用于返回一个变化后的全体列表
  * @return {Promise<SuccessModel | ErrorModel>} 
  */
-async function returnUserList () {
+async function returnUserList (role_id) {
   try {
-    const res = await getUserList();
+    const res = await getUserList(role_id);
     const res_ = await Promise.all(
       res.map(async (item) => {
         const cal = await unitService.lookupUnit(Number(item.unit_id));
@@ -99,7 +100,7 @@ async function returnUserList () {
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: item.role_name,
+          role_id: item.role_id,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,

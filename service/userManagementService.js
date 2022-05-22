@@ -31,7 +31,7 @@ async function getUserList () {
       _id: 1,
       user_name: 1,
       password: 1,
-      role_name: 1,
+      role_id: 1,
       account: 1,
       activation_status: 1,
       unit_id: 1

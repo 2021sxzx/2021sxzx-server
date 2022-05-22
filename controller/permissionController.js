@@ -19,10 +19,10 @@ class permissionController {
 
   async addPermissionAndReturn (req, res) {
     const {
-      role_name,
+      role_id,
       permission_identifier_array
     } = req.body;
-    const result_ = await addPermission(role_name, ...permission_identifier_array);
+    const result_ = await addPermission(Number(role_id), ...permission_identifier_array);
     let result = new SuccessModel({
       msg: '添加权限成功',
       data: result_,
@@ -33,9 +33,9 @@ class permissionController {
 
   async deletePermissionAndReturn (req, res) {
     const {
-      role_name
+      role_id
     } = req.body;
-    const result_ = await deletePermission(role_name);
+    const result_ = await deletePermission(Number(role_id));
     let result = new SuccessModel({
       msg: '删除角色权限成功',
       data: result_
@@ -45,10 +45,11 @@ class permissionController {
   }
 
   async searchPermissionAndReturn (req, res) {
-    const {
-      role_name
+    let {
+      role_id
     } = req.query;
-    const result_ = await searchPermission(role_name);
+    role_id = Number(role_id);
+    const result_ = await searchPermission(role_id);
     let result = new SuccessModel({
       msg: '查找角色权限成功',
       data: result_
@@ -59,10 +60,10 @@ class permissionController {
 
   async patchPermissionAndReturn (req, res) {
     const {
-      role_name,
+      role_id,
       permission_identifier_array
     } = req.body;
-    const result_ = await patchPermission(role_name, ...permission_identifier_array);
+    const result_ = await patchPermission(Number(role_id), ...permission_identifier_array);
     let result = new SuccessModel({
       msg: '修改权限成功',
       data: result_
