@@ -19,6 +19,7 @@ const { SuccessModel, ErrorModel } = require('../utils/resultModel')
  * @param {*} role_describe
  * @param {*} role_rank
  * @param  {Array} permission_identifier_array
+ * 有一个bug，就是这个role_id不存在
  */
 async function addRoleAndReturnObject (
   role_name,
@@ -28,12 +29,10 @@ async function addRoleAndReturnObject (
 ) {
   try {
     await addRole(role_name, role_describe, permission_identifier_array, role_rank);
+    // id在哪里？
     const res = await getRole(role_id);
     const calPermission = await calcaulatePermission(role_id);
-    console.log({
-      ...res,
-      permission: calPermission
-    })
+
     return new SuccessModel({
       msg: '添加角色列表成功',
       data: {
@@ -77,10 +76,11 @@ async function updateRoleAndReturnObject (role_name, role_id, role_describe) {
  */
 async function returnRoleList (role_id) {
   try {
-    const roleList = await getRoleList(role_id)
+    const roleList = await getRoleList(role_id);
     const permissionList = await Promise.all(
       await roleList.map(async (item) => {
         const permissions = await calcaulatePermission(item.role_id);
+        console.log(permissions)
         const permissionIdentifierArray = await calcaulatePermissionIdentifier(item.role_id);
         return {
           permissions,

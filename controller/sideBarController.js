@@ -10,8 +10,8 @@ function setStatusCode(res,data) {
 
 class sideBarController {
   async sideBarList (req, res) {
-    const {role_name} = req.body;
-    const result = await sideBarDataService.getSideBarList(role_name);
+    const {role_id} = req.body;
+    const result = await sideBarDataService.getSideBarList(Number(role_id));
     setStatusCode(res, result)
     res.json(result);
   }

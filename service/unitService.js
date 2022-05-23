@@ -54,7 +54,6 @@ class unitService {
 
   // 查询单位名称
   async lookupUnit (unit_id) {
-    console.log(unit_id);
     if (Number.isNaN(unit_id)) {
       return '无单位';
     }

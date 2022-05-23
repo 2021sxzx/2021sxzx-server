@@ -64,6 +64,7 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
       role_rank,
       role_id: Date.now()
     });
+
     // 往权限角色关联表里面添加关联
     permission_identifier_array.forEach((item) => {
       roleMapPermission.create({
@@ -196,7 +197,7 @@ async function SearchRole (searchValue) {
 
 /**
  * 用于计算本角色对应的权限，返回一个本角色对应的权限列表[字符数组]
- * @param role_name
+ * @param role_id
  * @return {Array[]}
  */
 async function calcaulatePermission (role_id) {
@@ -205,7 +206,7 @@ async function calcaulatePermission (role_id) {
     const permissionFindArrPrv = await roleMapPermission.find({
       role_id: role_id
     })
-
+    console.log(permissionFindArrPrv);
     // 获取角色名称
     const permissionFindArr = await Promise.all(
       permissionFindArrPrv.map(async (item) => {

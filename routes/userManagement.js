@@ -57,17 +57,17 @@ router.post('/v1/user', async (req, res, next) => {
     user_name: req.body.user_name,
     account: req.body.account,
     password: req.body.password,
-    role_name: req.body.role_name,
+    role_id: req.body.role_id,
     unit_id: req.body.unit_id
   })
-  setStatusCode(res, data)
+  setStatusCode(res, data);
   res.json(data)
 })
 
 // 修改用户
 router.patch('/v1/user', async (req, res, next) => {
   const { user_name, password, role_name, account, new_account } = req.body
-  const data = await updateUserAndReturnList(user_name, password, role_name, account, new_account )
+  const data = await updateUserAndReturnList(user_name, password, role_name, account, new_account)
   setStatusCode(res, data)
   res.json(data)
 })

@@ -1,4 +1,7 @@
-const users = require('../model/users')
+const users = require('../model/users');
+const {
+  getRole
+} = require('../service/roleService');
 
 /**
  * 添加后台用户
@@ -7,15 +10,17 @@ const users = require('../model/users')
  */
 async function addUser (userInfo) {
   try {
-    const res = await users.find(userInfo);
-    // console.log(!res);
+    const res = await users.find({account: userInfo.account});
     if (!res) {
+      console.log("res", res);
       return;
     }
-    return await users.create({
+    console.log(userInfo);
+    const resq = await users.create({
       ...userInfo,
       activation_status: 1
     });
+    return resq;
   } catch (e) {
     throw e.message
   }
@@ -50,7 +55,7 @@ async function getUserList () {
  * @param new_account
  * @return {Promise<>}
  */
-async function updateUser (user_name, password, role_name, account, new_account) {
+async function updateUser (user_name, password, role_id, account, new_account) {
   try {
     return await users.updateOne({
       account: account
@@ -58,7 +63,7 @@ async function updateUser (user_name, password, role_name, account, new_account)
       // _id: 1,
       user_name: user_name,
       password: password,
-      role_name: role_name,
+      role_name: role_id,
       account: new_account,
       activation_status: 1
     })
@@ -97,15 +102,13 @@ async function searchUser (searchValue) {
           user_name: {$regex: reg}
         }, {
           account: {$regex: reg}
-        }, {
-          role_name: {$regex: reg}
         }
       ]
     }, {
       _id: 1,
       user_name: 1,
       password: 1,
-      role_name: 1,
+      role_id: 1,
       account: 1,
       activation_status: 1,
       unit_id: 1
@@ -160,7 +163,7 @@ async function batchImportedUser (imported_array) {
     let mapArray = imported_array.map(item => {
       return {
         user_name: item.user_name,
-        role_name: item.role_name,
+        role_id: item.role_id,
         account: item.account,
         password: item.password,
         activation_status: 1,

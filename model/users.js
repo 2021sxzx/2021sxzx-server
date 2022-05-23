@@ -11,8 +11,8 @@ const usersSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  role_name: {  // 角色名称
-    type: String,
+  role_id: {  // 角色名称
+    type: Number,
     required: true
   },
   account: {   // 账号-手机号
