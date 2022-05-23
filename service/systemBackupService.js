@@ -1,4 +1,6 @@
 const systemConfiguration = require("../model/systemConfiguration");
+const systemBackup = require("../model/systemBackup");
+const user = require("../model/users");
 const fs = require('fs');
 const path=require('path')
 var child = require("child_process");
@@ -31,6 +33,42 @@ const logger=require('morgan')
 }
 
 /**
+ * 返回系统备份
+ * @returns {Promise<*|*>}
+ */
+ async function getSystemBackup() {
+  try {
+    var data=await systemBackup.find();
+    // console.log(data)
+    return data;
+  } catch (e) {
+    return e.message;
+  }
+}
+
+/**
+ * 创建系统备份
+ * @returns {Promise<*|*>}
+ */
+ async function createSystemBackup(backup_name,user_name) {
+  try {
+    /* if (data.failureName === null) {
+      throw new Error("call createSystemFailure error: failure_name is null");
+    } */
+      return await systemBackup.create({
+      backup_name: backup_name,
+      user_name: user_name
+    });
+    var data=await systemBackup.find();
+    console.log(data)
+    // return data;
+  } catch (e) {
+    return e.message;
+  }
+}
+
+
+/**
  * 修改系统备份周期
  * @returns {Promise<*|*>}
  */
@@ -61,92 +99,112 @@ async function changeBackupCycleService(data) {
  * @returns {Promise<*|*>}
  */
  async function autoBackup() {
-  try {
-    var checkJob = schedule.scheduleJob('*/10 * * * * *', function () {
-      /*       child.exec('sh MongoDB_bak.sh',function(err,stdout,stderr){
-        if(err){console.log(err)}
-        console.log("stdout:",stdout)
-        // console.log("stderr:",stderr);
-      }) */
+   try {
+     var filePath = path.join(__dirname, "./MongoDBBak.sh");
+     var logPath = path.join(__dirname, "../log/access.log");
+     function getDate() {
+       var date = new Date(new Date().getTime() + 8 * 3600 * 1000);
+       return date.toISOString();
+     }
+     var checkJob = schedule.scheduleJob("0 0 */12 * * *", function () {
+       child.exec("sh " + filePath, function (err, stdout, stderr) {
+         if (err) {
+           console.log(err);
+           const writeStream2 = fs.createWriteStream(logPath, { flags: "a" });
+           let logString = "定时备份故障[" + getDate() + "]" + err + "\n";
+           writeStream2.write(logString);
+           writeStream2.end();
+           return 0;
+         }
+           const writeStream = fs.createWriteStream(logPath, { flags: "a" });
+           var backup_name = stdout.toString().split("\n");
+           backup_name = name[name.length - 2];
+           let logString = "系统 ::[" + getDate() + "] \"系统自动备份\" \n";
+           createSystemBackup(backup_name,"系统");
+           writeStream.write(logString);
+           writeStream.end();
+/*
+         const writeStream1 = fs.createWriteStream(logPath, { flags: "a" });
+         //let logString="手动系统备份完成["+getDate()+"]"+stdout+"\n"
+         let logString = "定时系统备份完成[" + getDate() + "]\n";
+         //读取文件发生错误事件
+         writeStream1.on("error", (err) => {
+           console.log("发生异常:", err);
+         });
+         //已打开要写入的文件事件
+         writeStream1.on("open", (fd) => {
+           console.log("文件已打开:");
+         });
+         writeStream1.write(logString);
+         writeStream1.end();
+         //文件已经就写入完成事件
+         writeStream1.on("finish", () => {
+           console.log("写入已完成..");
+           // console.log("读取文件内容:", fs.readFileSync(logPath, "utf8")); //打印写入的内容
+           // console.log(writeStream);
+         });
+         //文件关闭事件
+         writeStream1.on("close", () => {
+           console.log("文件已关闭！");
+         });
+*/
+       });
+     });
 
-      var logPath = path.join(__dirname, "../log/access.log");
-      console.log(logPath)
-      const writeStream = fs.createWriteStream(logPath, { flags: "a" });
-
-/*       logger.token('id',function getId(){return '系统'});
-      logger.token('localDate',function getDate(){
-        var date=new Date(new Date().getTime()+8 * 3600 * 1000);
-        return date.toISOString()
-      });
-      logger(':id [:localDate]', {
-        stream: writeStream
-      }) */
-
-
-       //读取文件发生错误事件
-      writeStream.on("error", (err) => {
-        console.log("发生异常:", err);
-      });
-      //已打开要写入的文件事件
-      writeStream.on("open", (fd) => {
-        console.log("文件已打开:");
-      });
-      function getDate(){
-        var date=new Date(new Date().getTime()+8 * 3600 * 1000);
-        return date.toISOString()
-      }
-      let logString="系统["+getDate()+"]备份\n"
-      writeStream.write(logString);
-      writeStream.end();
-      //文件已经就写入完成事件
-      writeStream.on("finish", () => {
-        console.log("写入已完成..");
-        // console.log("读取文件内容:", fs.readFileSync(logPath, "utf8")); //打印写入的内容
-        // console.log(writeStream);
-      });
-      //文件关闭事件
-      writeStream.on("close", () => {
-        console.log("文件已关闭！");
-      });
-      /*       let data = new Promise(function (resolve, reject) {
-        var cmd = "node -v"; //监听80端口拿进程数
-        child.exec(cmd, function (err, stdout, stderr) {
-          if (err) {
-            console.log(err);
-            reject(err);
-          } else if (stderr.length > 0) {
-            reject(new Error(stderr.toString()));
-          } else {
-            // a=stdout;
-            console.log("stdout:", stdout);
-            resolve();
-          }
-        });
-      }); */
-    })
-
-
-/*     execFile("ping",["www.baidu.com"],function(err,stdout,stderr){
+     /*     execFile("ping",["www.baidu.com"],function(err,stdout,stderr){
       if(err){console.log(err)}
       console.log("stdout:",stdout)
       console.log("stderr:",stderr);
     }) */
-/*     execFile("cmd",["node -v"],function(err,stdout,stderr){
+     /*     execFile("cmd",["node -v"],function(err,stdout,stderr){
       if(err){console.log(err)}
       console.log("stdout:",stdout)
       console.log("stderr:",stderr);
     }) */
-    /* child.exec('ls',function(err,stdout,stderr){
-      if(err){console.log(err)}
-      console.log("stdout:",stdout)
-      console.log("stderr:",stderr);
-    }) */
-  } catch (e) {
-    return e.message;
-  }
-}
+   } catch (e) {
+     return e.message;
+   }
+ }
 // autoBackup()
+
+/**
+ * 手动系统备份
+ * @returns {Promise<*|*>}
+ */
+ async function handleBackup(user_id) {
+   try {
+     var filePath = path.join(__dirname, "./MongoDBBak.sh");
+     var logPath = path.join(__dirname, "../log/access.log");
+     function getDate() {
+      var date = new Date(new Date().getTime() + 8 * 3600 * 1000);
+      return date.toISOString();
+    }
+       child.exec("sh " + filePath, function (err, stdout, stderr) {
+       if (err) {
+         const writeStream2 = fs.createWriteStream(logPath, { flags: "a" });
+         let logString = "手动备份故障[" + getDate() + "]" + err + "\n";
+         writeStream2.write(logString);
+         writeStream2.end();
+         return 0;
+       }
+      const writeStream1 = fs.createWriteStream(logPath, { flags: "a" });
+         var backup_name = stdout.toString().split("\n");
+         backup_name = backup_name[backup_name.length - 2];
+         var user=user.findOne({_id:user_id})
+           let logString = user_id+" ::[" + getDate() + "] \"手动系统备份完成\" \n";
+         createSystemBackup(backup_name,user.user_name);
+       writeStream1.write(logString);
+       writeStream1.end();
+     });
+} catch (e) {
+     return e.message;
+   }
+ }
+
 module.exports = {
   getMongoBackupCycle,
-    changeBackupCycleService
+    changeBackupCycleService,
+    handleBackup,
+    getSystemBackup,
+    createSystemBackup
 };

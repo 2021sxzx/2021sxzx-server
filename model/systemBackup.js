@@ -2,11 +2,11 @@ const mongoose = require("mongoose")
 
 // 系统故障表的定义
 const systemBackupSchema = new mongoose.Schema({
-  name:{
+  backup_name:{
     type:String,
     required:true
   },
-  configuration:{
+  user_name:{
     type:Object,
     required:true
   }
