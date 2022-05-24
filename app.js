@@ -72,6 +72,9 @@ logger.token('localDate',function getDate(){
   return date.toISOString()
 });
 app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
+  skip:function(req,res){
+    return req.headers.userid !=''||req.headers.userid !=null||req.headers.userid !='-'
+  },
   stream: accessLogStream
 }));
 // post请求的参数的获取, express会将解析之后, 转换成对象的post请求参数放到请求对象的body属性中
