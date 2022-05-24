@@ -38,7 +38,7 @@ async function postLogout(logoutData) {
         let data = await logout(logoutData);
         return new SuccessModel({ msg: '登出成功', data: data });
     } catch (e) {
-        return new ErrorModel({ msg: e.message })
+        return new ErrorModel({ msg: e.message });
     }
 }
 

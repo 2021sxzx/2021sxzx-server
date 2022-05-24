@@ -26,7 +26,7 @@ const permission = require('../model/permission')
 }
 
 /**
- * 删除角色权限
+ * 删除角色所有权限
  */
 async function deletePermission (role_id) {
   try {

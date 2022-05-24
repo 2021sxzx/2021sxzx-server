@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-
+const {validatePwd} = require('../utils/validatePwd');
+const {ErrorModel} = require('../utils/resultModel');
 const {
   addUserAndReturnList,
   addUserBatchingAndReturnList,
@@ -53,15 +54,23 @@ router.get('/v1/testInfer', async (req, res, next) => {
 
 // 添加用户
 router.post('/v1/user', async (req, res, next) => {
-  const data = await addUserAndReturnList({
-    user_name: req.body.user_name,
-    account: req.body.account,
-    password: req.body.password,
-    role_id: req.body.role_id,
-    unit_id: req.body.unit_id
-  })
-  setStatusCode(res, data);
-  res.json(data)
+  if (validatePwd(req.body.password)) {
+    const data = await addUserAndReturnList({
+      user_name: req.body.user_name,
+      account: req.body.account,
+      password: req.body.password,
+      role_id: req.body.role_id,
+      unit_id: req.body.unit_id
+    })
+    setStatusCode(res, data);
+    res.json(data)
+  } else {
+    let result = new ErrorModel({
+      code: 200,
+      msg: '密码不安全，建议使用包含四类不同字符并长度至少为8'
+    })
+    res.json(result)
+  }
 })
 
 // 修改用户

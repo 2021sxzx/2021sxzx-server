@@ -10,7 +10,7 @@ const {
   getPermissionList,
   addPermission,
   deletePermission
-} = require('../service/roleService')
+} = require('../service/roleService');
 const { SuccessModel, ErrorModel } = require('../utils/resultModel')
 
 /**
@@ -28,10 +28,10 @@ async function addRoleAndReturnObject (
   role_rank
 ) {
   try {
-    await addRole(role_name, role_describe, permission_identifier_array, role_rank);
+    const resq = await addRole(role_name, role_describe, permission_identifier_array, role_rank);
     // id在哪里？
-    const res = await getRole(role_id);
-    const calPermission = await calcaulatePermission(role_id);
+    const res = await getRole(resq.role_id);
+    const calPermission = await calcaulatePermission(resq.role_id);
 
     return new SuccessModel({
       msg: '添加角色列表成功',
@@ -119,7 +119,8 @@ async function returnRoleList (role_id) {
  */
 async function deleteRoleAndReturnObject (role_id) {
   try {
-    const res = await deleteRole(role_id)
+    const res = await deleteRole(role_id);
+    await deletePermission(role_id);
     return new SuccessModel({
       msg: '删除成功',
       data: res
