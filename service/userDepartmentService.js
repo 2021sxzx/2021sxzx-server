@@ -1,6 +1,5 @@
 const department = require('../model/department');
 const users = require('../model/users');
-// const { users } = require('systeminformation');
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
 class userDepartmentService {
@@ -8,14 +7,9 @@ class userDepartmentService {
   async addDepartment (department_name) {
     await department.create({
       department_name,
-      department_id: 0,
+      department_id: Date.now(),
       subordinate_department: null
     });
-    const res = await department.findOne({
-      department_name
-    }, {
-      department_name: 1
-    })
     return new SuccessModel({
       msg: '添加成功',
       data: res
@@ -102,9 +96,6 @@ class userDepartmentService {
     });
     return res === null ? '没有处室' : res.department_name;
   }
-
-  // 查找处室有哪些人
-  async findPeopleByDepartment () {}
 
   async isInDepartment (department_name) {
     const res = await department.findOne({

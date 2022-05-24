@@ -40,10 +40,12 @@ async function addUserAndReturnList (userInfo) {
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          unit_name: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
-    )
+    );
     return new SuccessModel({
       msg: '添加成功',
       data: res_
@@ -72,7 +74,9 @@ async function addUserBatchingAndReturnList (imported_array) {
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          unit_id: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -103,7 +107,9 @@ async function returnUserList () {
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          unit_id: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -124,9 +130,9 @@ async function returnUserList () {
  * @param account   用户账户
  * @return {Promise<SuccessModel | ErrorModel>}
  */
-async function updateUserAndReturnList (user_name, password, role_name, account, new_account) {
+async function updateUserAndReturnList (user_name, password, role_id, account, new_account) {
   try {
-    await updateUser(user_name, password, role_name, account, new_account)
+    await updateUser(user_name, password, role_id, account, new_account);
     const res = await getUserList()
     const res_ = await Promise.all(
       res.map(async (item) => {
@@ -139,7 +145,9 @@ async function updateUserAndReturnList (user_name, password, role_name, account,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          unit_id: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -173,7 +181,9 @@ async function deleteUserAndReturnList (account) {
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          unit_id: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -203,7 +213,9 @@ async function searchUserAndReturnList (searchValue) {
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          unit_id: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -231,7 +243,9 @@ async function setActivationAndReturn (account) {
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          unit_id: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )

@@ -1,7 +1,6 @@
 const unit = require('../model/unit');
 const users = require('../model/users');
 const department = require('../model/department');
-const departmentMapUser = require('../model/departmentMapUser');
 const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
 class unitService {
@@ -85,11 +84,15 @@ class unitService {
   // 单位列表[树型结构]
   async unitTree () {
     let rootTemp = await unit.findOne({ parent_unit: 0 }, {'__v': 0});
+    const users = await this.calculateUser(rootTemp.unit_id);
     let root = {
       _id: rootTemp._id,
       unit_name: rootTemp.unit_name,
       unit_id: rootTemp.unit_id,
       parent_unit: rootTemp.parent_unit,
+    }
+    if (users.length !== 0) {
+      root.users = users;
     }
     let that = this;
     async function renderTree (root) {
@@ -97,6 +100,10 @@ class unitService {
         return;
       }
       let children = await that.findChild(root.unit_id);
+      let users = await that.calculateUser(root.unit_id);
+      if (users.length !== 0) {
+        root.users = users;
+      }
       if (children.length > 0) {
         root.children = children;
         for (let index in root.children) {
@@ -112,22 +119,6 @@ class unitService {
       msg: "获取列表成功",
       data: root
     });
-  }
-
-  // 生成单位编号
-  async createUnitToken (unit_id) {
-    let token = `${unit_id}`;
-    let parent = null;
-    let that = this;
-    while (1) {
-      parent = await that.findParent(unit_id);
-      if (!parent) {
-        break;
-      } else {
-        token = parent.unit_id + '-' + token;
-      }
-    }
-    return token;
   }
 
   // 搜索单位
@@ -158,6 +149,46 @@ class unitService {
       msg: "搜索成功",
       data: root
     });
+  }
+
+  // 生成单位编号
+  async createUnitToken (unit_id) {
+    let token = `${unit_id}`;
+    let parent = null;
+    let that = this;
+    while (1) {
+      parent = await that.findParent(unit_id);
+      if (!parent) {
+        break;
+      } else {
+        token = String(parent.unit_id) + '-' + token;
+      }
+    }
+    return token;
+  }
+
+  // 比对，发现是否为父子单位关系
+  // 用于筛选用户管理访问控制专用
+  async compareAndJudge (unit_id1, unit_id2) {
+    const res = await this.findParent(unit_id2);
+    if (unit_id1 == res.unit_id) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  // 根据单位计算级别
+  async calculateRank (unit_id) {
+    let res = await this.createUnitToken(unit_id);
+    let rank = res.split('-').length;
+    return rank;
+  }
+
+  // 计算单位下有多少人
+  async calculateUser (unit_id) {
+    const res = await users.find({unit_id});
+    return res;
   }
 }
 

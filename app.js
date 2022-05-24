@@ -24,8 +24,6 @@ const systemBackupRouter=require('./routes/systemBackup')
 const userDepartmentRouter = require('./routes/userDepartment');
 const imageRouter = require('./routes/image');
 
-const department = require('./model/department');
-const departmentMapUser = require('./model/departmentMapUser');
 
 const { validate_jwt } = require('./utils/validateJwt');
 
@@ -38,9 +36,9 @@ const redisClient = require('./config/redis');
 // const item = require("./model/item")
 // const itemGuide = require("./model/task")
 
-(async () => {
-  await redisClient.connect()
-})();
+// (async () => {
+//   await redisClient.connect()
+// })();
 mongoose.connect(MONGO_CONFIG.url);
 
 const app = express();

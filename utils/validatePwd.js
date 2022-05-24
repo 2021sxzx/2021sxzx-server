@@ -6,7 +6,7 @@ const validatePwd = (pwd) => {
     return false;
   }
   let scout = 0;
-  const arr = pwd.split('').map(item => { return String(item) });
+  let arr = pwd.split('').map(item => { return String(item) });
   let numberLock = 0;
   let upperCaseLock = 0;
   let lowerCaseLock = 0;
@@ -20,28 +20,24 @@ const validatePwd = (pwd) => {
       if (item.charCodeAt() >= 48 && item.charCodeAt() <= 57) { // 判断数字
         scout++;
         numberLock = 1;
-        break;
       }
     }
     if (upperCaseLock == 0) {
       if (item.charCodeAt() >= 65 && item.charCodeAt() <= 90) { // 判断大写
         scout++;
         upperCaseLock = 1;
-        break;
       }
     }
     if (lowerCaseLock == 0) {
       if (item.charCodeAt() >= 97 && item.charCodeAt() <= 122) { // 判断小写
         scout++;
         lowerCaseLock = 1;
-        break;
       }
     }
     if (otherCaseLock == 0) {
       if (!((item.charCodeAt() >= 48 && item.charCodeAt() <= 57) || (item.charCodeAt() >= 65 && item.charCodeAt() <= 90) || (item.charCodeAt() >= 97 && item.charCodeAt() <= 122))) { // 判断其他字符
         scout++;
         otherCaseLock = 1;
-        break;
       }
     }
   }

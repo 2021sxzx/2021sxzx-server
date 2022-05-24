@@ -15,10 +15,9 @@ async function addUser (userInfo) {
       console.log("res", res);
       return;
     }
-    console.log(userInfo);
     const resq = await users.create({
       ...userInfo,
-      activation_status: 1
+      activation_status: 1,
     });
     return resq;
   } catch (e) {
@@ -32,15 +31,18 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    return await users.find({}, {
+    const res = await users.find({}, {
       _id: 1,
       user_name: 1,
       password: 1,
       role_id: 1,
       account: 1,
       activation_status: 1,
-      unit_id: 1
-    })
+      unit_id: 1,
+      department_id: 1
+    });
+    console.log("res", res);
+    return res;
   } catch (e) {
     throw e.message
   }
@@ -60,12 +62,10 @@ async function updateUser (user_name, password, role_id, account, new_account) {
     return await users.updateOne({
       account: account
     }, {
-      // _id: 1,
       user_name: user_name,
       password: password,
-      role_name: role_id,
-      account: new_account,
-      activation_status: 1
+      role_id: role_id,
+      account: new_account
     })
   } catch (e) {
     throw e.message
@@ -111,7 +111,8 @@ async function searchUser (searchValue) {
       role_id: 1,
       account: 1,
       activation_status: 1,
-      unit_id: 1
+      unit_id: 1,
+      department_id: 1
     })
   } catch (e) {
     throw e.message
@@ -157,13 +158,14 @@ async function setActivation (account) {
     throw e.message
   }
 }
-
+// 还有个部门id没加
 async function batchImportedUser (imported_array) {
   try {
     let mapArray = imported_array.map(item => {
       return {
         user_name: item.user_name,
         role_id: item.role_id,
+        department_id: item.department_id,
         account: item.account,
         password: item.password,
         activation_status: 1,
