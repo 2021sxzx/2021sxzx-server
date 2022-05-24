@@ -1,4 +1,3 @@
-const departmentMapUser = require('../model/departmentMapUser');
 const department = require('../model/department');
 const users = require('../model/users');
 // const { users } = require('systeminformation');
