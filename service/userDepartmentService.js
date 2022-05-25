@@ -5,7 +5,7 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 class userDepartmentService {
   // 添加处室
   async addDepartment (department_name) {
-    await department.create({
+    const res = await department.create({
       department_name,
       department_id: Date.now(),
       subordinate_department: null
@@ -17,6 +17,7 @@ class userDepartmentService {
   }
 
   // 批量添加用户的处室
+  /*
   async addDepartmentBatching (imported_array) {
     try {
       const date = new Date().getTime();
@@ -34,17 +35,19 @@ class userDepartmentService {
       throw error.message
     }
   }
+  */
 
   // 删除处室
-  async deleteDepartment (department_name) {
-    const isEmpty = await departmentMapUser.findOne({
-      department_name
-    });
-    if (!!isEmpty) {
-      return;
+  async deleteDepartment (department_id) {
+
+    const isEmpty = await users.find({ department_id });
+    if (isEmpty.length > 0) {
+      return new ErrorModel({
+        msg: '有用户使用处室，不允许删除'
+      });
     }
     const res = await department.deleteOne({
-      department_name
+      department_id
     });
     return new SuccessModel({
       msg: '删除处室成功',
@@ -53,21 +56,10 @@ class userDepartmentService {
   }
 
   // 更新处室名称
-  async updateDepartment (department_name, new_department_name) {
-    await department.updateMany({
-      department_name: department_name
-    }, {
-      department_name: new_department_name
-    });
+  async updateDepartment (department_id, department_name) {
+    await department.updateMany({ department_id }, { department_name });
 
-    await departmentMapUser.updateMany({
-      department_name: department_name
-    }, {
-      department_name: new_department_name
-    });
-    const res = await department.find({
-      department_name: new_department_name
-    }, {
+    const res = await department.find({ department_id }, {
       department_name: 1,
       department_id: 1
     });
@@ -80,7 +72,8 @@ class userDepartmentService {
   // 列出所有处室
   async listAllDepartment () {
     const res = await department.find({}, {
-      department_name: 1
+      department_name: 1,
+      department_id: 1
     });
     return new SuccessModel({
       msg: '返回数据成功',
@@ -88,64 +81,24 @@ class userDepartmentService {
     });
   }
 
-  // 根据账户来查找处室
-  async findDepartmentByAccount (account, user_name) {
-    const res = await departmentMapUser.findOne({
-      account: account,
-      user_name: user_name
-    });
-    return res === null ? '没有处室' : res.department_name;
+  // 根据账户来查找部门
+  async findDepartmentByAccount (account) {
+    const res = await users.findOne({account}, { department_id: 1 });
+    let findDepartment = await department.find({department_id: res.department_id});
+    return findDepartment === null ? '没有部门' : findDepartment.department_id;
   }
 
-  async isInDepartment (department_name) {
-    const res = await department.findOne({
-      department_name: department_name
-    });
-    if (!res) {
-      return false;
-    }
-    return true;
-  }
-
-  // 添加初始处室数据若为空或者不合法，则默认为办公室
-  async addUserAndDepartmentInitial (account, user_name, department_name) {
-    const date = new Date().getTime();
-    let isInDepartment = null;
-    const resq = await department.findOne({
-      department_name: department_name
-    });
-    if (!resq) {
-      isInDepartment = false;
-    } else {
-      isInDepartment = true;
-    }
-    department_name = department_name !== undefined && isInDepartment === true ? department_name : '办公室';
-    await departmentMapUser.create({
-      account,
-      user_name,
-      join_time: date,
-      department_name
-    });
-    const res = await departmentMapUser.findOne({
-      account,
-      user_name
-    });
-    return res;
-  }
-
-  async deleteUserAndDepartment (account) {
-    const res = await departmentMapUser.deleteOne({
-      account
-    })
-    return res;
-  }
-
+  // 搜索部门
   async searchDepartment (searchValue) {
+    if (searchValue == '') {
+      searchValue = '.'
+    }
     const reg = new RegExp(searchValue, 'i');
     const res = await department.find({
       department_name: {$regex: reg}
     }, {
-      department_name: 1
+      department_name: 1,
+      department_id: 1
     });
     return new SuccessModel({
       msg: '搜索成功',
@@ -153,8 +106,14 @@ class userDepartmentService {
     });
   }
 
-  /******************上面的接口全部废弃****************************************/
-  
+  async deletePeopleDepartment (account) {
+    await users.updateOne({account}, { department_id: null });
+    const res = await users.findOne({account});
+    return new SuccessModel({
+      msg: '删除部门成功',
+      data: res
+    });
+  }
 }
 
 module.exports = new userDepartmentService();

@@ -95,7 +95,8 @@ async function getRole (role_id) {
       role_describe: 1,
       role_rank: 1,
       role_id: 1
-    })
+    });
+    console.log(roleObj);
     return roleObj;
   } catch (error) {
     throw new Error(error.message)

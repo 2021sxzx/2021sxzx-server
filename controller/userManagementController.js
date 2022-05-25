@@ -93,13 +93,13 @@ async function addUserBatchingAndReturnList (imported_array) {
  * 用于返回一个变化后的全体列表
  * @return {Promise<SuccessModel | ErrorModel>} 
  */
-async function returnUserList () {
+async function returnUserList (role_id) {
   try {
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
         const cal = await unitService.lookupUnit(Number(item.unit_id));
-        const calRoleObj = await getRole(item._doc.role_id);
+        const calRoleObj = await getRole(item.role_id);
         return {
           _id: item._id,
           user_name: item.user_name,
@@ -112,7 +112,8 @@ async function returnUserList () {
           department_id: item.department_id
         }
       })
-    )
+    );
+    console.log(res_)
     return new SuccessModel({
       msg: '获取列表成功',
       data: res_
