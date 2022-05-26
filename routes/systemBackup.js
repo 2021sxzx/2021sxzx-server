@@ -1,11 +1,14 @@
 const express = require('express');
+const path = require('path')
+const fs = require('fs')
 const router = express.Router();
 const {
     getMongoBackupCycleController,
     changeBackupCycleController,
     getMongoBackupController,
     createSystemBackupController
-  } = require("../controller/systemBackupController.js")
+  } = require("../controller/systemBackupController.js");
+const systemBackup = require('../model/systemBackup.js');
 
 const {
   handleBackup,
@@ -68,6 +71,26 @@ router.post('/v1/change-backup-cycle', async (req,res,next) => {
   // let data=await handleBackup()
 //   setStatusCode(res,data)
   res.json('data')
+})
+
+/**
+ * 删除一个备份
+ */
+ router.post('/v1/delete-system-backup', async (req, res, next) => {
+  // console.log("first")
+  let data=req.body;
+  // console.log(data);
+  var backupPath=path.join('/www/backup/mongodb_bak/mongodb_bak_list',data.backup_name)
+  fs.unlink(backupPath, function(err){
+    if(err)throw err;
+    console.log('删除成功')
+  })   
+  systemBackup.deleteOne({'_id':data._id}).then((res) =>{
+    console.log('备份删除成功')
+  })
+  res.end()
+  // setStatusCode(res, result)
+  // res.json(result)
 })
 
 module.exports = router;
