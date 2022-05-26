@@ -3,16 +3,16 @@ const permission = require('../model/permission')
 
 /**
  * 添加角色权限，在角色权限关联表里面进行添加
- * @param role_name
+ * @param role_id
  * @param permission_identifier_array
  * @return {Promise<*>}
  */
- async function addPermission (role_name, ...permission_identifier_array) {
+ async function addPermission (role_id, ...permission_identifier_array) {
   try {
     let addedArr = await Promise.all(
       permission_identifier_array.map(async (item) => {
         const res = await roleMapPermission.create({
-          role_name: role_name,
+          role_id,
           permission_identifier: item
         })
         return res
@@ -26,12 +26,12 @@ const permission = require('../model/permission')
 }
 
 /**
- * 删除角色权限
+ * 删除角色所有权限
  */
-async function deletePermission (role_name) {
+async function deletePermission (role_id) {
   try {
     let needDeleteData = await roleMapPermission.deleteMany({
-      role_name: role_name
+      role_id
     })
     return needDeleteData
   } catch (error) {
@@ -40,10 +40,10 @@ async function deletePermission (role_name) {
 }
 
 // 查找角色权限
-async function searchPermission (role_name) {
+async function searchPermission (role_id) {
   try {
     let resArr = await roleMapPermission.find({
-      role_name
+      role_id: role_id
     })
     return resArr;
   } catch {
@@ -52,10 +52,10 @@ async function searchPermission (role_name) {
 }
 
 // 修改角色权限
-async function patchPermission (role_name, ...permission_identifier_array) {
+async function patchPermission (role_id, ...permission_identifier_array) {
   try {
-    await deletePermission(role_name);
-    const res = await addPermission(role_name, ...permission_identifier_array);
+    await deletePermission(role_id);
+    const res = await addPermission(role_id, ...permission_identifier_array);
     return res;
   } catch {
     throw new Error(e.message)

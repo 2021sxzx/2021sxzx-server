@@ -48,7 +48,6 @@ async function authenticate(loginData) {
                 return {
                     message: 'You have successfully logged in!',
                     code: 200,
-                    role_name: res.role_name,
                     cookie: {
                         httpOnly: true
                     },
@@ -56,9 +55,10 @@ async function authenticate(loginData) {
                         token: token,
                         expiresIn: 3600
                     },
-                    role_name: res.role_name,
+                    role_id: res.role_id,
+                    unit_id: res.unit_id,
                     _id: res._id,
-                    refresh_token
+                    refresh_token,
                 };
 
 

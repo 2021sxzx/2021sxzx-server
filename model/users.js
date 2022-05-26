@@ -11,8 +11,8 @@ const usersSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  role_name: {  // 角色名称
-    type: String,
+  role_id: {  // 角色名称
+    type: Number,
     required: true
   },
   account: {   // 账号-手机号
@@ -30,8 +30,17 @@ const usersSchema = new mongoose.Schema({
   user_rank: { //用户身份
     type: Number,
     default: 0 //默认是业务员
+  },
+  // 单位id
+  unit_id: {
+    type: Number,
+    require: true
+  },
+  department_id: {
+    type: Number,
+    default: 1
   }
-})
+});
 
 const users = mongoose.model('users', usersSchema);
 module.exports = users;

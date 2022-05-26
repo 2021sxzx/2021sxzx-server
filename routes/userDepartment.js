@@ -15,7 +15,17 @@ function wrap(handler) {
     }
   };
 }
-
+// 可行
+router.all('*', (req, res, next) => {
+  // 配置响应头
+  res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+  res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+  res.header("X-Powered-By",' 3.2.1');
+  res.header("X-Content-Type-Options", "nosniff");
+  res.header("X-Frame-Options", "SameOrigin");
+  if(req.method=="OPTIONS") res.sendStatus(200);/*让options请求快速返回*/
+  else  next();
+})
 router.post('/v1/Department', wrap(userDepartmentController.addDepartmentCallback));
 router.delete('/v1/Department', wrap(userDepartmentController.deleteDepartmentCallback));
 router.patch('/v1/Department', wrap(userDepartmentController.updateDepartmentCallback));

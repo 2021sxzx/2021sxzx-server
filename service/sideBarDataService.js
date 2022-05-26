@@ -5,9 +5,9 @@ const roleMapPermission = require('../model/roleMapPermission');
 const { SuccessModel } = require('../utils/resultModel');
 
 class sideBarData {
-  async getSideBarList (role_name) {
+  async getSideBarList (role_id) {
     let permissionIdentifier = await roleMapPermission.find({
-      role_name: role_name
+      role_id: role_id
     });
     const temp = await Promise.all(
       permissionIdentifier.map(async (item) => {

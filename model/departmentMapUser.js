@@ -14,7 +14,7 @@ const departmentMapUserSchema = new mongoose.Schema({
     type:Number,
     required:true
   },
-  department_name:{  //部门的名称
+  department_name: {  //部门的名称
     type:String,
     required:true
   }

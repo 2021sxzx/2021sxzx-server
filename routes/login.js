@@ -20,12 +20,16 @@ router.post('/v1/login', async (req, res) => {
     let loginData = req.body;
     let data = await postLogin(loginData);
     setStatusCode(res, data);
-    console.log('login');
     if (data.code === 200) {
         const jwt = data.data.jwt;
         const token = jwt.token;
         const cookie = data.data.cookie;
-        res.cookie('auth-token', token, cookie);
+        
+        // 配置登录响应头，防止XSS和CSRF
+        res.cookie('auth-token', token, cookie, {
+          httpOnly: true,
+          sameSite: 'Lax'
+        });
         res.json(data);
     } else if (data.code === 404) {
         console.log(data.msg);

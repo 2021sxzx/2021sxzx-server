@@ -9,8 +9,12 @@ const {
   isActivation,
   setActivation,
   batchImportedUser
-} = require('../service/userManagementService')
+} = require('../service/userManagementService');
+const unitService = require('../service/unitService');
 const userDepartmentService = require('../service/userDepartmentService');
+const {
+  getRole
+} = require('../service/roleService');
 
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -22,24 +26,26 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 async function addUserAndReturnList (userInfo) {
   try {
     await addUser(userInfo);
-    await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name, userInfo.department_name);
+    // await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name, userInfo.department_name);
 
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
-
+        const cal = await unitService.lookupUnit(item.unit_id);
+        const calRoleObj = await getRole(item._doc.role_id);
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: item.role_name,
+          role_name: calRoleObj.role_name,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
-    )
+    );
     return new SuccessModel({
       msg: '添加成功',
       data: res_
@@ -55,20 +61,22 @@ async function addUserAndReturnList (userInfo) {
 async function addUserBatchingAndReturnList (imported_array) {
   try {
     await batchImportedUser(imported_array);
-    await userDepartmentService.addDepartmentBatching(imported_array);
+    // await userDepartmentService.addDepartmentBatching(imported_array);
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
-
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
+        const calRoleObj = await getRole(item._doc.role_id);
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: item.role_name,
+          role_name: calRoleObj.role_name,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -90,20 +98,18 @@ async function returnUserList () {
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
-        // if (!item['department_name']) {
-        //   item['department_name'] = cal;
-        // }
-        // cal = cal === undefined ? '无' : cal;
-        // console.log(item.department_name)
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
+        const calRoleObj = await getRole(item._doc.role_id);
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: item.role_name,
+          role_name: calRoleObj.role_name,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -124,21 +130,24 @@ async function returnUserList () {
  * @param account   用户账户
  * @return {Promise<SuccessModel | ErrorModel>}
  */
-async function updateUserAndReturnList (user_name, password, role_name, account, new_account) {
+async function updateUserAndReturnList (user_name, password, role_id, account, new_account) {
   try {
-    await updateUser(user_name, password, role_name, account, new_account)
+    await updateUser(user_name, password, role_id, account, new_account);
     const res = await getUserList()
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
+        const calRoleObj = await getRole(item._doc.role_id);
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: item.role_name,
+          role_name: calRoleObj.role_name,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -159,19 +168,22 @@ async function updateUserAndReturnList (user_name, password, role_name, account,
 async function deleteUserAndReturnList (account) {
   try {
     await deleteUser(account);
-    await userDepartmentService.deleteUserAndDepartment(account);
+    // await userDepartmentService.deleteUserAndDepartment(account);
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
+        const calRoleObj = await getRole(item._doc.role_id);
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: item.role_name,
+          role_name: calRoleObj.role_name,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -192,15 +204,18 @@ async function searchUserAndReturnList (searchValue) {
     const res = await searchUser(searchValue);
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
+        const calRoleObj = await getRole(item._doc.role_id);
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: item.role_name,
+          role_name: calRoleObj.role_name,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
@@ -219,15 +234,18 @@ async function setActivationAndReturn (account) {
     const res = await getUserList();
     const res_ = await Promise.all(
       res.map(async (item) => {
-        const cal = await userDepartmentService.findDepartmentByAccount(item.account, item.user_name);
+        const cal = await unitService.lookupUnit(Number(item.unit_id));
+        const calRoleObj = await getRole(item._doc.role_id);
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: item.role_name,
+          role_name: calRoleObj.role_name,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
-          department_name: cal
+          unit_name: cal,
+          unit_id: item.unit_id,
+          department_id: item.department_id
         }
       })
     )
