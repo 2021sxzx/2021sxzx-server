@@ -113,7 +113,6 @@ async function returnUserList (role_id) {
         }
       })
     );
-    console.log(res_)
     return new SuccessModel({
       msg: '获取列表成功',
       data: res_
