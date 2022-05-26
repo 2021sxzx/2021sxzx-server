@@ -24,7 +24,7 @@ const imageSource = require("../model/imageSource");
   /* 系统故障相关的路由处理. */
   
   /**
-   * show系统日志的获取
+   * 故障列表的获取
    */
    router.get('/v1/failure', async (req,res,next) => {
     let data = await showSystemFailureController()
