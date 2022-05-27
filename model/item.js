@@ -26,29 +26,11 @@ const itemSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    // region_code: {    //区划编码
-    //     type: String,
-    //     required: true
-    // },
     region_id: {    //区划id
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: 'region'
     },
-    // creator: {      //创建人
-    //     id: {
-    //         type: String,
-    //         required: true
-    //     },
-    //     name: {
-    //         type: String,
-    //         required: true
-    //     },
-    //     department_name: {
-    //         type: String,
-    //         required: true
-    //     }
-    // },
     creator_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

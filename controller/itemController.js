@@ -2375,7 +2375,6 @@ module.exports = {
     setCheckJobRule,
     getCheckJobRule,
     getCheckResult,
-    getItemUsers
     // getRuleDic,
     // getRegionDic
 }

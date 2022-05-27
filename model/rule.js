@@ -29,20 +29,6 @@ const ruleSchema = new mongoose.Schema({
         type: Number,
         default: Date.now()
     },
-    // creator: {      //创建人
-    //     id: {
-    //         type: String,
-    //         required: true
-    //     },
-    //     name: {
-    //         type: String,
-    //         required: true
-    //     },
-    //     department_name: {
-    //         type: String,
-    //         required: true
-    //     }
-    // },
     creator_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,

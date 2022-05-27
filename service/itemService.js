@@ -2,8 +2,46 @@ const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
 const modelTask = require('../model/task')
 const modelRemoteCheckLog = require('../model/remoteCheckLog')
+const modelUsers = require('../model/users')
 const request = require('request')
 const schedule = require('node-schedule')
+
+//---------------------------------------------------------------------------------
+//以下为项目启动时初始化的代码
+
+initialize()
+
+async function initialize() {
+    //初始化用户
+    var result = false
+    while (result === false) {
+        result = await initializeUser()
+    }
+    console.log('已初始化管理员账号')
+    //先初始化数据库
+    result = false
+    while (result === false) {
+        result = await initializeRegion()
+    }
+    console.log('已初始化region表')
+    result = false
+    while (result === false) {
+        result = await initializeRule()
+    }
+    console.log('已初始化rule表')
+    //再初始化缓存数据
+    result = false
+    while (result === false) {
+        result = await initializeMemory()
+    }
+    console.log('已初始化内存数据对象')
+    //初始化定时器
+    await initializeCheckJob()
+    console.log('已初始化定时器')
+}
+
+//------------------------------------------------------------------------------------
+//以下为本地缓存相关的代码
 
 var regionDic = { status: 0, data: {} }
 var ruleDic = { status: 0, data: {} }
@@ -11,7 +49,7 @@ var ruleDic = { status: 0, data: {} }
 var tasks = []
 var running = false
 
-async function initialize() {
+async function initializeMemory() {
     try {
         //初始化区划树
         regionDic.status = 0
@@ -21,7 +59,7 @@ async function initialize() {
         }
         //区划树完成
         regionDic.status = 1
-        console.log('Get Region Tree !!!')
+        console.log('初始化区划规则成功')
         //初始化规则树
         ruleDic.status = 0
         var rules = await modelRule.find({ rule_name: { $ne: 'null' } }, { _id: 0, __v: 0 })
@@ -30,16 +68,14 @@ async function initialize() {
         }
         //规则树完成
         ruleDic.status = 1
-        console.log('Get Rule Tree !!!')
+        console.log('初始化业务规则成功')
+        return true
     } catch (err) {
+        console.log('初始化缓存数据失败')
         console.log(err.message)
-        setTimeout(() => {
-            initialize()
-        }, 5000);
+        return false
     }
 }
-
-initialize()
 
 async function createRegions(region_id) {
     //把字典设为不可用状态
@@ -196,26 +232,7 @@ async function updateRules(rule_id) {
  * @param {Array<String>} data 要更新的id
  */
 async function addUpdateTask(functionName, data) {
-    switch (functionName) {
-        case 'createRegions':
-            tasks.push(createRegions(data))
-            break
-        case 'deleteRegions':
-            tasks.push(deleteRegions(data))
-            break
-        case 'updateRegions':
-            tasks.push(updateRegions(data))
-            break
-        case 'createRules':
-            tasks.push(createRules(data))
-            break
-        case 'deleteRules':
-            tasks.push(deleteRules(data))
-            break
-        case 'updateRules':
-            tasks.push(updateRules(data))
-            break
-    }
+    tasks.push({ functionName: functionName, data: data })
     runTasks()
 }
 
@@ -227,7 +244,27 @@ async function runTasks() {
     if (running === true) return
     running = true
     while (tasks.length > 0) {
-        await tasks.shift()
+        var obj = tasks.shift()
+        switch (obj.functionName) {
+            case 'createRegions':
+                await createRegions(obj.data)
+                break
+            case 'deleteRegions':
+                await deleteRegions(obj.data)
+                break
+            case 'updateRegions':
+                await updateRegions(obj.data)
+                break
+            case 'createRules':
+                await createRules(obj.data)
+                break
+            case 'deleteRules':
+                await deleteRules(obj.data)
+                break
+            case 'updateRules':
+                await updateRules(obj.data)
+                break
+        }
     }
     running = false
 }
@@ -257,7 +294,7 @@ function getRuleDic() {
 }
 
 //---------------------------------------------------------------------
-//以下为定期检查事项指南详情的代码
+//以下为检查事项指南详情的代码
 
 const getToken_Url = 'http://api2.gzonline.gov.cn:9090/oauth/token'
 const getChildRegionList_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/two/OrganizationService/getChildRegionList'
@@ -269,6 +306,7 @@ const client_id = 'basicUser20190821144223063'
 const client_secret = 'e9e413e43b8d43cd8e71243cdbec5cd6'
 var token = ''
 const TYPE = 'PARALLEL'   //SERIAL或者PARALLEL
+const GZ_REGIONCODE = '440100000000'
 
 /**
  * 获取token
@@ -882,7 +920,7 @@ async function checkAllRegionsItems(regions, time) {
     //如果传入空数组就是检查全部区划，否则只检查regions数组内的区划
     try {
         if (regions.length <= 0) {
-            regions = await getAllChildRegions('440100000000')
+            regions = await getAllChildRegions(GZ_REGIONCODE)
             //检查一下区划信息
             var inLocalNinRemote = []   //数据库有但是省政务没有
             var inRemoteNinLocal = []   //省政务有但是数据库没有
@@ -968,6 +1006,7 @@ async function checkAllRegionsItems(regions, time) {
         checkAllRegionsItems(recheckRegions, time + 1)
     }
     console.log('检查完毕')
+    console.log('下一次检查时间：' + checkJob.nextInvocation())
 }
 
 /**
@@ -991,15 +1030,259 @@ async function getCheckResult() {
     return result
 }
 
-//初始状态是每周日4点
-var rule = new schedule.RecurrenceRule()
-rule.year = 2023    //这里设置为2023年只是因为暂时不要现在执行
-rule.dayOfWeek = [0]
-rule.hour = 4
-rule.minute = 0
+//--------------------------------------------------------------------------
+//以下为初始化数据库的代码
 
-var checkJob = schedule.scheduleJob(rule, function () { checkAllRegionsItems([], 0) })
-console.log('下一次检查时间：' + checkJob.nextInvocation())
+async function initializeUser() {
+    try {
+        var user = await modelUsers.findOne({ account: 'admin' })
+        if (user === null) {
+            var result = await modelUsers.create({
+                user_name: '管理员',
+                role_id: 0,
+                account: 'admin',
+                password: 'password123'
+            })
+        }
+        return true
+    } catch (err) {
+        console.log(err.message)
+        return false
+    }
+}
+
+/**
+ * 初始化数据库的region表
+ * @returns {boolean} 初始化成功or失败
+ */
+async function initializeRegion() {
+    //数据库中region表是否为空
+    try {
+        var regionCount = await modelRegion.countDocuments({})
+    } catch (err) {
+        console.log(err.message)
+        return false
+    }
+    //region表空的就初始化region数据
+    if (!regionCount || regionCount <= 0) {
+        var result = false
+        while (result === false) {
+            result = await initializeRegionSchema()
+        }
+    }
+    return true
+}
+
+/**
+ * 初始化数据库的rule表
+ * @returns {boolean} 初始化成功or失败
+ */
+async function initializeRule() {
+    //数据库中rule表是否为空
+    try {
+        var ruleCount = await modelRule.countDocuments({})
+    } catch (err) {
+        console.log(err.message)
+        return false
+    }
+    //rule表空的就初始化rule数据
+    if (!ruleCount || ruleCount <= 0) {
+        var result = false
+        while (result === false) {
+            result = await initializeRuleSchema()
+        }
+    }
+    return true
+}
+
+/**
+ * 从省政务获取全部区划数据
+ * @returns {Array<Object>} 区划数据
+ */
+async function getAllRegions() {
+    try {
+        var user = await modelUsers.findOne({ account: 'admin' })
+        if (user === null) {
+            await initializeUser()
+            throw new Error('没有管理员账号')
+        }
+        var regions = []
+        regions.push({
+            region_code: GZ_REGIONCODE,
+            region_name: '广州市',
+            parent_code: '',
+            creator_id: user._id
+        })
+        var arr = []
+        arr.push(GZ_REGIONCODE)
+        while (arr.length > 0) {
+            var result = []
+            //并行
+            if (TYPE === 'PARALLEL') {
+                console.log('获取' + arr + '的下级区划')
+                var promiseList = []
+                for (let i = 0, len = arr.length; i < len; i++) {
+                    let region = arr.shift()
+                    promiseList.push(getChildRegionList(region))
+                }
+                result = await Promise.all(promiseList)
+                console.log('获取成功')
+            }
+            //------
+            //串行
+            else {
+                for (let i = 0, len = arr.length; i < len; i++) {
+                    let region = arr.shift()
+                    let r = await getChildRegionList(region)
+                    console.log('已获取' + region + '的下级区划')
+                    result.push(r)
+                }
+            }
+            //------
+            for (let i = 0, len = result.length; i < len; i++) {
+                var childRegions = result[i].data ? result[i].data : []
+                for (let j = 0; j < childRegions.length; j++) {
+                    regions.push({
+                        region_code: childRegions[j].CODE,
+                        region_name: childRegions[j].SHORT_CODE,
+                        parent_code: childRegions[j].PARENT_CODE,
+                        creator_id: user._id
+                    })
+                    arr.push(childRegions[j].CODE)
+                }
+            }
+        }
+        return regions
+    } catch (error) {
+        console.log('获取全部区划失败')
+        throw new Error(error.message)
+    }
+}
+
+/**
+ * 初始化数据库中的区划表
+ * @returns {boolean} 初始化成功or失败
+ */
+async function initializeRegionSchema() {
+    try {
+        //先清空region表，避免多次执行的时候出问题
+        await modelRegion.deleteMany({})
+        //获取全部区划数据
+        var regions = await getAllRegions()
+        //写入数据库
+        var result = await modelRegion.create(regions)
+        //用_id初始化parentId字段和children字段
+        var tree = {}
+        for (let i = 0, len = regions.length; i < len; i++) {
+            tree[regions[i].region_code] = regions[i]
+        }
+        var regionTree = {}
+        for (let i = 0, len = result.length; i < len; i++) {
+            regionTree[result[i].region_code] = Object.assign({}, result[i])
+        }
+        var keys = Object.keys(regionTree)
+        for (let i = 0, len = keys.length; i < len; i++) {
+            let r = regionTree[keys[i]]
+            let parent_code = tree[r.region_code].parent_code
+            r.parentId = (parent_code === '') ? '' : regionTree[parent_code]._id
+            if (parent_code !== '') {
+                let parent = regionTree[parent_code]
+                parent.children.push(r._id)
+            }
+        }
+        //更新数据库
+        var bulkOps = []
+        for (let i = 0, len = keys.length; i < len; i++) {
+            bulkOps.push({
+                updateOne: {
+                    filter: { _id: regionTree[keys[i]]._id },
+                    update: regionTree[keys[i]]
+                }
+            })
+        }
+        await modelRegion.bulkWrite(bulkOps)
+        return true
+    } catch (err) {
+        console.log('初始化region表失败')
+        console.log(err.message)
+        return false
+    }
+}
+
+/**
+ * 初始化数据库中的rule表
+ * @returns {boolean} 初始化成功or失败
+ */
+async function initializeRuleSchema() {
+    try {
+        //先清空rule表，避免多次执行的时候出问题
+        await modelRule.deleteMany({})
+        var user = await modelUsers.findOne({ account: 'admin' })
+        if (user === null) {
+            await initializeUser()
+            throw new Error('没有管理员用户')
+        }
+        var rules = [
+            {
+                rule_id: '0',
+                rule_name: '人社局业务规则',
+                parentId: '',
+                children: ['1', '2', '3', '4'],
+                creator_id: user._id
+            },
+            {
+                rule_id: '1',
+                rule_name: '人才人事',
+                parentId: '0',
+                creator_id: user._id
+            },
+            {
+                rule_id: '2',
+                rule_name: '就业创业',
+                parentId: '0',
+                creator_id: user._id
+            },
+            {
+                rule_id: '3',
+                rule_name: '社会保险',
+                parentId: '0',
+                creator_id: user._id
+            },
+            {
+                rule_id: '4',
+                rule_name: '劳动保障',
+                parentId: '0',
+                creator_id: user._id
+            }
+        ]
+        //写入数据库
+        var result = await modelRule.create(rules)
+        return true
+    } catch (err) {
+        console.log('初始化rule表失败')
+        console.log(err.message)
+        return false
+    }
+}
+
+//--------------------------------------------------------------------------
+//以下为定时器的代码
+
+var checkJob = null
+var rule = null
+
+async function initializeCheckJob() {
+    if (checkJob !== null) {
+        return
+    }
+    //初始状态是每周日4点
+    rule = new schedule.RecurrenceRule()
+    rule.dayOfWeek = [0]
+    rule.hour = 4
+    rule.minute = 0
+    checkJob = schedule.scheduleJob(rule, function () { checkAllRegionsItems([], 0) })
+    // console.log(checkJob.nextInvocation())
+}
 
 /**
  * 设置定时任务执行时间
@@ -1008,17 +1291,20 @@ console.log('下一次检查时间：' + checkJob.nextInvocation())
  * @param {Number} minute 分钟
  */
 function setCheckJobRule(dayOfWeek, hour, minute) {
-    var result = checkJob.reschedule(new schedule.RecurrenceRule({
-        dayOfWeek: dayOfWeek,
-        hour: hour,
-        minute: minute
-    }))
+    var newRule = new schedule.RecurrenceRule()
+    newRule.dayOfWeek = dayOfWeek
+    newRule.hour = hour
+    newRule.minute = minute
+    if (checkJob === null) {
+        checkJob = schedule.scheduleJob(newRule, function () { checkAllRegionsItems([], 0) })
+        rule = newRule
+        return
+    }
+    var result = checkJob.reschedule(newRule)
     if (result === false) {
         throw new Error('设置失败')
     }
-    rule.dayOfWeek = dayOfWeek
-    rule.hour = hour
-    rule.minute = minute
+    rule = newRule
 }
 
 /**
@@ -1026,6 +1312,9 @@ function setCheckJobRule(dayOfWeek, hour, minute) {
  * @returns {Object} { dayOfWeek, hour, minute }
  */
 function getCheckJobRule() {
+    if (rule === null) {
+        return {}
+    }
     return {
         dayOfWeek: rule.dayOfWeek,
         hour: rule.hour,

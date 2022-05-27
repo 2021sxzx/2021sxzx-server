@@ -156,20 +156,6 @@ const taskSchema = new mongoose.Schema({
         required: true,
         ref: 'users'
     }
-    // creator: {      //创建人
-    //     id: {
-    //         type: String,
-    //         required: true
-    //     },
-    //     name: {
-    //         type: String,
-    //         required: true
-    //     },
-    //     department_name: {
-    //         type: String,
-    //         required: true
-    //     }
-    // }
 })
 
 const task = mongoose.model('task', taskSchema, 'tempTasks')

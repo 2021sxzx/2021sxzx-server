@@ -14,10 +14,6 @@ const regionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    region_level: {
-        type: Number,
-        required: true
-    },
     parentId: {
         type: String,
         default: ''
@@ -28,20 +24,6 @@ const regionSchema = new mongoose.Schema({
         }],
         default: []
     },
-    // creator: {      //创建人
-    //     id: {
-    //         type: String,
-    //         required: true
-    //     },
-    //     name: {
-    //         type: String,
-    //         required: true
-    //     },
-    //     department_name: {
-    //         type: String,
-    //         required: true
-    //     }
-    // },
     creator_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
