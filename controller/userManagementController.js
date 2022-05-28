@@ -103,7 +103,7 @@ async function returnUserList (role_id) {
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: calRoleObj.role_name,
+          role_name: calRoleObj,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
