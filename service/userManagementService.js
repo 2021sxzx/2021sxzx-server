@@ -41,7 +41,6 @@ async function getUserList () {
       unit_id: 1,
       department_id: 1
     });
-    console.log("res", res);
     return res;
   } catch (e) {
     throw e.message

@@ -21,19 +21,19 @@ class userDepartmentController {
 
   async deleteDepartmentCallback (req, res) {
     const {
-      department_name
+      department_id
     } = req.body;
-    const result = await userDepartmentService.deleteDepartment(department_name);
+    const result = await userDepartmentService.deleteDepartment(department_id);
     setStatusCode(res, result);
     res.json(result);
   }
 
   async updateDepartmentCallback (req, res) {
     const {
-      department_name,
-      new_department_name
+      department_id,
+      department_name
     } = req.body;
-    const result = await userDepartmentService.updateDepartment(department_name, new_department_name);
+    const result = await userDepartmentService.updateDepartment(department_id, department_name);
     setStatusCode(res, result);
     res.json(result);
   }
@@ -47,8 +47,15 @@ class userDepartmentController {
   async searchDepartmentCallback (req, res) {
     const {
       searchValue
-    } = req.query;
+    } = req.body;
     const result = await userDepartmentService.searchDepartment(searchValue);
+    setStatusCode(res, result);
+    res.json(result);
+  }
+
+  async deletePeopleDepartmentCallback (req, res) {
+    const {account} = req.body;
+    const result = await userDepartmentService.deletePeopleDepartment(account);
     setStatusCode(res, result);
     res.json(result);
   }

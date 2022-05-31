@@ -30,6 +30,7 @@ router.post('/v1/Department', wrap(userDepartmentController.addDepartmentCallbac
 router.delete('/v1/Department', wrap(userDepartmentController.deleteDepartmentCallback));
 router.patch('/v1/Department', wrap(userDepartmentController.updateDepartmentCallback));
 router.get('/v1/Department', wrap(userDepartmentController.listAllDepartmentCallback));
-router.get('/v1/searchDepartment', wrap(userDepartmentController.searchDepartmentCallback));
+router.post('/v1/searchDepartment', wrap(userDepartmentController.searchDepartmentCallback));
+router.delete('/v1/PeopleDepartment', wrap(userDepartmentController.deletePeopleDepartmentCallback));
 
 module.exports = router;

@@ -95,8 +95,9 @@ async function getRole (role_id) {
       role_describe: 1,
       role_rank: 1,
       role_id: 1
-    })
-    return roleObj;
+    });
+    // console.log(roleObj === null);
+    return roleObj === null ? '未添加角色' : roleObj.role_name;
   } catch (error) {
     throw new Error(error.message)
   }
