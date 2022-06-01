@@ -37,7 +37,7 @@ const redisClient = require('./config/redis');
 // const itemGuide = require("./model/task")
 
 // (async () => {
-//   await redisClient.connect()
+//   await redisClient.connect();
 // })();
 mongoose.connect(MONGO_CONFIG.url);
 

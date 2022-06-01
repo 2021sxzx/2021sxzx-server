@@ -44,7 +44,6 @@ async function authenticate(loginData) {
                     redisClient.print
                 );
 
-
                 return {
                     message: 'You have successfully logged in!',
                     code: 200,

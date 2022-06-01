@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 // const unitService = require('../service/unitService');
 const unit = require('../model/unit');
+const users = require('../model/users');
 // const {
 //   addUserAndReturnList,
 //   returnUserList,
@@ -18,12 +19,37 @@ const unit = require('../model/unit');
 
 // // 返回用户列表
 router.get('/v1/aq', async function (req, res, next) {
-  // const resp = await unitService.addUnit('123', 1);
-  // let resqID = parseInt("0x" + String(resp._id).slice(-3));
-  // console.log(resqID)
-  // console.log(resp);
-  // let res1 = Date.now();
-  const q = await unit.find({parent_unit: 3});
+
+  // 聚合操作的学习
+  const q = await users.aggregate([
+    {
+      $lookup: {
+        from: 'units',
+        localField: 'unit_id',
+        foreignField: 'unit_id',
+        as: "info"
+      }
+    }, {
+      $match: {
+        unit_id: 1653018366974
+      }
+    }, {
+      $unwind: "$info"
+    }, {
+      $project: {
+        _id: 0,
+        user_name: 1,
+        account: 1,
+        password: 1,
+        activation_status: 1,
+        user_rank: 1,
+        unit_id: 1,
+        role_id: 1,
+        unit_name: '$info.unit_name'
+      }
+    }
+  ])
+  console.log(q);
   res.json(q);
 })
 

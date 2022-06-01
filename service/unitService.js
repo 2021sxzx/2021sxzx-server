@@ -124,30 +124,32 @@ class unitService {
   // 搜索单位
   async searchUnit (searchValue) {
     const reg = new RegExp(searchValue, 'i')
-    const root = await unit.findOne({ parent_unit: 0 });
-
-    let that = this;
-    async function renderTreeByReg (root, reg) {
-      if (!root) {
-        return;
-      }
-      let _children = await that.findChild(root.unit_id)
-      let children = _children.filter(item => { 
-        return reg.test(item.unit_name) 
-      });
-      if (children.length > 0) {
-        root.children = children;
-        for (let index in root.children) {
-          await renderTree(root.children[index], reg);
+    const res = await unit.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'unit_id',
+          foreignField: 'unit_id',
+          as: "users"
         }
-      } else {
-        return;
+      }, {
+        $match: {
+          unit_name: { $regex: reg }
+        }
+      }, {
+        $project: {
+          _id: 0,
+          unit_id: 1,
+          unit_name: 1,
+          parent_unit: 1,
+          users: 1
+        }
       }
-    }
-    await renderTreeByReg(root, reg);
+    ])
+
     return new SuccessModel({
       msg: "搜索成功",
-      data: root
+      data: res
     });
   }
 

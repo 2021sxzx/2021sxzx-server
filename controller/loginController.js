@@ -21,7 +21,7 @@ async function postLogin(loginData) {
         }
     } catch (e) {
 
-        return new ErrorModel({ msg: e.message })
+        return new ErrorModel({ msg: e.message });
     }
 
 };
