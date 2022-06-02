@@ -229,7 +229,6 @@ class sideBarData {
             return item;
           })
         );
-        console.log(iniValue);
         return iniValue;
       }
 

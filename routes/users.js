@@ -3,7 +3,8 @@ const router = express.Router();
 // const unitService = require('../service/unitService');
 const unit = require('../model/unit');
 const users = require('../model/users');
-const sideBarData = require('../service/sideBarDataService')
+const sideBarData = require('../service/sideBarDataService');
+const unitService = require('../service/unitService');
 // const {
 //   addUserAndReturnList,
 //   returnUserList,
@@ -18,7 +19,6 @@ const sideBarData = require('../service/sideBarDataService')
 
 // });
 
-// // 返回用户列表
 router.get('/v1/aq', async function (req, res, next) {
 
   // 聚合操作的学习
@@ -50,12 +50,9 @@ router.get('/v1/aq', async function (req, res, next) {
   //     }
   //   }
   // ])
-  // const resq = await sideBarData.listSideBarAndMapPermixsion(15815115112);
-  // console.log(resq);
-  // console.log(q);
-  const resq = await sideBarData.createTree(15815115114);
+  const resq = await unitService.newUnitTree();
   res.json(resq);
-})
+});
 
 // // 更新用户数据
 // router.patch('/v1/user', async function (req, res, next) {

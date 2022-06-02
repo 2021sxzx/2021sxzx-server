@@ -121,9 +121,72 @@ class unitService {
     });
   }
 
+  // 重构后的单位列表渲染
+  async newUnitTree () {
+    try {
+      async function getAggregate () {
+        try {
+          const res = await unit.aggregate([
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'unit_id',
+                foreignField: 'unit_id',
+                as: "users"
+              }
+            }, {
+              $project: {
+                _id: 0,
+                unit_id: 1,
+                unit_name: 1,
+                parent_unit: 1,
+                users: 1
+              }
+            }
+          ]);
+          return res;
+        } catch (error) {
+          return new ErrorModel({
+            msg: "获得单位列表失败",
+            data: error.message
+          })
+        }
+      }
+
+      async function findRoot (allData) {
+        const res = allData.filter(item => item.parent_unit == 0);
+        return res[0];
+      }
+
+      async function findChild (unit_id, allData) {
+        const resArr = allData.filter(item => item.parent_unit == unit_id);
+        return resArr;
+      }
+
+      async function renderTree (root, allData) {
+        const children = await findChild(root.unit_id, allData);
+        if (children.length > 0) {
+          root['children'] = children;
+          for (let i = 0; i < children.length; i++) {
+            await renderTree(children[i], allData);
+          }
+        }
+      }
+      const allData = await getAggregate();
+      const root = await findRoot(allData);
+      await renderTree(root, allData)
+      return root;
+    } catch (error) {
+      throw new ErrorModel({
+        msg: "单位信息处理失败",
+        data: e.message
+      });
+    }
+  }
+
   // 搜索单位
   async searchUnit (searchValue) {
-    const reg = new RegExp(searchValue, 'i')
+    const reg = new RegExp(searchValue, 'i');
     const res = await unit.aggregate([
       {
         $lookup: {

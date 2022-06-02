@@ -42,7 +42,7 @@ class unitController {
   // }
 
   async getUnit (req, res) {
-    const result = await unitService.unitTree();
+    const result = await unitService.newUnitTree();
     setStatusCode(res, result);
     res.json(result);
   }
