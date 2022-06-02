@@ -2,9 +2,11 @@
 const sideBar = require('../model/sideBar');
 const sideBarMapPermission = require('../model/sideBarMapPermission');
 const roleMapPermission = require('../model/roleMapPermission');
-const { SuccessModel } = require('../utils/resultModel');
+const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
 class sideBarData {
+
+  /***************废弃函数**************************/
   async getSideBarList (role_id) {
     let permissionIdentifier = await roleMapPermission.find({
       role_id: role_id
@@ -116,6 +118,133 @@ class sideBarData {
     );
 
     return sideBar_.length === 0 ? [] : sideBar_
+  }
+
+  /*****************上述为旧接口，可废弃******************************/
+
+  // 聚合查询数据库中sideBar关联的所有数据
+  async listSideBarAndMapPermission (role_id) {
+    try {
+      // 多表查询
+      const res = await sideBarMapPermission.aggregate([
+        {
+          $lookup: {
+            from: 'sidebars',
+            localField: 'id',
+            foreignField: 'id',
+            as: 'obj'
+          }
+        }, {
+          $lookup: {
+            from: 'rolemappermissions',
+            localField: 'permission_identifier',
+            foreignField: 'permission_identifier',
+            as: 'obj2'
+          }
+        }, {
+          $unwind: "$obj2"
+        }, {
+          $unwind: "$obj"
+        }, {
+          $project: {
+            _id: 0,
+            id: 1,
+            role_id: '$obj2.role_id',
+            key: '$obj.key',
+            title: '$obj.title',
+            parent: '$obj.parent'
+          }
+        }, {
+          $match: {
+            role_id: role_id
+          }
+        }
+      ])
+
+      let deWeight = (arr) => {
+        let map = new Map();
+        for (let item of arr) {
+          if (!map.has(item.id)) {
+            map.set(item.id, item);
+          }
+        }
+        return [...map.values()];
+      }
+
+      return deWeight(res);
+    } catch (error) {
+      return new ErrorModel({
+        msg: "获得侧边栏失败",
+        data: error.message
+      })
+    }
+  }
+
+  // 找出孩子节点
+  async findChild_new (id, allData) {
+    let dataArr = allData.filter(item => { return item.parent == id });
+    console.log(dataArr)
+    return dataArr;
+  }
+
+  // 递归渲染侧边栏
+  async createTree (role_id) {
+    try {
+      const allData = await this.listSideBarAndMapPermission(role_id);
+      const that = this;
+      async function createRecursiveNode (id) {
+        const children = allData.filter(item => { return item.parent === id });
+        const parent = allData.filter(item => { return item.id === id });
+        if (children.length) {
+          return {
+            key: parent[0].key,
+            title: parent[0].title,
+            id: parent[0].id,
+            children: children
+          }
+        } else {
+          return {
+            key: parent[0].key,
+            title: parent[0].title,
+            id: parent[0].id
+          }
+        }
+      }
+
+      async function findIni () {
+        const ini = allData.filter(item => { return item.parent === 0 });
+        return ini;
+      }
+
+      async function renderTree (iniValue) {
+        // console.log(allData);
+        iniValue = await Promise.all(
+          iniValue.map(async item => {
+            const child = await that.findChild_new(item.id, allData);
+            // console.log('child', child)
+            if (child.length > 0) {
+              await renderTree(child);
+              item['children'] = child;
+            }
+            return item;
+          })
+        );
+        console.log(iniValue);
+        return iniValue;
+      }
+
+      let iniValue = await findIni();
+      const sideBar = await renderTree(iniValue);
+      return new SuccessModel({
+        msg: "获得侧边栏成功",
+        data: sideBar.sort((a, b) => a.id - b.id)
+      })
+    } catch (error) {
+      return new ErrorModel({
+        msg: "获得侧边栏失败",
+        data: error.message
+      })
+    }
   }
 }
 

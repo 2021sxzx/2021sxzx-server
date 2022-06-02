@@ -3,6 +3,7 @@ const router = express.Router();
 // const unitService = require('../service/unitService');
 const unit = require('../model/unit');
 const users = require('../model/users');
+const sideBarData = require('../service/sideBarDataService')
 // const {
 //   addUserAndReturnList,
 //   returnUserList,
@@ -21,36 +22,39 @@ const users = require('../model/users');
 router.get('/v1/aq', async function (req, res, next) {
 
   // 聚合操作的学习
-  const q = await users.aggregate([
-    {
-      $lookup: {
-        from: 'units',
-        localField: 'unit_id',
-        foreignField: 'unit_id',
-        as: "info"
-      }
-    }, {
-      $match: {
-        unit_id: 1653018366974
-      }
-    }, {
-      $unwind: "$info"
-    }, {
-      $project: {
-        _id: 0,
-        user_name: 1,
-        account: 1,
-        password: 1,
-        activation_status: 1,
-        user_rank: 1,
-        unit_id: 1,
-        role_id: 1,
-        unit_name: '$info.unit_name'
-      }
-    }
-  ])
-  console.log(q);
-  res.json(q);
+  // const q = await users.aggregate([
+  //   {
+  //     $lookup: {
+  //       from: 'units',
+  //       localField: 'unit_id',
+  //       foreignField: 'unit_id',
+  //       as: "info"
+  //     }
+  //   }, {
+  //     $match: {
+  //       unit_id: 1653018366974
+  //     }
+  //   }, {
+  //     $unwind: "$info"
+  //   }, {
+  //     $project: {
+  //       _id: 0,
+  //       user_name: 1,
+  //       account: 1,
+  //       password: 1,
+  //       activation_status: 1,
+  //       user_rank: 1,
+  //       unit_id: 1,
+  //       role_id: 1,
+  //       unit_name: '$info.unit_name'
+  //     }
+  //   }
+  // ])
+  // const resq = await sideBarData.listSideBarAndMapPermixsion(15815115112);
+  // console.log(resq);
+  // console.log(q);
+  const resq = await sideBarData.createTree(15815115114);
+  res.json(resq);
 })
 
 // // 更新用户数据

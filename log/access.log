@@ -2610,3 +2610,13 @@
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:17:59.349Z] "GET /api/v1/failure HTTP/1.1" 200 1490 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:20:10.077Z] "GET /api/v1/show/ HTTP/1.1" 200 321726 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
 
+定时备份故障[2022-06-02T00:00:01.154Z]Error: Command failed: sh C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh
+C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh: line 15: cd: /www/backup/mongodb_bak/mongodb_bak_now: No such file or directory
+C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh: line 19: /usr/bin/mongodump: No such file or directory
+tar (child): /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_02_00_00_00.tar.gz: Cannot open: No such file or directory
+tar (child): Error is not recoverable: exiting now
+tar: /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_02_00_00_00.tar.gz: Cannot write: Broken pipe
+tar: Child returned status 2
+tar: Error is not recoverable: exiting now
+find: ‘/www/backup/mongodb_bak/mongodb_bak_list/’: No such file or directory
+
