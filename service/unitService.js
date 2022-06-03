@@ -175,7 +175,10 @@ class unitService {
       const allData = await getAggregate();
       const root = await findRoot(allData);
       await renderTree(root, allData)
-      return root;
+      return new SuccessModel({
+        msg: "单位信息处理成功",
+        data: root
+      });;
     } catch (error) {
       throw new ErrorModel({
         msg: "单位信息处理失败",
