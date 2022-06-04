@@ -69,70 +69,14 @@ class unitService {
       : '无单位'
   }
 
-  // 查找父单位
-  async findParent(unit_id) {
-    const res = await unit.find({ unit_id })
-    const parent_unit = res.parent_unit
-    const result = await unit.findOne({ unit: parent_unit })
-    return result
-  }
-
-  // 查找子单位
-  async findChild(unit_id) {
-    const res = await unit.find({ parent_unit: unit_id })
-    return res.map((item) => {
-      return {
-        _id: item._id,
-        unit_name: item.unit_name,
-        unit_id: item.unit_id,
-        parent_unit: item.parent_unit,
-      }
-    })
-  }
-
-  // 单位列表[树型结构]
-  async unitTree() {
-    let rootTemp = await unit.findOne({ parent_unit: 0 }, { __v: 0 })
-    const users = await this.calculateUser(rootTemp.unit_id)
-    let root = {
-      _id: rootTemp._id,
-      unit_name: rootTemp.unit_name,
-      unit_id: rootTemp.unit_id,
-      parent_unit: rootTemp.parent_unit,
-    }
-    if (users.length !== 0) {
-      root.users = users
-    }
-    let that = this
-    async function renderTree(root) {
-      if (!root) {
-        return
-      }
-      let children = await that.findChild(root.unit_id)
-      let users = await that.calculateUser(root.unit_id)
-      if (users.length !== 0) {
-        root.users = users
-      }
-      if (children.length > 0) {
-        root.children = children
-        for (let index in root.children) {
-          // 注意了
-          await renderTree(root.children[index])
-        }
-      } else {
-        return
-      }
-    }
-    await renderTree(root)
-    return new SuccessModel({
-      msg: '获取列表成功',
-      data: root,
-    })
-  }
-
   // 重构后的单位列表渲染
-  async newUnitTree() {
+  async newUnitTree(unit_id) {
     try {
+      if (arguments.length === 0) {
+        // 根节点
+        unit_id = 1653018366962;
+      }
+
       async function getAggregate() {
         try {
           const res = await unit.aggregate([
@@ -163,8 +107,8 @@ class unitService {
         }
       }
 
-      async function findRoot(allData) {
-        const res = allData.filter((item) => item.parent_unit == 0)
+      async function findRoot(allData, unit_id) {
+        const res = allData.filter((item) => item.unit_id == unit_id);
         return res[0]
       }
 
@@ -183,7 +127,7 @@ class unitService {
         }
       }
       const allData = await getAggregate()
-      const root = await findRoot(allData)
+      const root = await findRoot(allData, unit_id)
       await renderTree(root, allData)
       return new SuccessModel({
         msg: '单位信息处理成功',
@@ -270,6 +214,8 @@ class unitService {
     const res = await users.find({ unit_id })
     return res
   }
+
+  async findPeopleByUnitId () {}
 }
 
 module.exports = new unitService()

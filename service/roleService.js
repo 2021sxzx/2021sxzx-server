@@ -109,14 +109,10 @@ async function getRole (role_id) {
  */
 async function getRoleList (role_id) {
   try {
-    const _role = await role.findOne({role_id});
-    let rank = Number(_role.role_rank);
-    const res = await role.find({
-      role_rank: rank + 1
-    })
+    const res = await role.find({})
     return res
   } catch (e) {
-    throw new Error(e.message)
+    throw new Error(e.message);
   }
 }
 
@@ -239,7 +235,6 @@ async function calcaulatePermissionIdentifier (role_id) {
         return item.permission_identifier
       })
     )
-    console.log(role_id, permissionFindArr)
     return permissionFindArr
 
   } catch (e) {
