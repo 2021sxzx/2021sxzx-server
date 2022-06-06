@@ -70,13 +70,13 @@ async function addUserBatchingAndReturnList (imported_array) {
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: calRoleObj.role_name,
+          role_name: calRoleObj,
+          role_id: item.role_id,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
           unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
+          unit_id: item.unit_id
         }
       })
     )
@@ -104,12 +104,13 @@ async function returnUserList (role_id) {
           _id: item._id,
           user_name: item.user_name,
           role_name: calRoleObj,
+          role_id: item.role_id,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
           unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
+          unit_id: item.unit_id
+          // department_id: item.department_id
         }
       })
     );
@@ -141,13 +142,13 @@ async function updateUserAndReturnList (user_name, password, role_id, account, n
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: calRoleObj.role_name,
+          role_name: calRoleObj,
+          role_id: item.role_id,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
           unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
+          unit_id: item.unit_id
         }
       })
     )
@@ -177,13 +178,13 @@ async function deleteUserAndReturnList (account) {
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: calRoleObj.role_name,
+          role_name: calRoleObj,
+          role_id: item.role_id,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
           unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
+          unit_id: item.unit_id
         }
       })
     )
@@ -209,13 +210,13 @@ async function searchUserAndReturnList (searchValue) {
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: calRoleObj.role_name,
+          role_name: calRoleObj,
+          role_id: item.role_id,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
           unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
+          unit_id: item.unit_id
         }
       })
     )
@@ -239,13 +240,13 @@ async function setActivationAndReturn (account) {
         return {
           _id: item._id,
           user_name: item.user_name,
-          role_name: calRoleObj.role_name,
+          role_name: calRoleObj,
+          role_id: item.role_id,
           account: item.account,
           password: item.password,
           activation_status: item.activation_status,
           unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
+          unit_id: item.unit_id
         }
       })
     )

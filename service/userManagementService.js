@@ -38,8 +38,8 @@ async function getUserList () {
       role_id: 1,
       account: 1,
       activation_status: 1,
-      unit_id: 1,
-      department_id: 1
+      unit_id: 1
+      // department_id: 1
     });
     return res;
   } catch (e) {
