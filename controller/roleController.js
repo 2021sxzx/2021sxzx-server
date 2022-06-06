@@ -80,7 +80,7 @@ async function returnRoleList (role_id) {
     const permissionList = await Promise.all(
       await roleList.map(async (item) => {
         const permissions = await calcaulatePermission(item.role_id);
-        console.log(permissions)
+        // console.log(permissions)
         const permissionIdentifierArray = await calcaulatePermissionIdentifier(item.role_id);
         return {
           permissions,
@@ -158,19 +158,26 @@ async function searchRoleAndReturnObject (searchValue) {
   try {
     const Role = await SearchRole(searchValue) // 多个角色的数组
     
-    let Permission = await Promise.all(
-      Role.map(async item => {
-        const res = await calcaulatePermission(item.role_id);
-        return res;
-      })
-    )
+    let prv = Role.map(async item => {
+      const res = await calcaulatePermission(item.role_id);
+      return res;
+    });
+    let prv1 = Role.map(async item => {
+      const res = await calcaulatePermissionIdentifier(item.role_id);
+      return res;
+    })
+    // console.log(prv1);
 
+    let Permission = await Promise.all(prv);
+    let PermissionPrv = await Promise.all(prv1);
+    // console.log(PermissionPrv);
     const res = Role.map((item, index) => {
       return {
         role_name: item.role_name,
         role_describe: item.role_describe,
         role_id: item.role_id,
-        permission: Permission[index]
+        permission: Permission[index],
+        permission_identifier_array: PermissionPrv[index]
       }
     })
 
