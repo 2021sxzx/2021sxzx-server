@@ -203,7 +203,7 @@ async function calcaulatePermission (role_id) {
     const permissionFindArrPrv = await roleMapPermission.find({
       role_id: role_id
     })
-    console.log(permissionFindArrPrv);
+    // console.log(permissionFindArrPrv);
     // 获取角色名称
     const permissionFindArr = await Promise.all(
       permissionFindArrPrv.map(async (item) => {
