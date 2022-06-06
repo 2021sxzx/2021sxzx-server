@@ -76,7 +76,7 @@ async function getAllUserComment({ pageNum, score }) {
         let res = await comment
           .find({ score: { $eq: score } })
           .skip((pageNum - 1) * 10)
-          .limit(pageNum * 10)
+          .limit(10)
           .lean();
         arrayShowIdc(res);
         const result = {
@@ -88,7 +88,7 @@ async function getAllUserComment({ pageNum, score }) {
         let res = await comment
           .find()
           .skip((pageNum - 1) * 10)
-          .limit(pageNum * 10)
+          .limit(10)
           .lean();
         arrayShowIdc(res);
         const result = {
@@ -547,7 +547,6 @@ async function getAllUserCommentByCondition({
         };
         return result;
       } else {
-        console.log(34343434);
         let res = await comment
           .find({
             [category]: { $regex: Reg },
@@ -584,7 +583,7 @@ async function getAllUserCommentByCondition({
             ],
           })
           .skip((pageNum - 1) * 10)
-          .limit(pageNum * 10)
+          .limit(10)
           .lean();
         let total = await comment
           .find({
@@ -611,7 +610,7 @@ async function getAllUserCommentByCondition({
             create_time: { $gte: startTime, $lte: endTime },
           })
           .skip((pageNum - 1) * 10)
-          .limit(pageNum * 10)
+          .limit(10)
           .lean();
         let total = await comment
           .find({
