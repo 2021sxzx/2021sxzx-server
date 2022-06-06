@@ -3,32 +3,6 @@ const roleMapPermission = require('../model/roleMapPermission')
 const users = require('../model/users')
 const permission = require('../model/permission')
 
-async function findRank (role_name) {
-  try {
-    const rank = role.find({role_name});
-    if (!rank) {
-      return
-    } else {
-      return rank.role_rank;
-    }
-  } catch (error) {
-    throw new Error(error.message);
-  }
-}
-
-// 判断是否可以CRUD的函数 
-function compareRankAndJudge (role_rank1, role_rank2) {
-  try {
-    if (role_rank1 > role_rank2 || Math.abs(role_rank1 - role_rank2) !== 1) {
-      return false;
-    } else {
-      return true;
-    }
-  } catch (error) {
-    throw new Error(error.message);
-  }
-}
-
 /**
  * 添加角色【肯定也要随之添加权限】
  * @param role_name
