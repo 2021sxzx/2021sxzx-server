@@ -72,7 +72,7 @@ router.get('/v1/role', async (req, res, next) => {
   let data = await returnRoleList(Number(role_id))
   setStatusCode(res, data)
   res.json(data)
-})
+});
 
 /**
  * 搜索角色

@@ -54,6 +54,13 @@ class unitController {
     setStatusCode(res, result);
     res.json(result);
   }
+
+  async getUserById (req, res) {
+    const { unit_id } = req.body;
+    const result = await unitService.getUserById(unit_id);
+    setStatusCode(res, result);
+    res.json(result);
+  }
 }
 
 module.exports = new unitController();

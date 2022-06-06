@@ -175,17 +175,26 @@ class unitService {
     })
   }
 
+
+  async findParent (unit_id) {
+    const res = await unit.findOne({ unit_id });
+    if (res.parent_unit != 0) {
+      return res.parent_unit;
+    } else {
+      return 0;
+    }
+  }
+
   // 生成单位编号
   async createUnitToken(unit_id) {
     let token = `${unit_id}`
-    let parent = null
     let that = this
     while (1) {
-      parent = await that.findParent(unit_id)
-      if (!parent) {
+      unit_id = await that.findParent(unit_id);
+      if (!unit_id) {
         break
       } else {
-        token = String(parent.unit_id) + '-' + token
+        token = String(unit_id) + '-' + token;
       }
     }
     return token
@@ -202,20 +211,27 @@ class unitService {
     }
   }
 
+  // 获取全部部门列表
+  async getAllUnitData () {
+    const res = await unit.find({});
+    return res;
+  }
+
   // 根据单位计算级别
-  async calculateRank(unit_id) {
-    let res = await this.createUnitToken(unit_id)
-    let rank = res.split('-').length
-    return rank
+  async calculateRank(unit_id, unitArr) {
+
   }
 
   // 计算单位下有多少人
-  async calculateUser(unit_id) {
+  async getUserById (unit_id) {
     const res = await users.find({ unit_id })
-    return res
+    const k = await this.createUnitToken(1653018366977);
+    console.log(k);
+    return new SuccessModel({
+      msg: '获取单位用户成功',
+      data: res
+    })
   }
-
-  async findPeopleByUnitId () {}
 }
 
 module.exports = new unitService()

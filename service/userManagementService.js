@@ -110,9 +110,8 @@ async function searchUser (searchValue) {
       role_id: 1,
       account: 1,
       activation_status: 1,
-      unit_id: 1,
-      department_id: 1
-    })
+      unit_id: 1
+    });
   } catch (e) {
     throw e.message
   }
@@ -164,7 +163,7 @@ async function batchImportedUser (imported_array) {
       return {
         user_name: item.user_name,
         role_id: item.role_id,
-        department_id: item.department_id,
+        unit_id: item.unit_id,
         account: item.account,
         password: item.password,
         activation_status: 1,
