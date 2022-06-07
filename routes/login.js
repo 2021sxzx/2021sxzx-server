@@ -19,7 +19,6 @@ function setStatusCode(res, data) {
 router.post('/v1/login', async (req, res) => {
     let loginData = req.body;
     let data = await postLogin(loginData);
-    setStatusCode(res, data);
     if (data.code === 200) {
         const jwt = data.data.jwt;
         const token = jwt.token;
@@ -41,7 +40,7 @@ router.post('/v1/login', async (req, res) => {
           sameSite: 'Lax'
         });
         res.json(data);
-    } else if (data.code === 404) {
+    } else {
         res.status(403).send(data);
 
     }
@@ -50,7 +49,6 @@ router.post('/v1/login', async (req, res) => {
 router.post('/v1/logout', async (req, res) => {
   let logoutData = req.body;
   let data = await postLogout(logoutData);
-  setStatusCode(res, data);
   if (data.code === 200) {
     // 设置过期时间，让cookie被清除
     res.clearCookie('auth-token');

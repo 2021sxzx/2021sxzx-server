@@ -62,7 +62,7 @@ router.post('/v1/user', async (req, res, next) => {
       role_id: req.body.role_id,
       unit_id: Number(req.body.unit_id)
       // department_id: req.body.department_id
-    })
+    });
     setStatusCode(res, data);
     res.json(data)
   } else {
