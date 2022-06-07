@@ -60,10 +60,10 @@ async function authenticate(loginData) {
                     refresh_token,
                 });
             } else {
-                return ({ message: '密码错误，请重试.', code: 403 });
+                return ({ msg: '密码错误，请重试.', code: 403 });
             }
         } else {
-            return ({ message: '该账号不存在.', code: 403 });
+            return ({ msg: '该账号不存在.', code: 403 });
         }
 
     } catch (e) {

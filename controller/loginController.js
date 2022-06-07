@@ -13,10 +13,11 @@ async function postLogin(loginData) {
 
     try {
         let data = await authenticate(loginData)
+        console.log(data);
         if (data.code == 200) {
-            return new SuccessModel({ code: 200, msg: data.message, data: data });
+            return new SuccessModel(data);
         } else if (data.code == 403) {
-            return new ErrorModel({ code: 403, msg: data.message })
+            return new ErrorModel(data)
         }
     } catch (e) {
         return new ErrorModel({ msg: e.message });
