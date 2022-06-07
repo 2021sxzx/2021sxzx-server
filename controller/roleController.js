@@ -166,11 +166,8 @@ async function searchRoleAndReturnObject (searchValue) {
       const res = await calcaulatePermissionIdentifier(item.role_id);
       return res;
     })
-    // console.log(prv1);
-
     let Permission = await Promise.all(prv);
     let PermissionPrv = await Promise.all(prv1);
-    // console.log(PermissionPrv);
     const res = Role.map((item, index) => {
       return {
         role_name: item.role_name,

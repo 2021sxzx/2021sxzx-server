@@ -31,16 +31,39 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    const res = await users.find({}, {
-      _id: 1,
-      user_name: 1,
-      password: 1,
-      role_id: 1,
-      account: 1,
-      activation_status: 1,
-      unit_id: 1
-      // department_id: 1
-    });
+    const res = await users.aggregate([
+      {
+        $lookup: {
+          from: 'units',
+          localField: 'unit_id',
+          foreignField: 'unit_id',
+          as: "info1"
+        }
+      }, {
+        $lookup: {
+          from: 'roles',
+          localField: 'role_id',
+          foreignField: 'role_id',
+          as: "info2"
+        }
+      }, {
+        $unwind: "$info1"
+      }, {
+        $unwind: "$info2"
+      }, {
+        $project: {
+          _id: 0,
+          user_name: 1,
+          account: 1,
+          password: 1,
+          activation_status: 1,
+          unit_id: 1,
+          unit_name: '$info1.unit_name',
+          role_id: 1,
+          role_name: '$info2.role_name'
+        }
+      }
+    ]);
     return res;
   } catch (e) {
     throw e.message
@@ -110,9 +133,8 @@ async function searchUser (searchValue) {
       role_id: 1,
       account: 1,
       activation_status: 1,
-      unit_id: 1,
-      department_id: 1
-    })
+      unit_id: 1
+    });
   } catch (e) {
     throw e.message
   }
@@ -164,7 +186,7 @@ async function batchImportedUser (imported_array) {
       return {
         user_name: item.user_name,
         role_id: item.role_id,
-        department_id: item.department_id,
+        unit_id: item.unit_id,
         account: item.account,
         password: item.password,
         activation_status: 1,

@@ -183,7 +183,6 @@ class sideBarData {
   // 找出孩子节点
   async findChild_new (id, allData) {
     let dataArr = allData.filter(item => { return item.parent == id });
-    console.log(dataArr)
     return dataArr;
   }
 
@@ -192,24 +191,6 @@ class sideBarData {
     try {
       const allData = await this.listSideBarAndMapPermission(role_id);
       const that = this;
-      async function createRecursiveNode (id) {
-        const children = allData.filter(item => { return item.parent === id });
-        const parent = allData.filter(item => { return item.id === id });
-        if (children.length) {
-          return {
-            key: parent[0].key,
-            title: parent[0].title,
-            id: parent[0].id,
-            children: children
-          }
-        } else {
-          return {
-            key: parent[0].key,
-            title: parent[0].title,
-            id: parent[0].id
-          }
-        }
-      }
 
       async function findIni () {
         const ini = allData.filter(item => { return item.parent === 0 });
