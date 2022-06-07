@@ -3,6 +3,14 @@ const roleMapPermission = require('../model/roleMapPermission')
 const users = require('../model/users')
 const permission = require('../model/permission')
 
+function searchPermissionName (permission_identifier, permissionList) {
+  for (let item of permissionList) {
+    if (item.permission_identifier === permission_identifier) {
+      return item.permission;
+    }
+  }
+}
+
 /**
  * 添加角色【肯定也要随之添加权限】
  * @param role_name
@@ -62,26 +70,36 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
  */
 async function getRole (role_id) {
   try {
-    const roleObj = await role.findOne({
-      role_id
-    }, {
-      role_name: 1,
-      role_describe: 1,
-      role_rank: 1,
-      role_id: 1
+    const resq = await role.aggregate([
+      {
+        $lookup: {
+          from: 'rolemappermissions',
+          localField: 'role_id',
+          foreignField: 'role_id',
+          as: "info1"
+        }
+      }, {
+        $match: { role_id: role_id }
+      }, {
+        $project: {
+          role_name: 1,
+          role_id: 1,
+          role_describe: 1,
+          permission_identifier: '$info1.permission_identifier'
+        }
+      }
+    ]);
+    const permissionList = await permission.find({});
+    console.log(resq);
+    resq.map(item => {
+      item["permission"] = item.permission_identifier.map(item => {
+        return searchPermissionName(item, permissionList);
+      });
+      return item;
     });
-    // console.log(roleObj === null);
-    return roleObj === null ? '未添加角色' : roleObj.role_name;
+    return resq;
   } catch (error) {
     throw new Error(error.message)
-  }
-}
-
-function searchPermissionName (permission_identifier, permissionList) {
-  for (let item of permissionList) {
-    if (item.permission_identifier === permission_identifier) {
-      return item.permission;
-    }
   }
 }
 

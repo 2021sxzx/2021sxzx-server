@@ -31,16 +31,11 @@ async function addRoleAndReturnObject (
     const resq = await addRole(role_name, role_describe, permission_identifier_array, role_rank);
     // id在哪里？
     const res = await getRole(resq.role_id);
-    const calPermission = await calcaulatePermission(resq.role_id);
+    // const calPermission = await calcaulatePermission(resq.role_id);
 
     return new SuccessModel({
       msg: '添加角色列表成功',
-      data: {
-        role_name: res.role_name,
-        role_describe: res.role_describe,
-        permission: calPermission,
-        role_id: res.role_id
-      }
+      data: res
     })
   } catch (e) {
     throw new ErrorModel({
@@ -135,26 +130,6 @@ async function getPermissionListAndReturnObject () {
 async function searchRoleAndReturnObject (searchValue) {
   try {
     const Role = await SearchRole(searchValue) // 多个角色的数组
-    
-    // let prv = Role.map(async item => {
-    //   const res = await calcaulatePermission(item.role_id);
-    //   return res;
-    // });
-    // let prv1 = Role.map(async item => {
-    //   const res = await calcaulatePermissionIdentifier(item.role_id);
-    //   return res;
-    // })
-    // let Permission = await Promise.all(prv);
-    // let PermissionPrv = await Promise.all(prv1);
-    // const res = Role.map((item, index) => {
-    //   return {
-    //     role_name: item.role_name,
-    //     role_describe: item.role_describe,
-    //     role_id: item.role_id,
-    //     permission: Permission[index],
-    //     permission_identifier_array: PermissionPrv[index]
-    //   }
-    // })
 
     return new SuccessModel({
       msg: '搜索成功',
