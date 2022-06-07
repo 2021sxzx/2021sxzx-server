@@ -45,19 +45,21 @@ async function authenticate(loginData) {
                 );
 
                 return ({
-                    message: 'You have successfully logged in!',
+                    msg: 'You have successfully logged in!',
                     code: 200,
-                    cookie: {
+                    data: {
+                      cookie: {
                         httpOnly: true
-                    },
-                    jwt: {
-                        token: token,
-                        expiresIn: 3600
-                    },
-                    role_id: res.role_id,
-                    unit_id: res.unit_id,
-                    _id: res._id,
-                    refresh_token,
+                      },
+                      jwt: {
+                          token: token,
+                          expiresIn: 3600
+                      },
+                      role_id: res.role_id,
+                      unit_id: res.unit_id,
+                      _id: res._id,
+                      refresh_token
+                    }
                 });
             } else {
                 return ({ msg: '密码错误，请重试.', code: 403 });
