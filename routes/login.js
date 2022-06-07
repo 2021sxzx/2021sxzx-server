@@ -9,6 +9,7 @@ const {
 router.post('/v1/login', async (req, res) => {
     let loginData = req.body;
     let data = await postLogin(loginData);
+    console.log(data);
     if (data.code === 200) {
         const jwt = data.data.jwt;
         const token = jwt.token;
