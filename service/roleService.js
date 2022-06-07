@@ -77,14 +77,46 @@ async function getRole (role_id) {
   }
 }
 
+function searchPermissionName (permission_identifier, permissionList) {
+  for (let item of permissionList) {
+    if (item.permission_identifier === permission_identifier) {
+      return item.permission;
+    }
+  }
+}
+
 /**
  * 返回一个角色列表
  * @return {Promise<Array[]>}
  */
 async function getRoleList (role_id) {
   try {
-    const res = await role.find({})
-    return res
+    const resq = await role.aggregate([
+      {
+        $lookup: {
+          from: 'rolemappermissions',
+          localField: 'role_id',
+          foreignField: 'role_id',
+          as: "info1"
+        }
+      }, {
+        $project: {
+          role_name: 1,
+          role_id: 1,
+          role_describe: 1,
+          permission_identifier: '$info1.permission_identifier'
+        }
+      }
+    ]);
+    const permissionList = await permission.find({});
+
+    resq.map(item => {
+      item["permission"] = item.permission_identifier.map(item => {
+        return searchPermissionName(item, permissionList);
+      });
+      return item;
+    });
+    return resq
   } catch (e) {
     throw new Error(e.message);
   }
@@ -151,16 +183,42 @@ async function SearchRole (searchValue) {
   }
   const reg = new RegExp(searchValue, 'i')
   try {
-    const res = await role.find({
-      $or: [
-        {
-          role_name: { $regex : reg }
-        },{
-          role_describe: { $regex : reg }
+    const resq = await role.aggregate([
+      {
+        $lookup: {
+          from: 'rolemappermissions',
+          localField: 'role_id',
+          foreignField: 'role_id',
+          as: "info1"
         }
-      ]
-    })
-    return res
+      }, {
+        $match: {
+          $or: [
+            {
+              role_name: { $regex : reg }
+            },{
+              role_describe: { $regex : reg }
+            }
+          ]
+        }
+      }, {
+        $project: {
+          role_name: 1,
+          role_id: 1,
+          role_describe: 1,
+          permission_identifier: '$info1.permission_identifier'
+        }
+      }
+    ]);
+    const permissionList = await permission.find({});
+
+    resq.map(item => {
+      item["permission"] = item.permission_identifier.map(item => {
+        return searchPermissionName(item, permissionList);
+      });
+      return item;
+    });
+    return resq
   } catch (e) {
     throw new Error(e.message)
   }

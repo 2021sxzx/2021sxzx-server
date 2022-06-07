@@ -102,26 +102,26 @@ router.get('/v1/aq', async function (req, res, next) {
         as: "info1"
       }
     }, {
-      $lookup: {
-        from: 'permissions',
-        localField: 'permission_identifier',
-        foreignField: 'permission_identifier',
-        as: "info2"
-      }
-    }, {
       $project: {
         role_name: 1,
         role_id: 1,
         role_describe: 1,
-        permission_identifier: '$info1.permission_identifier',
-        info2: 1
+        permission_identifier: '$info1.permission_identifier'
       }
     }
   ]);
   const permissionList = await permission.find({});
+
+  function searchPermissionName (permission_identifier, permissionList) {
+    for (let item of permissionList) {
+      if (item.permission_identifier === permission_identifier) {
+        return item.permission;
+      }
+    }
+  }
   resq.map(item => {
     item["permission"] = item.permission_identifier.map(item => {
-      
+      return searchPermissionName(item, permissionList);
     });
     return item;
   });

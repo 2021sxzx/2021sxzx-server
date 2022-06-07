@@ -77,32 +77,10 @@ async function updateRoleAndReturnObject (role_name, role_id, role_describe) {
 async function returnRoleList (role_id) {
   try {
     const roleList = await getRoleList(role_id);
-    const permissionList = await Promise.all(
-      await roleList.map(async (item) => {
-        const permissions = await calcaulatePermission(item.role_id);
-        // console.log(permissions)
-        const permissionIdentifierArray = await calcaulatePermissionIdentifier(item.role_id);
-        return {
-          permissions,
-          permissionIdentifierArray
-        };
-      })
-    )
-    let res = []
-  
-    for (let i = 0; i < roleList.length; i++) {
-      res.push({
-        role_name: roleList[i].role_name,
-        role_id: roleList[i].role_id,
-        role_describe: roleList[i].role_describe,
-        permission: permissionList[i].permissions,
-        permission_identifier_array: permissionList[i].permissionIdentifierArray
-      });
-    }
   
     return new SuccessModel({
       msg: '返回角色权限列表成功',
-      data: res
+      data: roleList
     })
 
   } catch (error) {
@@ -158,29 +136,29 @@ async function searchRoleAndReturnObject (searchValue) {
   try {
     const Role = await SearchRole(searchValue) // 多个角色的数组
     
-    let prv = Role.map(async item => {
-      const res = await calcaulatePermission(item.role_id);
-      return res;
-    });
-    let prv1 = Role.map(async item => {
-      const res = await calcaulatePermissionIdentifier(item.role_id);
-      return res;
-    })
-    let Permission = await Promise.all(prv);
-    let PermissionPrv = await Promise.all(prv1);
-    const res = Role.map((item, index) => {
-      return {
-        role_name: item.role_name,
-        role_describe: item.role_describe,
-        role_id: item.role_id,
-        permission: Permission[index],
-        permission_identifier_array: PermissionPrv[index]
-      }
-    })
+    // let prv = Role.map(async item => {
+    //   const res = await calcaulatePermission(item.role_id);
+    //   return res;
+    // });
+    // let prv1 = Role.map(async item => {
+    //   const res = await calcaulatePermissionIdentifier(item.role_id);
+    //   return res;
+    // })
+    // let Permission = await Promise.all(prv);
+    // let PermissionPrv = await Promise.all(prv1);
+    // const res = Role.map((item, index) => {
+    //   return {
+    //     role_name: item.role_name,
+    //     role_describe: item.role_describe,
+    //     role_id: item.role_id,
+    //     permission: Permission[index],
+    //     permission_identifier_array: PermissionPrv[index]
+    //   }
+    // })
 
     return new SuccessModel({
       msg: '搜索成功',
-      data: res
+      data: Role
     })
 
   } catch (error) {
