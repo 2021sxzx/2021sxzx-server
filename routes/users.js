@@ -7,6 +7,7 @@ const role = require('../model/role');
 const sideBarData = require('../service/sideBarDataService');
 const unitService = require('../service/unitService');
 const roleMapPermission = require('../model/roleMapPermission');
+const permission = require('../model/permission');
 // const {
 //   addUserAndReturnList,
 //   returnUserList,
@@ -116,7 +117,14 @@ router.get('/v1/aq', async function (req, res, next) {
         info2: 1
       }
     }
-  ])
+  ]);
+  const permissionList = await permission.find({});
+  resq.map(item => {
+    item["permission"] = item.permission_identifier.map(item => {
+      
+    });
+    return item;
+  });
   res.json(resq);
 });
 

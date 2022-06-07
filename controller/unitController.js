@@ -42,8 +42,10 @@ class unitController {
   // }
 
   async getUnit (req, res) {
-    const { unit_id = 1653018366962 } = req.body;
-    const result = await unitService.newUnitTree(unit_id);
+    // const { unit_id = 1653018366962 } = req.body;
+    // const unit_id = req.cookie.unit_id;
+    console.log(req.cookies.role_id)
+    const result = await unitService.newUnitTree(Number(req.cookies.unit_id));
     setStatusCode(res, result);
     res.json(result);
   }

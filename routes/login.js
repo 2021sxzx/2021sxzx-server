@@ -23,10 +23,20 @@ router.post('/v1/login', async (req, res) => {
     if (data.code === 200) {
         const jwt = data.data.jwt;
         const token = jwt.token;
-        const cookie = data.data.cookie;
+        console.log(data);
         
         // 配置登录响应头，防止XSS和CSRF
-        res.cookie('auth-token', token, cookie, {
+        res.cookie('auth-token', token, {
+          httpOnly: true,
+          sameSite: 'Lax'
+        });
+
+        res.cookie('unit_id', data.data.unit_id, {
+          httpOnly: true,
+          sameSite: 'Lax'
+        });
+
+        res.cookie('role_id', data.data.role_id, {
           httpOnly: true,
           sameSite: 'Lax'
         });
