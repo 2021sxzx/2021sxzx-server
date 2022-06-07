@@ -23,7 +23,6 @@ router.post('/v1/login', async (req, res) => {
     if (data.code === 200) {
         const jwt = data.data.jwt;
         const token = jwt.token;
-        console.log(data);
         
         // 配置登录响应头，防止XSS和CSRF
         res.cookie('auth-token', token, {
@@ -31,6 +30,7 @@ router.post('/v1/login', async (req, res) => {
           sameSite: 'Lax'
         });
 
+        
         res.cookie('unit_id', data.data.unit_id, {
           httpOnly: true,
           sameSite: 'Lax'
@@ -42,8 +42,8 @@ router.post('/v1/login', async (req, res) => {
         });
         res.json(data);
     } else if (data.code === 404) {
-        console.log(data.msg);
-        res.status(403).send(data.msg);
+        res.status(403).send(data);
+
     }
 });
 

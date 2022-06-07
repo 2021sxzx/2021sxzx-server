@@ -44,7 +44,7 @@ async function authenticate(loginData) {
                     redisClient.print
                 );
 
-                return {
+                return ({
                     message: 'You have successfully logged in!',
                     code: 200,
                     cookie: {
@@ -58,10 +58,7 @@ async function authenticate(loginData) {
                     unit_id: res.unit_id,
                     _id: res._id,
                     refresh_token,
-                };
-
-
-
+                });
             } else {
                 return ({ message: '密码错误，请重试.', code: 403 });
             }

@@ -16,11 +16,9 @@ async function postLogin(loginData) {
         if (data.code == 200) {
             return new SuccessModel({ code: 200, msg: data.message, data: data });
         } else if (data.code == 403) {
-
             return new ErrorModel({ code: 403, msg: data.message })
         }
     } catch (e) {
-
         return new ErrorModel({ msg: e.message });
     }
 
