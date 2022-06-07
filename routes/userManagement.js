@@ -69,8 +69,8 @@ router.post('/v1/user', async (req, res, next) => {
     let result = new ErrorModel({
       msg: '密码不安全，建议使用包含四类不同字符并长度至少为8'
     })
-    res.sendStatus(403);
-    res.json(result);
+    setStatusCode(res, result);
+    res.status(403).json(result);
   }
 });
 

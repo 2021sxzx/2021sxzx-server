@@ -6,16 +6,6 @@ const {
     postLogout
 } = require("../controller/loginController")
 
-
-function setStatusCode(res, data) {
-    if (data.code === 200) {
-        res.statusCode = 200
-    } else {
-        res.statusCode = 404
-    }
-}
-
-
 router.post('/v1/login', async (req, res) => {
     let loginData = req.body;
     let data = await postLogin(loginData);
@@ -41,8 +31,7 @@ router.post('/v1/login', async (req, res) => {
         });
         res.json(data);
     } else {
-        res.status(403).send(data);
-
+        res.status(404).json(data);
     }
 });
 
