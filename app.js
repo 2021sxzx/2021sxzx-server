@@ -5,8 +5,6 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
-
-const usersRouter = require('./routes/users');
 const unitRouter = require('./routes/unit');
 const commentRouter = require("./routes/comment")
 const systemLogRouter = require("./routes/systemLog")
@@ -30,12 +28,8 @@ const { validate_jwt } = require('./utils/validateJwt');
 const { MONGO_CONFIG } = require("./config/db") //数据库的配置信息
 const mongoose = require("mongoose")
 const redisClient = require('./config/redis');
-// const systemFailure = require("./model/systemFailure")
-// const rule = require("./model/rule")
-// const itemRule = require("./model/itemRule")
-// const item = require("./model/item")
-// const itemGuide = require("./model/task")
 
+// IIFE立即执行redis数据库连接
 (async () => {
   await redisClient.connect()
 })();
@@ -89,7 +83,6 @@ app.use(validate_jwt);
 */
 
 // 处理路由
-app.use('/api', usersRouter);
 app.use('/api', unitRouter);
 app.use('/api', commentRouter);
 app.use('/api', taskRouter)
@@ -106,7 +99,6 @@ app.use('/api', systemBasicRouter)
 app.use('/api', systemBackupRouter)
 app.use('/api', imageRouter)
 app.use('/api', userDepartmentRouter)
-//app.use('/api', verifyRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

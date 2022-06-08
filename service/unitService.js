@@ -24,8 +24,6 @@ class unitService {
     const isExist = await unit.find({ unit_id })
     const isHaveChild = await unit.find({ parent_unit: unit_id })
     const isUsed = await users.find({ unit_id })
-    console.log(isExist.length)
-    console.log(isHaveChild.length)
     if (
       isExist.length === 0 ||
       isHaveChild.length !== 0 ||
@@ -69,6 +67,56 @@ class unitService {
       : '无单位'
   }
 
+  async getAggregate() {
+    try {
+      const res = await unit.aggregate([
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'unit_id',
+            foreignField: 'unit_id',
+            as: 'users',
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            unit_id: 1,
+            unit_name: 1,
+            parent_unit: 1,
+            users: 1,
+          },
+        },
+      ])
+      return res
+    } catch (error) {
+      return new ErrorModel({
+        msg: '获得单位列表失败',
+        data: error.message,
+      })
+    }
+  }
+
+  async findRoot(allData, unit_id) {
+    const res = allData.filter((item) => item.unit_id == unit_id);
+    return res[0]
+  }
+
+  async findChild(unit_id, allData) {
+    const resArr = allData.filter((item) => item.parent_unit == unit_id)
+    return resArr
+  }
+
+  async renderTree(root, allData) {
+    const children = await this.findChild(root.unit_id, allData)
+    if (children.length > 0) {
+      root['children'] = children
+      for (let i = 0; i < children.length; i++) {
+        await this.renderTree(children[i], allData)
+      }
+    }
+  }
+
   // 重构后的单位列表渲染
   async newUnitTree(unit_id) {
     try {
@@ -76,59 +124,9 @@ class unitService {
         // 根节点
         unit_id = 1653018366962;
       }
-
-      async function getAggregate() {
-        try {
-          const res = await unit.aggregate([
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'unit_id',
-                foreignField: 'unit_id',
-                as: 'users',
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                unit_id: 1,
-                unit_name: 1,
-                parent_unit: 1,
-                users: 1,
-              },
-            },
-          ])
-          return res
-        } catch (error) {
-          return new ErrorModel({
-            msg: '获得单位列表失败',
-            data: error.message,
-          })
-        }
-      }
-
-      async function findRoot(allData, unit_id) {
-        const res = allData.filter((item) => item.unit_id == unit_id);
-        return res[0]
-      }
-
-      async function findChild(unit_id, allData) {
-        const resArr = allData.filter((item) => item.parent_unit == unit_id)
-        return resArr
-      }
-
-      async function renderTree(root, allData) {
-        const children = await findChild(root.unit_id, allData)
-        if (children.length > 0) {
-          root['children'] = children
-          for (let i = 0; i < children.length; i++) {
-            await renderTree(children[i], allData)
-          }
-        }
-      }
-      const allData = await getAggregate()
-      const root = await findRoot(allData, unit_id)
-      await renderTree(root, allData)
+      const allData = await this.getAggregate()
+      const root = await this.findRoot(allData, unit_id)
+      await this.renderTree(root, allData)
       return new SuccessModel({
         msg: '单位信息处理成功',
         data: root,
@@ -200,33 +198,15 @@ class unitService {
     return token
   }
 
-  // 比对，发现是否为父子单位关系
-  // 用于筛选用户管理访问控制专用
-  async compareAndJudge(unit_id1, unit_id2) {
-    const res = await this.findParent(unit_id2)
-    if (unit_id1 == res.unit_id) {
-      return true
-    } else {
-      return false
-    }
-  }
-
   // 获取全部部门列表
   async getAllUnitData () {
     const res = await unit.find({});
     return res;
   }
 
-  // 根据单位计算级别
-  async calculateRank(unit_id, unitArr) {
-
-  }
-
   // 计算单位下有多少人
   async getUserById (unit_id) {
     const res = await users.find({ unit_id })
-    const k = await this.createUnitToken(1653018366977);
-    console.log(k);
     return new SuccessModel({
       msg: '获取单位用户成功',
       data: res

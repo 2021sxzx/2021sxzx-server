@@ -20,24 +20,10 @@ function searchPermissionName (permission_identifier, permissionList) {
  * 得要是一个数组，就不太好了。因为不好携带
  * 
  * 还必须知道这里操控用户的rank值，只能添加下一级的rank的角色
- * 操控用户的rank值：adder_rank
+ * 用户角色的控制只根据部门有关
  */
 async function addRole (role_name, role_describe, permission_identifier_array, role_rank) {
   try {
-    // // 控制保证必须有输入权限
-    // if (new Set(permission_identifier_array).length <= 1) {
-    //   throw new Error("权限数组不够噢")
-    // }
-
-    // // 列出所有角色
-    // const roleList = await role.find({})
-
-    // // 后台检查是否有同样的数据，如果有，就不允许插入
-    // roleList.forEach((item) => {
-    //   if (role_name === item.role_name && role_describe === item.role_describe) {
-    //     throw new Error("不允许插入噢")
-    //   }
-    // })
 
     // 添加角色
     const res = await role.create({
@@ -90,7 +76,6 @@ async function getRole (role_id) {
       }
     ]);
     const permissionList = await permission.find({});
-    console.log(resq);
     resq.map(item => {
       item["permission"] = item.permission_identifier.map(item => {
         return searchPermissionName(item, permissionList);
@@ -253,7 +238,6 @@ async function calcaulatePermission (role_id) {
     const permissionFindArrPrv = await roleMapPermission.find({
       role_id: role_id
     })
-    // console.log(permissionFindArrPrv);
     // 获取角色名称
     const permissionFindArr = await Promise.all(
       permissionFindArrPrv.map(async (item) => {
