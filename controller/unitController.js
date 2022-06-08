@@ -34,17 +34,8 @@ class unitController {
     res.json(result);
   }
 
-  // async lookupUnit (req, res) {
-  //   const { unit_id } = req.query;
-  //   const result = await unitService.lookupUnit(unit_id);
-  //   setStatusCode(res, result);
-  //   res.json(result);
-  // }
-
   async getUnit (req, res) {
-    // const { unit_id = 1653018366962 } = req.body;
-    // const unit_id = req.cookie.unit_id;
-    console.log(req.cookies.role_id)
+    // 使用cookie来进行单位的控制
     const result = await unitService.newUnitTree(Number(req.cookies.unit_id));
     setStatusCode(res, result);
     res.json(result);

@@ -15,7 +15,7 @@ function wrap(handler) {
     }
   };
 }
-// 可行
+// 响应头配置，规避安全问题
 router.all('*', (req, res, next) => {
   // 配置响应头
   res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");

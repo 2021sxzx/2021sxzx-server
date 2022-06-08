@@ -12,7 +12,6 @@ const {
   setActivationAndReturn
 } = require('../controller/userManagementController');
 
-const userDepartmentService = require('../service/userDepartmentService');
 const departmentMapUser = require('../model/departmentMapUser')
 
 function setStatusCode(res, data) {
@@ -54,14 +53,12 @@ router.get('/v1/testInfer', async (req, res, next) => {
 // 添加用户
 router.post('/v1/user', async (req, res, next) => {
   if (validatePwd(req.body.password)) {
-    // console.log('req.body', [req.body]);
     const data = await addUserAndReturnList({
       user_name: req.body.user_name,
       account: req.body.account,
       password: req.body.password,
       role_id: req.body.role_id,
       unit_id: Number(req.body.unit_id)
-      // department_id: req.body.department_id
     });
     setStatusCode(res, data);
     res.json(data)

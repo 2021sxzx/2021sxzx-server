@@ -10,7 +10,7 @@ function setStatusCode(res,data) {
 }
 
 class sideBarController {
-  // 重修了侧边栏接口
+  // 重构了侧边栏接口，使得数据获取变快
   async sideBarList (req, res) {
     try {
       const {role_id} = req.body;

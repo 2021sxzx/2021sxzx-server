@@ -40,7 +40,6 @@ class sideBarData {
     let result = await Promise.all(
       parentArr.map(async (item) => {
         let childTree = await this.findChild(item.id);
-        // console.log("childTree", childTree)
         if (childTree.children === undefined) {
           return childTree
         }
@@ -119,8 +118,9 @@ class sideBarData {
 
     return sideBar_.length === 0 ? [] : sideBar_
   }
-
   /*****************上述为旧接口，可废弃******************************/
+
+  /*******************新接口，解决了数据库的大量查询问题************************************/
 
   // 聚合查询数据库中sideBar关联的所有数据
   async listSideBarAndMapPermission (role_id) {

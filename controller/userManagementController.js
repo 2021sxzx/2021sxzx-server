@@ -26,8 +26,6 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 async function addUserAndReturnList (userInfo) {
   try {
     await addUser(userInfo);
-    // await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name, userInfo.department_name);
-
     const res = await getUserList();
     return new SuccessModel({
       msg: '添加成功',
@@ -44,7 +42,6 @@ async function addUserAndReturnList (userInfo) {
 async function addUserBatchingAndReturnList (imported_array) {
   try {
     await batchImportedUser(imported_array);
-    // await userDepartmentService.addDepartmentBatching(imported_array);
     const res_ = await getUserList();
     return new SuccessModel({
       msg: '添加成功',
@@ -100,7 +97,6 @@ async function updateUserAndReturnList (user_name, password, role_id, account, n
 async function deleteUserAndReturnList (account) {
   try {
     await deleteUser(account);
-    // await userDepartmentService.deleteUserAndDepartment(account);
     const res_ = await getUserList();
     return new SuccessModel({
       msg: '删除成功',
@@ -117,26 +113,9 @@ async function deleteUserAndReturnList (account) {
 async function searchUserAndReturnList (searchValue) {
   try {
     const res = await searchUser(searchValue);
-    const res_ = await Promise.all(
-      res.map(async (item) => {
-        const cal = await unitService.lookupUnit(Number(item.unit_id));
-        const calRoleObj = await getRole(item._doc.role_id);
-        return {
-          _id: item._id,
-          user_name: item.user_name,
-          role_name: calRoleObj,
-          role_id: item.role_id,
-          account: item.account,
-          password: item.password,
-          activation_status: item.activation_status,
-          unit_name: cal,
-          unit_id: item.unit_id
-        }
-      })
-    )
     return new SuccessModel({
       msg: '查询成功',
-      data: res_
+      data: res
     })
   } catch (e) {
     throw new ErrorModel({msg: e.message})
