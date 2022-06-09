@@ -89,9 +89,9 @@ router.delete('/v1/user', async (req, res, next) => {
 
 // 搜索用户
 router.post('/v1/searchUser', async (req, res, next) => {
-  const { searchValue } = req.body
-  const data = await searchUserAndReturnList(searchValue)
-  setStatusCode(res, data)
+  const { searchValue } = req.body;
+  const data = await searchUserAndReturnList(searchValue, Number(req.cookies.unit_id));
+  setStatusCode(res, data);
   res.json(data)
 })
 
@@ -105,8 +105,8 @@ router.post('/v1/setActivation', async function (req, res, next) {
 router.post('/v1/batchImportUser', async (req, res, next) => {
   const { imported_array } = req.body;
   const data = await addUserBatchingAndReturnList(imported_array);
-  setStatusCode(res, data)
-  res.json(data)
+  setStatusCode(res, data);
+  res.json(data);
 })
 
 module.exports = router;

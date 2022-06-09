@@ -247,17 +247,24 @@ class unitService {
   }
 
   // 计算两个unit_id之间的父子关系
+  // 在这里，祖先我们统称为[父]
   // 如果有this.allData, 就没有过多的数据库拉取操作，提高性能
   // 为了方便，我们只判断1是否为2的父亲，不判断1是否为2的子[这么做的考虑，是因为这里不会有超过0.1ms的性能损耗]
   async calculateWhoIsParent (unit_id1, unit_id2) {
     if (this.allUnit == null) {
       await this.getAggregate();
-    } 
+    }
+    if (unit_id1 == unit_id2) {
+      return true;
+    }
     const allUnit = this.allUnit;
     let root2 = allUnit.filter(item => { return item.unit_id == unit_id2 });
+    if (root2.length == 0) {
+      return false;
+    }
     let parent_unit = null;
     while (1) {
-      parent_unit = root2.parent_unit
+      parent_unit = root2[0].parent_unit;
       if (parent_unit == 0) {
         return false;
       }

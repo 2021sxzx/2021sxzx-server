@@ -6,17 +6,33 @@ const {
   updateUser,
   deleteUser,
   searchUser,
-  isActivation,
   setActivation,
   batchImportedUser
 } = require('../service/userManagementService');
 const unitService = require('../service/unitService');
-const userDepartmentService = require('../service/userDepartmentService');
-const {
-  getRole
-} = require('../service/roleService');
 
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
+
+// 用于异步函数的筛选，索引式筛选
+const asyncFilter = async (array, AsyncCallback) => {
+  const tempArr = await Promise.all(array.map(AsyncCallback));
+  return array.filter((_v, index) => {
+    return tempArr[index];
+  })
+}
+
+// 全新的用户列表，用于访问控制渲染使用，只需要传入用户列表参数和unit_id即可
+async function newUserList (res, unit_id) {
+  try {
+    const result = await asyncFilter(res, async item => {
+      const isCanSee = await unitService.calculateWhoIsParent(unit_id, item.unit_id);
+      return isCanSee;
+    })
+    return result;
+  } catch (error) {
+    return new ErrorModel({msg: e.message});
+  }
+}
 
 /**
  * 用来添加一个用户，然后返回添加后的用户列表
@@ -27,6 +43,7 @@ async function addUserAndReturnList (userInfo) {
   try {
     await addUser(userInfo);
     const res = await getUserList();
+    // newUserList()
     return new SuccessModel({
       msg: '添加成功',
       data: res
@@ -58,7 +75,7 @@ async function addUserBatchingAndReturnList (imported_array) {
  */
 async function returnUserList (role_id) {
   try {
-    const res = await getUserList();
+    const res = await getUserList(role_id);
     return new SuccessModel({
       msg: '获取列表成功',
       data: res
@@ -110,13 +127,19 @@ async function deleteUserAndReturnList (account) {
 /**
  * @param searchValue 
  */
-async function searchUserAndReturnList (searchValue) {
+async function searchUserAndReturnList (searchValue, unit_id) {
   try {
-    const res = await searchUser(searchValue);
+    let res = await searchUser(searchValue);
+
+    const result = await asyncFilter(res, async item => {
+      const isCanSee = await unitService.calculateWhoIsParent(unit_id, item.unit_id);
+      return isCanSee;
+    })
+
     return new SuccessModel({
       msg: '查询成功',
-      data: res
-    })
+      data: result
+    });
   } catch (e) {
     throw new ErrorModel({msg: e.message})
   }
