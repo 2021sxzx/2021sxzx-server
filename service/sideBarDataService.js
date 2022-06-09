@@ -6,6 +6,12 @@ const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
 class sideBarData {
 
+  constructor () {
+    // allData 拉取数据库的数据，其中一份放到allData，第二次获取侧边栏就不需要重新访问数据库了
+    // 如果有数据库层面的更新，那么重启服务器，该值变为空，之后就会重新拉下新数据到allData
+    this.allData = null;
+  }
+
   /***************废弃函数**************************/
   async getSideBarList (role_id) {
     let permissionIdentifier = await roleMapPermission.find({
@@ -154,13 +160,8 @@ class sideBarData {
             title: '$obj.title',
             parent: '$obj.parent'
           }
-        }, {
-          $match: {
-            role_id: role_id
-          }
         }
       ])
-
       let deWeight = (arr) => {
         let map = new Map();
         for (let item of arr) {
@@ -170,8 +171,9 @@ class sideBarData {
         }
         return [...map.values()];
       }
-
-      return deWeight(res);
+      // 备份，注意这里是所有的数据，针对不同的角色也可以无需更新allData
+      this.allData = deWeight(res);
+      return deWeight(res).filter(item => { return item.role_id == role_id });
     } catch (error) {
       return new ErrorModel({
         msg: "获得侧边栏失败",
@@ -189,7 +191,13 @@ class sideBarData {
   // 递归渲染侧边栏
   async createTree (role_id) {
     try {
-      const allData = await this.listSideBarAndMapPermission(role_id);
+      let allData = null;
+      if (this.allData == null) {
+        allData = await this.listSideBarAndMapPermission(role_id);
+      } else {
+        allData = this.allData.filter(item => { return item.role_id == role_id });
+      }
+      
       const that = this;
 
       async function findIni () {
@@ -198,11 +206,9 @@ class sideBarData {
       }
 
       async function renderTree (iniValue) {
-        // console.log(allData);
         iniValue = await Promise.all(
           iniValue.map(async item => {
             const child = await that.findChild_new(item.id, allData);
-            // console.log('child', child)
             if (child.length > 0) {
               await renderTree(child);
               item['children'] = child;

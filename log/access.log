@@ -2637,3 +2637,12 @@ tar: Child returned status 2
 tar: Error is not recoverable: exiting now
 find: ‘/www/backup/mongodb_bak/mongodb_bak_list/’: No such file or directory
 
+定时备份故障[2022-06-09T00:00:01.528Z]Error: Command failed: sh C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh
+C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh: line 19: /usr/bin/mongodump: No such file or directory
+tar (child): /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_09_00_00_01.tar.gz: Cannot open: No such file or directory
+tar (child): Error is not recoverable: exiting now
+tar: /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_09_00_00_01.tar.gz: Cannot write: Broken pipe
+tar: Child returned status 2
+tar: Error is not recoverable: exiting now
+find: ‘/www/backup/mongodb_bak/mongodb_bak_list/’: No such file or directory
+

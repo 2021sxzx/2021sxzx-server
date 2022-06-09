@@ -13,7 +13,7 @@ const itemRouter = require('./routes/item')
 const systemResourceRouter = require('./routes/systemResource')
 const loginRouter = require('./routes/login')
 const userManagementRouter = require('./routes/userManagement')
-const roleRouter = require('./routes/role')
+const roleRouter = require('./routes/role');
 const sideBarRouter = require('./routes/sideBar');
 const permissionRouter = require('./routes/permission');
 const systemFailureRouter = require('./routes/systemFailure')
@@ -30,9 +30,9 @@ const mongoose = require("mongoose")
 const redisClient = require('./config/redis');
 
 // IIFE立即执行redis数据库连接
-(async () => {
-  await redisClient.connect()
-})();
+// (async () => {
+//   await redisClient.connect()
+// })();
 mongoose.connect(MONGO_CONFIG.url);
 
 const app = express();

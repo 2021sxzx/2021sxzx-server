@@ -1,9 +1,15 @@
 const unit = require('../model/unit')
 const users = require('../model/users')
-const department = require('../model/department')
 const { SuccessModel, ErrorModel } = require('../utils/resultModel')
 
 class unitService {
+
+  // 用于将数据库数据拉下，这样无需多次渲染
+  constructor () {
+    this.allData = null;
+    this.needUpdateData = false;
+  }
+
   // 添加单位
   async addUnit(unit_name, parent_unit) {
     // 使用时间戳来做自增id
@@ -12,7 +18,8 @@ class unitService {
       unit_id: Date.now(),
       parent_unit,
     })
-    const res = await this.newUnitTree()
+    this.needUpdateData = true;
+    const res = await this.newUnitTree();
     return new SuccessModel({
       msg: '添加成功',
       data: res,
@@ -33,7 +40,8 @@ class unitService {
         msg: '删除失败',
       })
     }
-    await unit.deleteOne({ unit_id })
+    await unit.deleteOne({ unit_id });
+    this.needUpdateData = true;
     const res = await this.newUnitTree()
     return new SuccessModel({
       msg: '删除成功',
@@ -49,6 +57,7 @@ class unitService {
         unit_name: new_unit_name,
       }
     )
+    this.needUpdateData = true;
     const res = await this.newUnitTree()
     return new SuccessModel({
       msg: '更新成功',
@@ -71,24 +80,31 @@ class unitService {
     try {
       const res = await unit.aggregate([
         {
-          $lookup: {
-            from: 'users',
-            localField: 'unit_id',
-            foreignField: 'unit_id',
-            as: 'users',
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            unit_id: 1,
-            unit_name: 1,
-            parent_unit: 1,
-            users: 1,
-          },
-        },
+          $facet: {
+            "aggregateData": [
+              {
+                $lookup: {
+                  from: 'users',
+                  localField: 'unit_id',
+                  foreignField: 'unit_id',
+                  as: 'users',
+                }
+              }, {
+                $project: {
+                  _id: 0,
+                  unit_id: 1,
+                  unit_name: 1,
+                  parent_unit: 1,
+                  users: 1,
+                },
+              }
+            ],
+            "pureData": []
+          }
+        }
       ])
-      return res
+      console.log(res);
+      return res.aggregateData;
     } catch (error) {
       return new ErrorModel({
         msg: '获得单位列表失败',
@@ -124,8 +140,14 @@ class unitService {
         // 根节点
         unit_id = 1653018366962;
       }
-      const allData = await this.getAggregate()
-      const root = await this.findRoot(allData, unit_id)
+      let allData = null;
+      // 在这里，如果发现needUpdateData变为true时，这个时候就会重新拉下所有的数据更新allData
+      if (this.allData == null || this.needUpdateData == true) {
+        this.allData = await this.getAggregate();
+        this.needUpdateData = false;
+      }
+      allData = this.allData;
+      const root = await this.findRoot(allData, unit_id);
       await this.renderTree(root, allData)
       return new SuccessModel({
         msg: '单位信息处理成功',
@@ -175,6 +197,7 @@ class unitService {
 
 
   async findParent (unit_id) {
+
     const res = await unit.findOne({ unit_id });
     if (res.parent_unit != 0) {
       return res.parent_unit;
@@ -211,6 +234,12 @@ class unitService {
       msg: '获取单位用户成功',
       data: res
     })
+  }
+
+  // 计算两个unit_id之间的父子关系
+  // 如果有this.allData, 就没有过多的数据库拉取操作，提高性能
+  async calculateWhoIsParent (unit_id1, unit_id2) {
+    const allData = this.allData;
   }
 }
 
