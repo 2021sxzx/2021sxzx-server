@@ -5,7 +5,8 @@ const {
     getSearchSystemLog,
     showSystemLogController,
     getSystemLog2,
-    getItemBrowseCount
+    getItemBrowseCount,
+    getAdvancedSearchSystemLog
   } = require("../controller/systemLogController")
 
 function setStatusCode(res,data) {
@@ -35,6 +36,17 @@ router.post('/v1/searchLog',async (req,res,next) => {
   let data = await getSearchSystemLog(searchData)
   setStatusCode(res,data)
   res.json(data)
+})
+
+/**
+ * 高级搜索功能
+ */
+ router.post('/v1/advancedSearchLog',async (req,res,next) => {
+  let searchData = req.body
+  // console.log(searchData)
+  let data = await getAdvancedSearchSystemLog(searchData)
+  // setStatusCode(res,data)
+  // res.json(data)
 })
 
 router.get('/v1/metaDataLog',async (req,res,next) => {
