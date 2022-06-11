@@ -23,6 +23,7 @@ async function addUser (userInfo) {
 
 /**
  * 获取用户列表
+ * 这里是可以进行优化的
  * @return {Promise<*>}
  */
 async function getUserList () {

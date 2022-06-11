@@ -33,7 +33,7 @@ router.get('/v1/create-system-backup', async (req, res, next) => {
   res.end('200');
 })
 /**
- * 系统故障的获取
+ * 系统备份的获取
  */
  router.get('/v1/mongo-backup', async (req,res,next) => {
   let data = await getMongoBackupController()
