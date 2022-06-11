@@ -1,9 +1,17 @@
 const unit = require('../model/unit')
 const users = require('../model/users')
-const department = require('../model/department')
 const { SuccessModel, ErrorModel } = require('../utils/resultModel')
 
 class unitService {
+
+  // 用于将数据库数据拉下，这样无需多次渲染
+  constructor () {
+    this.allData = null;
+    // allUnit: 在做unit查询时，应该要一起做unit数据的保留，以便于找出两个unit_id的父子关系
+    this.allUnit = null;
+    this.needUpdateData = false;
+  }
+
   // 添加单位
   async addUnit(unit_name, parent_unit) {
     // 使用时间戳来做自增id
@@ -12,7 +20,8 @@ class unitService {
       unit_id: Date.now(),
       parent_unit,
     })
-    const res = await this.newUnitTree()
+    this.needUpdateData = true;
+    const res = await this.newUnitTree();
     return new SuccessModel({
       msg: '添加成功',
       data: res,
@@ -24,8 +33,6 @@ class unitService {
     const isExist = await unit.find({ unit_id })
     const isHaveChild = await unit.find({ parent_unit: unit_id })
     const isUsed = await users.find({ unit_id })
-    console.log(isExist.length)
-    console.log(isHaveChild.length)
     if (
       isExist.length === 0 ||
       isHaveChild.length !== 0 ||
@@ -35,7 +42,8 @@ class unitService {
         msg: '删除失败',
       })
     }
-    await unit.deleteOne({ unit_id })
+    await unit.deleteOne({ unit_id });
+    this.needUpdateData = true;
     const res = await this.newUnitTree()
     return new SuccessModel({
       msg: '删除成功',
@@ -51,6 +59,7 @@ class unitService {
         unit_name: new_unit_name,
       }
     )
+    this.needUpdateData = true;
     const res = await this.newUnitTree()
     return new SuccessModel({
       msg: '更新成功',
@@ -69,122 +78,87 @@ class unitService {
       : '无单位'
   }
 
-  // 查找父单位
-  async findParent(unit_id) {
-    const res = await unit.find({ unit_id })
-    const parent_unit = res.parent_unit
-    const result = await unit.findOne({ unit: parent_unit })
-    return result
-  }
-
-  // 查找子单位
-  async findChild(unit_id) {
-    const res = await unit.find({ parent_unit: unit_id })
-    return res.map((item) => {
-      return {
-        _id: item._id,
-        unit_name: item.unit_name,
-        unit_id: item.unit_id,
-        parent_unit: item.parent_unit,
-      }
-    })
-  }
-
-  // 单位列表[树型结构]
-  async unitTree() {
-    let rootTemp = await unit.findOne({ parent_unit: 0 }, { __v: 0 })
-    const users = await this.calculateUser(rootTemp.unit_id)
-    let root = {
-      _id: rootTemp._id,
-      unit_name: rootTemp.unit_name,
-      unit_id: rootTemp.unit_id,
-      parent_unit: rootTemp.parent_unit,
-    }
-    if (users.length !== 0) {
-      root.users = users
-    }
-    let that = this
-    async function renderTree(root) {
-      if (!root) {
-        return
-      }
-      let children = await that.findChild(root.unit_id)
-      let users = await that.calculateUser(root.unit_id)
-      if (users.length !== 0) {
-        root.users = users
-      }
-      if (children.length > 0) {
-        root.children = children
-        for (let index in root.children) {
-          // 注意了
-          await renderTree(root.children[index])
+  async getAggregate() {
+    try {
+      const resq = await unit.aggregate([
+        {
+          $facet: {
+            "aggregateData": [
+              {
+                $lookup: {
+                  from: 'users',
+                  localField: 'unit_id',
+                  foreignField: 'unit_id',
+                  as: 'users',
+                }
+              }, {
+                $project: {
+                  _id: 0,
+                  unit_id: 1,
+                  unit_name: 1,
+                  parent_unit: 1,
+                  users: 1,
+                },
+              }
+            ],
+            "pureData": [
+              {
+                $match: {
+                  unit_id: {
+                    $gte: 0
+                  }
+                }
+              }
+            ]
+          }
         }
-      } else {
-        return
+      ]);
+      this.allUnit = resq[0].pureData;
+      return resq[0].aggregateData;
+    } catch (error) {
+      return new ErrorModel({
+        msg: '获得单位列表失败',
+        data: error.message,
+      })
+    }
+  }
+
+  async findRoot(allData, unit_id) {
+    const res = allData.filter((item) => item.unit_id == unit_id);
+    return res[0]
+  }
+
+  async findChild(unit_id, allData) {
+    const resArr = allData.filter((item) => item.parent_unit == unit_id)
+    return resArr
+  }
+
+  async renderTree(root, allData) {
+    const children = await this.findChild(root.unit_id, allData)
+    if (children.length > 0) {
+      root['children'] = children
+      for (let i = 0; i < children.length; i++) {
+        await this.renderTree(children[i], allData)
       }
     }
-    await renderTree(root)
-    return new SuccessModel({
-      msg: '获取列表成功',
-      data: root,
-    })
   }
 
   // 重构后的单位列表渲染
-  async newUnitTree() {
+  async newUnitTree(unit_id) {
     try {
-      async function getAggregate() {
-        try {
-          const res = await unit.aggregate([
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'unit_id',
-                foreignField: 'unit_id',
-                as: 'users',
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                unit_id: 1,
-                unit_name: 1,
-                parent_unit: 1,
-                users: 1,
-              },
-            },
-          ])
-          return res
-        } catch (error) {
-          return new ErrorModel({
-            msg: '获得单位列表失败',
-            data: error.message,
-          })
-        }
+      if (arguments.length === 0) {
+        // 根节点
+        unit_id = 1653018366962;
       }
-
-      async function findRoot(allData) {
-        const res = allData.filter((item) => item.parent_unit == 0)
-        return res[0]
+      let allData = null;
+      // 在这里，如果发现needUpdateData变为true时，这个时候就会重新拉下所有的数据更新allData
+      if (this.allData == null || this.needUpdateData == true) {
+        this.allData = await this.getAggregate();
+        this.needUpdateData = false;
       }
-
-      async function findChild(unit_id, allData) {
-        const resArr = allData.filter((item) => item.parent_unit == unit_id)
-        return resArr
-      }
-
-      async function renderTree(root, allData) {
-        const children = await findChild(root.unit_id, allData)
-        if (children.length > 0) {
-          root['children'] = children
-          for (let i = 0; i < children.length; i++) {
-            await renderTree(children[i], allData)
-          }
-        }
-      }
-      const allData = await getAggregate()
-      const root = await findRoot(allData)
-      await renderTree(root, allData)
+      allData = this.allData;
+      const root = await this.findRoot(allData, unit_id);
+      await this.renderTree(root, allData);
       return new SuccessModel({
         msg: '单位信息处理成功',
         data: root,
@@ -231,44 +205,75 @@ class unitService {
     })
   }
 
+
+  async findParent (unit_id) {
+
+    const res = await unit.findOne({ unit_id });
+    if (res.parent_unit != 0) {
+      return res.parent_unit;
+    } else {
+      return 0;
+    }
+  }
+
   // 生成单位编号
   async createUnitToken(unit_id) {
     let token = `${unit_id}`
-    let parent = null
     let that = this
     while (1) {
-      parent = await that.findParent(unit_id)
-      if (!parent) {
+      unit_id = await that.findParent(unit_id);
+      if (!unit_id) {
         break
       } else {
-        token = String(parent.unit_id) + '-' + token
+        token = String(unit_id) + '-' + token;
       }
     }
     return token
   }
 
-  // 比对，发现是否为父子单位关系
-  // 用于筛选用户管理访问控制专用
-  async compareAndJudge(unit_id1, unit_id2) {
-    const res = await this.findParent(unit_id2)
-    if (unit_id1 == res.unit_id) {
-      return true
-    } else {
-      return false
-    }
-  }
-
-  // 根据单位计算级别
-  async calculateRank(unit_id) {
-    let res = await this.createUnitToken(unit_id)
-    let rank = res.split('-').length
-    return rank
+  // 获取全部部门列表
+  async getAllUnitData () {
+    const res = await unit.find({});
+    return res;
   }
 
   // 计算单位下有多少人
-  async calculateUser(unit_id) {
+  async getUserById (unit_id) {
     const res = await users.find({ unit_id })
-    return res
+    return new SuccessModel({
+      msg: '获取单位用户成功',
+      data: res
+    })
+  }
+
+  // 计算两个unit_id之间的父子关系
+  // 在这里，祖先我们统称为[父]
+  // 如果有this.allData, 就没有过多的数据库拉取操作，提高性能
+  // 为了方便，我们只判断1是否为2的父亲，不判断1是否为2的子[这么做的考虑，是因为这里不会有超过0.1ms的性能损耗]
+  async calculateWhoIsParent (unit_id1, unit_id2) {
+    if (this.allUnit == null) {
+      await this.getAggregate();
+    }
+    if (unit_id1 == unit_id2) {
+      return true;
+    }
+    const allUnit = this.allUnit;
+    let root2 = allUnit.filter(item => { return item.unit_id == unit_id2 });
+    if (root2.length == 0) {
+      return false;
+    }
+    let parent_unit = null;
+    while (1) {
+      parent_unit = root2[0].parent_unit;
+      if (parent_unit == 0) {
+        return false;
+      }
+      if (parent_unit == unit_id1) {
+        return true;
+      }
+      root2 = allUnit.filter(item => { return item.unit_id == parent_unit });
+    }
+    return false;
   }
 }
 

@@ -44,29 +44,28 @@ async function authenticate(loginData) {
                     redisClient.print
                 );
 
-                return {
-                    message: 'You have successfully logged in!',
+                return ({
+                    msg: 'You have successfully logged in!',
                     code: 200,
-                    cookie: {
+                    data: {
+                      cookie: {
                         httpOnly: true
-                    },
-                    jwt: {
-                        token: token,
-                        expiresIn: 3600
-                    },
-                    role_id: res.role_id,
-                    unit_id: res.unit_id,
-                    _id: res._id,
-                    refresh_token,
-                };
-
-
-
+                      },
+                      jwt: {
+                          token: token,
+                          expiresIn: 3600
+                      },
+                      role_id: res.role_id,
+                      unit_id: res.unit_id,
+                      _id: res._id,
+                      refresh_token
+                    }
+                });
             } else {
-                return ({ message: '密码错误，请重试.', code: 403 });
+                return ({ msg: '密码错误，请重试.', code: 403 });
             }
         } else {
-            return ({ message: '该账号不存在.', code: 403 });
+            return ({ msg: '该账号不存在.', code: 403 });
         }
 
     } catch (e) {

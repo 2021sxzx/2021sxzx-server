@@ -6,6 +6,12 @@ const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
 class sideBarData {
 
+  constructor () {
+    // allData 拉取数据库的数据，其中一份放到allData，第二次获取侧边栏就不需要重新访问数据库了
+    // 如果有数据库层面的更新，那么重启服务器，该值变为空，之后就会重新拉下新数据到allData
+    this.allData = null;
+  }
+
   /***************废弃函数**************************/
   async getSideBarList (role_id) {
     let permissionIdentifier = await roleMapPermission.find({
@@ -40,7 +46,6 @@ class sideBarData {
     let result = await Promise.all(
       parentArr.map(async (item) => {
         let childTree = await this.findChild(item.id);
-        // console.log("childTree", childTree)
         if (childTree.children === undefined) {
           return childTree
         }
@@ -119,8 +124,9 @@ class sideBarData {
 
     return sideBar_.length === 0 ? [] : sideBar_
   }
-
   /*****************上述为旧接口，可废弃******************************/
+
+  /*******************新接口，解决了数据库的大量查询问题************************************/
 
   // 聚合查询数据库中sideBar关联的所有数据
   async listSideBarAndMapPermission (role_id) {
@@ -154,13 +160,8 @@ class sideBarData {
             title: '$obj.title',
             parent: '$obj.parent'
           }
-        }, {
-          $match: {
-            role_id: role_id
-          }
         }
       ])
-
       let deWeight = (arr) => {
         let map = new Map();
         for (let item of arr) {
@@ -170,8 +171,9 @@ class sideBarData {
         }
         return [...map.values()];
       }
-
-      return deWeight(res);
+      // 备份，注意这里是所有的数据，针对不同的角色也可以无需更新allData
+      this.allData = deWeight(res);
+      return deWeight(res).filter(item => { return item.role_id == role_id });
     } catch (error) {
       return new ErrorModel({
         msg: "获得侧边栏失败",
@@ -183,33 +185,20 @@ class sideBarData {
   // 找出孩子节点
   async findChild_new (id, allData) {
     let dataArr = allData.filter(item => { return item.parent == id });
-    console.log(dataArr)
     return dataArr;
   }
 
   // 递归渲染侧边栏
   async createTree (role_id) {
     try {
-      const allData = await this.listSideBarAndMapPermission(role_id);
-      const that = this;
-      async function createRecursiveNode (id) {
-        const children = allData.filter(item => { return item.parent === id });
-        const parent = allData.filter(item => { return item.id === id });
-        if (children.length) {
-          return {
-            key: parent[0].key,
-            title: parent[0].title,
-            id: parent[0].id,
-            children: children
-          }
-        } else {
-          return {
-            key: parent[0].key,
-            title: parent[0].title,
-            id: parent[0].id
-          }
-        }
+      let allData = null;
+      if (this.allData == null) {
+        allData = await this.listSideBarAndMapPermission(role_id);
+      } else {
+        allData = this.allData.filter(item => { return item.role_id == role_id });
       }
+      
+      const that = this;
 
       async function findIni () {
         const ini = allData.filter(item => { return item.parent === 0 });
@@ -217,11 +206,9 @@ class sideBarData {
       }
 
       async function renderTree (iniValue) {
-        // console.log(allData);
         iniValue = await Promise.all(
           iniValue.map(async item => {
             const child = await that.findChild_new(item.id, allData);
-            // console.log('child', child)
             if (child.length > 0) {
               await renderTree(child);
               item['children'] = child;

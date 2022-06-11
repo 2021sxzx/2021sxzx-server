@@ -34,15 +34,9 @@ class unitController {
     res.json(result);
   }
 
-  // async lookupUnit (req, res) {
-  //   const { unit_id } = req.query;
-  //   const result = await unitService.lookupUnit(unit_id);
-  //   setStatusCode(res, result);
-  //   res.json(result);
-  // }
-
   async getUnit (req, res) {
-    const result = await unitService.newUnitTree();
+    // 使用cookie来进行单位的控制
+    const result = await unitService.newUnitTree(Number(req.cookies.unit_id));
     setStatusCode(res, result);
     res.json(result);
   }
@@ -50,6 +44,13 @@ class unitController {
   async searchUnit (req, res) {
     const { searchValue } = req.body;
     const result = await unitService.searchUnit(searchValue);
+    setStatusCode(res, result);
+    res.json(result);
+  }
+
+  async getUserById (req, res) {
+    const { unit_id } = req.body;
+    const result = await unitService.getUserById(unit_id);
     setStatusCode(res, result);
     res.json(result);
   }

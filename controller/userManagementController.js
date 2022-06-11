@@ -6,17 +6,33 @@ const {
   updateUser,
   deleteUser,
   searchUser,
-  isActivation,
   setActivation,
   batchImportedUser
 } = require('../service/userManagementService');
 const unitService = require('../service/unitService');
-const userDepartmentService = require('../service/userDepartmentService');
-const {
-  getRole
-} = require('../service/roleService');
 
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
+
+// 用于异步函数的筛选，索引式筛选
+const asyncFilter = async (array, AsyncCallback) => {
+  const tempArr = await Promise.all(array.map(AsyncCallback));
+  return array.filter((_v, index) => {
+    return tempArr[index];
+  })
+}
+
+// 全新的用户列表，用于访问控制渲染使用，只需要传入用户列表参数和unit_id即可
+async function newUserList (res, unit_id) {
+  try {
+    const result = await asyncFilter(res, async item => {
+      const isCanSee = await unitService.calculateWhoIsParent(unit_id, item.unit_id);
+      return isCanSee;
+    })
+    return result;
+  } catch (error) {
+    return new ErrorModel({msg: e.message});
+  }
+}
 
 /**
  * 用来添加一个用户，然后返回添加后的用户列表
@@ -26,29 +42,11 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 async function addUserAndReturnList (userInfo) {
   try {
     await addUser(userInfo);
-    // await userDepartmentService.addUserAndDepartmentInitial(userInfo.account, userInfo.user_name, userInfo.department_name);
-
     const res = await getUserList();
-    const res_ = await Promise.all(
-      res.map(async (item) => {
-        const cal = await unitService.lookupUnit(item.unit_id);
-        const calRoleObj = await getRole(item._doc.role_id);
-        return {
-          _id: item._id,
-          user_name: item.user_name,
-          role_name: calRoleObj.role_name,
-          account: item.account,
-          password: item.password,
-          activation_status: item.activation_status,
-          unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
-        }
-      })
-    );
+    // newUserList()
     return new SuccessModel({
       msg: '添加成功',
-      data: res_
+      data: res
     })
   } catch (e) {
     return new ErrorModel({msg: e.message});
@@ -61,25 +59,7 @@ async function addUserAndReturnList (userInfo) {
 async function addUserBatchingAndReturnList (imported_array) {
   try {
     await batchImportedUser(imported_array);
-    // await userDepartmentService.addDepartmentBatching(imported_array);
-    const res = await getUserList();
-    const res_ = await Promise.all(
-      res.map(async (item) => {
-        const cal = await unitService.lookupUnit(Number(item.unit_id));
-        const calRoleObj = await getRole(item._doc.role_id);
-        return {
-          _id: item._id,
-          user_name: item.user_name,
-          role_name: calRoleObj.role_name,
-          account: item.account,
-          password: item.password,
-          activation_status: item.activation_status,
-          unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
-        }
-      })
-    )
+    const res_ = await getUserList();
     return new SuccessModel({
       msg: '添加成功',
       data: res_
@@ -95,27 +75,10 @@ async function addUserBatchingAndReturnList (imported_array) {
  */
 async function returnUserList (role_id) {
   try {
-    const res = await getUserList();
-    const res_ = await Promise.all(
-      res.map(async (item) => {
-        const cal = await unitService.lookupUnit(Number(item.unit_id));
-        const calRoleObj = await getRole(item.role_id);
-        return {
-          _id: item._id,
-          user_name: item.user_name,
-          role_name: calRoleObj,
-          account: item.account,
-          password: item.password,
-          activation_status: item.activation_status,
-          unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
-        }
-      })
-    );
+    const res = await getUserList(role_id);
     return new SuccessModel({
       msg: '获取列表成功',
-      data: res_
+      data: res
     })
   } catch (e) {
     return new ErrorModel({msg: e.message})
@@ -133,24 +96,7 @@ async function returnUserList (role_id) {
 async function updateUserAndReturnList (user_name, password, role_id, account, new_account) {
   try {
     await updateUser(user_name, password, role_id, account, new_account);
-    const res = await getUserList()
-    const res_ = await Promise.all(
-      res.map(async (item) => {
-        const cal = await unitService.lookupUnit(Number(item.unit_id));
-        const calRoleObj = await getRole(item._doc.role_id);
-        return {
-          _id: item._id,
-          user_name: item.user_name,
-          role_name: calRoleObj.role_name,
-          account: item.account,
-          password: item.password,
-          activation_status: item.activation_status,
-          unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
-        }
-      })
-    )
+    const res_ = await getUserList()
     return new SuccessModel({
       msg: '修改成功',
       data: res_
@@ -168,25 +114,7 @@ async function updateUserAndReturnList (user_name, password, role_id, account, n
 async function deleteUserAndReturnList (account) {
   try {
     await deleteUser(account);
-    // await userDepartmentService.deleteUserAndDepartment(account);
-    const res = await getUserList();
-    const res_ = await Promise.all(
-      res.map(async (item) => {
-        const cal = await unitService.lookupUnit(Number(item.unit_id));
-        const calRoleObj = await getRole(item._doc.role_id);
-        return {
-          _id: item._id,
-          user_name: item.user_name,
-          role_name: calRoleObj.role_name,
-          account: item.account,
-          password: item.password,
-          activation_status: item.activation_status,
-          unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
-        }
-      })
-    )
+    const res_ = await getUserList();
     return new SuccessModel({
       msg: '删除成功',
       data: res_
@@ -199,30 +127,19 @@ async function deleteUserAndReturnList (account) {
 /**
  * @param searchValue 
  */
-async function searchUserAndReturnList (searchValue) {
+async function searchUserAndReturnList (searchValue, unit_id) {
   try {
-    const res = await searchUser(searchValue);
-    const res_ = await Promise.all(
-      res.map(async (item) => {
-        const cal = await unitService.lookupUnit(Number(item.unit_id));
-        const calRoleObj = await getRole(item._doc.role_id);
-        return {
-          _id: item._id,
-          user_name: item.user_name,
-          role_name: calRoleObj.role_name,
-          account: item.account,
-          password: item.password,
-          activation_status: item.activation_status,
-          unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
-        }
-      })
-    )
+    let res = await searchUser(searchValue);
+
+    const result = await asyncFilter(res, async item => {
+      const isCanSee = await unitService.calculateWhoIsParent(unit_id, item.unit_id);
+      return isCanSee;
+    })
+
     return new SuccessModel({
       msg: '查询成功',
-      data: res_
-    })
+      data: result
+    });
   } catch (e) {
     throw new ErrorModel({msg: e.message})
   }
@@ -231,24 +148,7 @@ async function searchUserAndReturnList (searchValue) {
 async function setActivationAndReturn (account) {
   try {
     const Act = await setActivation(account);
-    const res = await getUserList();
-    const res_ = await Promise.all(
-      res.map(async (item) => {
-        const cal = await unitService.lookupUnit(Number(item.unit_id));
-        const calRoleObj = await getRole(item._doc.role_id);
-        return {
-          _id: item._id,
-          user_name: item.user_name,
-          role_name: calRoleObj.role_name,
-          account: item.account,
-          password: item.password,
-          activation_status: item.activation_status,
-          unit_name: cal,
-          unit_id: item.unit_id,
-          department_id: item.department_id
-        }
-      })
-    )
+    const res_ = await getUserList();
     return new SuccessModel({
       msg: '改变激活状态成功',
       data: res_

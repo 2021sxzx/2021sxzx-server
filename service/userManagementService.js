@@ -1,7 +1,4 @@
 const users = require('../model/users');
-const {
-  getRole
-} = require('../service/roleService');
 
 /**
  * 添加后台用户
@@ -12,7 +9,6 @@ async function addUser (userInfo) {
   try {
     const res = await users.find({account: userInfo.account});
     if (!res) {
-      console.log("res", res);
       return;
     }
     const resq = await users.create({
@@ -27,20 +23,44 @@ async function addUser (userInfo) {
 
 /**
  * 获取用户列表
+ * 这里是可以进行优化的
  * @return {Promise<*>}
  */
 async function getUserList () {
   try {
-    const res = await users.find({}, {
-      _id: 1,
-      user_name: 1,
-      password: 1,
-      role_id: 1,
-      account: 1,
-      activation_status: 1,
-      unit_id: 1,
-      department_id: 1
-    });
+    const res = await users.aggregate([
+      {
+        $lookup: {
+          from: 'units',
+          localField: 'unit_id',
+          foreignField: 'unit_id',
+          as: "info1"
+        }
+      }, {
+        $lookup: {
+          from: 'roles',
+          localField: 'role_id',
+          foreignField: 'role_id',
+          as: "info2"
+        }
+      }, {
+        $unwind: "$info1"
+      }, {
+        $unwind: "$info2"
+      }, {
+        $project: {
+          _id: 0,
+          user_name: 1,
+          account: 1,
+          password: 1,
+          activation_status: 1,
+          unit_id: 1,
+          unit_name: '$info1.unit_name',
+          role_id: 1,
+          role_name: '$info2.role_name'
+        }
+      }
+    ]);
     return res;
   } catch (e) {
     throw e.message
@@ -95,24 +115,50 @@ async function deleteUser (account) {
 async function searchUser (searchValue) {
   const reg = new RegExp(searchValue, 'i')
   try {
-    return await users.find({
-      $or: [
-        {
-          user_name: {$regex: reg}
-        }, {
-          account: {$regex: reg}
+    const res = await users.aggregate([
+      {
+        $lookup: {
+          from: 'units',
+          localField: 'unit_id',
+          foreignField: 'unit_id',
+          as: "info1"
         }
-      ]
-    }, {
-      _id: 1,
-      user_name: 1,
-      password: 1,
-      role_id: 1,
-      account: 1,
-      activation_status: 1,
-      unit_id: 1,
-      department_id: 1
-    })
+      }, {
+        $lookup: {
+          from: 'roles',
+          localField: 'role_id',
+          foreignField: 'role_id',
+          as: "info2"
+        }
+      }, {
+        $unwind: "$info1"
+      }, {
+        $unwind: "$info2"
+      }, {
+        $match: {
+          $or: [
+            {
+              user_name: {$regex: reg}
+            }, {
+              account: {$regex: reg}
+            }
+          ]
+        }
+      }, {
+        $project: {
+          _id: 0,
+          user_name: 1,
+          account: 1,
+          password: 1,
+          activation_status: 1,
+          unit_id: 1,
+          unit_name: '$info1.unit_name',
+          role_id: 1,
+          role_name: '$info2.role_name'
+        }
+      }
+    ]);
+    return res;
   } catch (e) {
     throw e.message
   }
@@ -157,14 +203,14 @@ async function setActivation (account) {
     throw e.message
   }
 }
-// 还有个部门id没加
+// 批量添加，注意要添加unit_id
 async function batchImportedUser (imported_array) {
   try {
     let mapArray = imported_array.map(item => {
       return {
         user_name: item.user_name,
         role_id: item.role_id,
-        department_id: item.department_id,
+        unit_id: item.unit_id,
         account: item.account,
         password: item.password,
         activation_status: 1,

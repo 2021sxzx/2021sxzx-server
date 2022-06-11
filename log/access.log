@@ -2577,6 +2577,7 @@
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:33.447Z] "GET /api/v1/site-settings HTTP/1.1" 200 231 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:33.473Z] "GET /api/v1/core-settings HTTP/1.1" 200 55 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:33.748Z] "GET /api/v1/interface-configuration HTTP/1.1" 200 58 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+<<<<<<< HEAD
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-06-08T22:43:37.229Z] "POST /api/v1/sideBar HTTP/1.1" 200 52 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-06-08T22:43:37.231Z] "POST /api/v1/sideBar HTTP/1.1" 200 52 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-06-08T22:43:37.260Z] "GET /api/v1/getCheckResult HTTP/1.1" 200 703 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33"
@@ -2662,3 +2663,83 @@
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-06-11T10:04:18.069Z] "GET /api/v1/interface-configuration HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.39"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-06-11T10:04:18.084Z] "GET /api/v1/metaDataLog/ HTTP/1.1" 200 258 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.39"
 62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-06-11T10:04:18.102Z] "GET /api/v1/itemBrowseCount/ HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.39"
+=======
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:33.769Z] "GET /api/v1/metaDataLog/ HTTP/1.1" 200 268 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:33.780Z] "GET /api/v1/itemBrowseCount/ HTTP/1.1" 200 260 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:37.385Z] "GET /api/v1/mongo-backup-cycle HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:37.391Z] "GET /api/v1/mongo-backup HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:37.711Z] "GET /api/v1/mongo-backup-cycle HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:38.604Z] "GET /api/v1/site-settings HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:38.915Z] "GET /api/v1/core-settings HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:38.916Z] "GET /api/v1/interface-configuration HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:38.927Z] "GET /api/v1/metaDataLog/ HTTP/1.1" 200 268 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:38.940Z] "GET /api/v1/itemBrowseCount/ HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:42.233Z] "GET /api/v1/showMemory HTTP/1.1" 200 165 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:42.323Z] "GET /api/v1/viewProcessMessage HTTP/1.1" 404 2 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:43.205Z] "GET /api/v1/showCpuPercentage HTTP/1.1" 200 58 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:43.270Z] "GET /api/v1/showDisk HTTP/1.1" 200 626 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:47.587Z] "GET /api/v1/mongo-backup-cycle HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:47.837Z] "GET /api/v1/mongo-backup HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:13:47.927Z] "GET /api/v1/mongo-backup-cycle HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:14:11.105Z] "GET /api/v1/handle-backup HTTP/1.1" 200 6 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-22T10:43:28.357Z] "GET /api/v1/handle-backup HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+系统 ::[2022-05-22T10:43:28.353Z] "手动系统备份完成" 
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:07:52.178Z] "POST /api/v1/sideBar HTTP/1.1" 200 52 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:07:52.187Z] "GET /api/v1/getCheckResult HTTP/1.1" 200 703 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:07:52.604Z] "GET /api/v1/getEveryItemStatusCount HTTP/1.1" 200 325 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:13:21.341Z] "POST /api/v1/sideBar HTTP/1.1" 200 52 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:13:21.351Z] "GET /api/v1/getCheckResult HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:13:21.952Z] "GET /api/v1/getEveryItemStatusCount HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:13:33.644Z] "POST /api/v1/login HTTP/1.1" 200 452 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:13:33.979Z] "POST /api/v1/sideBar HTTP/1.1" 200 52 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:13:34.287Z] "GET /api/v1/getCheckResult HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:13:34.717Z] "GET /api/v1/getEveryItemStatusCount HTTP/1.1" 304 - "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:17:59.349Z] "GET /api/v1/failure HTTP/1.1" 200 1490 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+62386b2b1e90ec7f7e958138 ::ffff:127.0.0.1 - - [2022-05-23T10:20:10.077Z] "GET /api/v1/show/ HTTP/1.1" 200 321726 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36 Edg/101.0.1210.53"
+
+定时备份故障[2022-06-02T00:00:01.154Z]Error: Command failed: sh C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh
+C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh: line 15: cd: /www/backup/mongodb_bak/mongodb_bak_now: No such file or directory
+C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh: line 19: /usr/bin/mongodump: No such file or directory
+tar (child): /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_02_00_00_00.tar.gz: Cannot open: No such file or directory
+tar (child): Error is not recoverable: exiting now
+tar: /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_02_00_00_00.tar.gz: Cannot write: Broken pipe
+tar: Child returned status 2
+tar: Error is not recoverable: exiting now
+find: ‘/www/backup/mongodb_bak/mongodb_bak_list/’: No such file or directory
+
+定时备份故障[2022-06-05T00:00:01.093Z]Error: Command failed: sh C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh
+C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh: line 19: /usr/bin/mongodump: No such file or directory
+tar (child): /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_05_00_00_00.tar.gz: Cannot open: No such file or directory
+tar (child): Error is not recoverable: exiting now
+tar: /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_05_00_00_00.tar.gz: Cannot write: Broken pipe
+tar: Child returned status 2
+tar: Error is not recoverable: exiting now
+find: ‘/www/backup/mongodb_bak/mongodb_bak_list/’: No such file or directory
+
+定时备份故障[2022-06-07T00:00:01.252Z]Error: Command failed: sh C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh
+C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh: line 19: /usr/bin/mongodump: No such file or directory
+tar (child): /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_07_00_00_00.tar.gz: Cannot open: No such file or directory
+tar (child): Error is not recoverable: exiting now
+tar: Child returned status 2
+tar: Error is not recoverable: exiting now
+find: ‘/www/backup/mongodb_bak/mongodb_bak_list/’: No such file or directory
+
+定时备份故障[2022-06-09T00:00:01.528Z]Error: Command failed: sh C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh
+C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh: line 19: /usr/bin/mongodump: No such file or directory
+tar (child): /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_09_00_00_01.tar.gz: Cannot open: No such file or directory
+tar (child): Error is not recoverable: exiting now
+tar: /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_09_00_00_01.tar.gz: Cannot write: Broken pipe
+tar: Child returned status 2
+tar: Error is not recoverable: exiting now
+find: ‘/www/backup/mongodb_bak/mongodb_bak_list/’: No such file or directory
+
+定时备份故障[2022-06-10T00:00:02.847Z]Error: Command failed: sh C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh
+C:\Users\Drama\Desktop\work\te\2021sxzx-server\service\MongoDBBak.sh: line 19: /usr/bin/mongodump: No such file or directory
+tar (child): /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_10_00_00_02.tar.gz: Cannot open: No such file or directory
+tar (child): Error is not recoverable: exiting now
+tar: /www/backup/mongodb_bak/mongodb_bak_list/mongodb_bak_2022_06_10_00_00_02.tar.gz: Cannot write: Broken pipe
+tar: Child returned status 2
+tar: Error is not recoverable: exiting now
+find: ‘/www/backup/mongodb_bak/mongodb_bak_list/’: No such file or directory
+
+>>>>>>> e5eca3a9bccf306decba128d7793a37c3812ddb6
