@@ -31,9 +31,9 @@ const mongoose = require("mongoose")
 const redisClient = require('./config/redis');
 
 // IIFE立即执行redis数据库连接
-// (async () => {
-//   await redisClient.connect()
-// })();
+(async () => {
+  await redisClient.connect()
+})();
 mongoose.connect(MONGO_CONFIG.url);
 
 const app = express();

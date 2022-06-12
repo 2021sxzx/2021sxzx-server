@@ -165,12 +165,14 @@ class sideBarData {
       let deWeight = (arr) => {
         let map = new Map();
         for (let item of arr) {
-          if (!map.has(item.id)) {
-            map.set(item.id, item);
+          const index = item.id + '-' + item.role_id;
+          if (!map.has(index)) {
+            map.set(index, item);
           }
         }
         return [...map.values()];
       }
+      console.log(res);
       // 备份，注意这里是所有的数据，针对不同的角色也可以无需更新allData
       this.allData = deWeight(res);
       return deWeight(res).filter(item => { return item.role_id == role_id });
