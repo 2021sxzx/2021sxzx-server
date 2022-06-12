@@ -12,7 +12,6 @@ const {
   setActivationAndReturn
 } = require('../controller/userManagementController');
 
-const departmentMapUser = require('../model/departmentMapUser')
 
 function setStatusCode(res, data) {
   if (data.code === 200) {
@@ -33,25 +32,15 @@ router.all('*', function(req, res, next) {
 
 // 获取用户
 router.get('/v1/user', async (req, res, next) => {
-  const {role_id} = req.query;
-  const data = await returnUserList(Number(role_id));
+  const unit_id = Number(req.cookies.unit_id)
+  const data = await returnUserList(unit_id);
   setStatusCode(res, data)
   res.json(data)
 })  
 
-router.get('/v1/testInfer', async (req, res, next) => {
-  const data = await departmentMapUser.findOne({
-    account: 'test0422',
-    user_name: 'test0422'
-  });
-  // const data = await userDepartmentService.findDepartmentByAccount('test0422', 'test0422');
-  res.json({
-    data2: data
-  });
-})
-
 // 添加用户
 router.post('/v1/user', async (req, res, next) => {
+  const unit_id = Number(req.cookies.unit_id)
   if (validatePwd(req.body.password)) {
     const data = await addUserAndReturnList({
       user_name: req.body.user_name,
@@ -59,7 +48,7 @@ router.post('/v1/user', async (req, res, next) => {
       password: req.body.password,
       role_id: req.body.role_id,
       unit_id: Number(req.body.unit_id)
-    });
+    }, unit_id);
     setStatusCode(res, data);
     res.json(data)
   } else {
@@ -74,7 +63,8 @@ router.post('/v1/user', async (req, res, next) => {
 // 修改用户
 router.patch('/v1/user', async (req, res, next) => {
   const { user_name, password, role_id, account, new_account } = req.body
-  const data = await updateUserAndReturnList(user_name, password, role_id, account, new_account)
+  const unit_id = Number(req.cookies.unit_id)
+  const data = await updateUserAndReturnList(user_name, password, role_id, account, new_account, unit_id);
   setStatusCode(res, data)
   res.json(data)
 })
@@ -98,7 +88,8 @@ router.post('/v1/searchUser', async (req, res, next) => {
 // 激活状态
 router.post('/v1/setActivation', async function (req, res, next) {
   const {account} = req.body;
-  const result = await setActivationAndReturn(account);
+  const unit_id = Number(req.cookies.unit_id)
+  const result = await setActivationAndReturn(account, unit_id);
   res.json(result);
 });
 

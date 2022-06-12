@@ -13,8 +13,7 @@ class sideBarController {
   // 重构了侧边栏接口，使得数据获取变快
   async sideBarList (req, res) {
     try {
-      const {role_id} = req.body;
-      const result = await sideBarDataService.createTree(Number(role_id));
+      const result = await sideBarDataService.createTree(Number(req.cookies.role_id));
       setStatusCode(res, result);
       res.json(result);
     } catch (error) {
