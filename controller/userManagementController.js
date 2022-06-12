@@ -39,10 +39,11 @@ async function newUserList (res, unit_id) {
  * @param userInfo  用户信息对象，有[user_name][account][password][role_name]
  * @return {Promise<SuccessModel | ErrorModel>} 
  */
-async function addUserAndReturnList (userInfo) {
+async function addUserAndReturnList (userInfo, unit_id) {
   try {
     await addUser(userInfo);
-    const res = await getUserList();
+    const result = await getUserList();
+    const res = await newUserList(result, unit_id);
     // newUserList()
     return new SuccessModel({
       msg: '添加成功',
@@ -73,9 +74,10 @@ async function addUserBatchingAndReturnList (imported_array) {
  * 用于返回一个变化后的全体列表
  * @return {Promise<SuccessModel | ErrorModel>} 
  */
-async function returnUserList (role_id) {
+async function returnUserList (unit_id) {
   try {
-    const res = await getUserList(role_id);
+    const result = await getUserList();
+    const res = await newUserList(result, unit_id);
     return new SuccessModel({
       msg: '获取列表成功',
       data: res
@@ -93,13 +95,14 @@ async function returnUserList (role_id) {
  * @param account   用户账户
  * @return {Promise<SuccessModel | ErrorModel>}
  */
-async function updateUserAndReturnList (user_name, password, role_id, account, new_account) {
+async function updateUserAndReturnList (user_name, password, role_id, account, new_account, unit_id) {
   try {
     await updateUser(user_name, password, role_id, account, new_account);
-    const res_ = await getUserList()
+    const result = await getUserList();
+    const res = await newUserList(result, unit_id);
     return new SuccessModel({
       msg: '修改成功',
-      data: res_
+      data: res
     })
   } catch (e) {
     return new ErrorModel({msg: e.message})
@@ -111,13 +114,14 @@ async function updateUserAndReturnList (user_name, password, role_id, account, n
  *  @param account  用户账户
  *  @return {Promise<SuccessModel | ErrorModel>}
  */
-async function deleteUserAndReturnList (account) {
+async function deleteUserAndReturnList (account, unit_id) {
   try {
     await deleteUser(account);
-    const res_ = await getUserList();
+    const result = await getUserList();
+    const res = await newUserList(result, unit_id);
     return new SuccessModel({
       msg: '删除成功',
-      data: res_
+      data: res
     })
   } catch (e) {
     return new ErrorModel({msg: e.message})
@@ -145,13 +149,14 @@ async function searchUserAndReturnList (searchValue, unit_id) {
   }
 }
 
-async function setActivationAndReturn (account) {
+async function setActivationAndReturn (account, unit_id) {
   try {
-    const Act = await setActivation(account);
-    const res_ = await getUserList();
+    await setActivation(account);
+    const result = await getUserList();
+    const res = await newUserList(result, unit_id);
     return new SuccessModel({
       msg: '改变激活状态成功',
-      data: res_
+      data: res
     })
   } catch (e) {
     throw new ErrorModel({msg: e.message});

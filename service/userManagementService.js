@@ -1,5 +1,10 @@
 const users = require('../model/users');
 
+// 用户数据拉取之后放到这里，下次便于取出，无需交互数据库
+let userCache = null;
+// 一个控制是否将数据重新从数据库拉取的变量
+let isNeedUpdateUserCache = false;
+
 /**
  * 添加后台用户
  * @param userInfo  对话框获取的信息
@@ -11,6 +16,7 @@ async function addUser (userInfo) {
     if (!res) {
       return;
     }
+    isNeedUpdateUserCache = true;
     const resq = await users.create({
       ...userInfo,
       activation_status: 1,
@@ -28,40 +34,46 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    const res = await users.aggregate([
-      {
-        $lookup: {
-          from: 'units',
-          localField: 'unit_id',
-          foreignField: 'unit_id',
-          as: "info1"
+    if (userCache !== null && !isNeedUpdateUserCache) {
+      return userCache
+    } else {
+      const res = await users.aggregate([
+        {
+          $lookup: {
+            from: 'units',
+            localField: 'unit_id',
+            foreignField: 'unit_id',
+            as: "info1"
+          }
+        }, {
+          $lookup: {
+            from: 'roles',
+            localField: 'role_id',
+            foreignField: 'role_id',
+            as: "info2"
+          }
+        }, {
+          $unwind: "$info1"
+        }, {
+          $unwind: "$info2"
+        }, {
+          $project: {
+            _id: 0,
+            user_name: 1,
+            account: 1,
+            password: 1,
+            activation_status: 1,
+            unit_id: 1,
+            unit_name: '$info1.unit_name',
+            role_id: 1,
+            role_name: '$info2.role_name'
+          }
         }
-      }, {
-        $lookup: {
-          from: 'roles',
-          localField: 'role_id',
-          foreignField: 'role_id',
-          as: "info2"
-        }
-      }, {
-        $unwind: "$info1"
-      }, {
-        $unwind: "$info2"
-      }, {
-        $project: {
-          _id: 0,
-          user_name: 1,
-          account: 1,
-          password: 1,
-          activation_status: 1,
-          unit_id: 1,
-          unit_name: '$info1.unit_name',
-          role_id: 1,
-          role_name: '$info2.role_name'
-        }
-      }
-    ]);
-    return res;
+      ]);
+      userCache = res;
+      isNeedUpdateUserCache = false;
+      return res;
+    }
   } catch (e) {
     throw e.message
   }
@@ -78,6 +90,7 @@ async function getUserList () {
  */
 async function updateUser (user_name, password, role_id, account, new_account) {
   try {
+    isNeedUpdateUserCache = true;
     return await users.updateOne({
       account: account
     }, {
@@ -98,6 +111,7 @@ async function updateUser (user_name, password, role_id, account, new_account) {
  */
 async function deleteUser (account) {
   try {
+    isNeedUpdateUserCache = true;
     return await users.deleteOne({
       account
     })
@@ -178,6 +192,7 @@ async function isActivation (account) {
 
 async function setActivation (account) {
   try {
+    isNeedUpdateUserCache = true;
     let res = await users.findOne({
       account
     }, {
@@ -206,6 +221,7 @@ async function setActivation (account) {
 // 批量添加，注意要添加unit_id
 async function batchImportedUser (imported_array) {
   try {
+    isNeedUpdateUserCache = true;
     let mapArray = imported_array.map(item => {
       return {
         user_name: item.user_name,
