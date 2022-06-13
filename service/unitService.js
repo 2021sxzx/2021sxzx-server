@@ -241,7 +241,6 @@ class unitService {
   // 计算单位下有多少人
   async getUserById (unit_id) {
     try {
-      // const res = await users.find({ unit_id })
       const res = await users.aggregate([
         {
           $lookup: {
@@ -275,7 +274,7 @@ class unitService {
         data: res
       })
     } catch (error) {
-      
+      throw Error(e.message);
     }
   }
 
