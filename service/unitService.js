@@ -1,4 +1,5 @@
-const unit = require('../model/unit')
+const unit = require('../model/unit');
+const { db } = require('../model/users');
 const users = require('../model/users')
 const { SuccessModel, ErrorModel } = require('../utils/resultModel')
 
@@ -239,11 +240,43 @@ class unitService {
 
   // 计算单位下有多少人
   async getUserById (unit_id) {
-    const res = await users.find({ unit_id })
-    return new SuccessModel({
-      msg: '获取单位用户成功',
-      data: res
-    })
+    try {
+      // const res = await users.find({ unit_id })
+      const res = await users.aggregate([
+        {
+          $lookup: {
+            from: 'units',
+            localField: 'unit_id',
+            foreignField: 'unit_id',
+            as: 'agg',
+          }
+        }, {
+          $unwind: '$agg'
+        }, {
+          $match: {
+            unit_id: unit_id
+          }
+        }, {
+          $project: {
+            unit_name: '$agg.unit_name',
+            _id: 1,
+            user_name: 1,
+            role_id: 1,
+            account: 1,
+            password: 1,
+            activation_status: 1,
+            role_name: 1,
+            unit_id: 1
+          }
+        }
+      ]);
+      return new SuccessModel({
+        msg: '获取单位用户成功',
+        data: res
+      })
+    } catch (error) {
+      
+    }
   }
 
   // 计算两个unit_id之间的父子关系

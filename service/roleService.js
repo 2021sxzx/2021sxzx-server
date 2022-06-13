@@ -3,6 +3,8 @@ const roleMapPermission = require('../model/roleMapPermission')
 const users = require('../model/users')
 const permission = require('../model/permission')
 
+// 在此，role_rank不能作为访问控制的一环，已经作为一个废弃的量来处理
+
 function searchPermissionName (permission_identifier, permissionList) {
   for (let item of permissionList) {
     if (item.permission_identifier === permission_identifier) {
@@ -19,10 +21,8 @@ function searchPermissionName (permission_identifier, permissionList) {
  * @return {Promise} 返回值是一个角色，没有角色对应的权限
  * 得要是一个数组，就不太好了。因为不好携带
  * 
- * 还必须知道这里操控用户的rank值，只能添加下一级的rank的角色
- * 用户角色的控制只根据部门有关
  */
-async function addRole (role_name, role_describe, permission_identifier_array, role_rank) {
+async function addRole (role_name, role_describe, permission_identifier_array, role_rank = 1) {
   try {
 
     // 添加角色
@@ -34,6 +34,7 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
     });
 
     // 往权限角色关联表里面添加关联
+    // 多次插入，可能影响效率，后续做一次性优化处理
     permission_identifier_array.forEach((item) => {
       roleMapPermission.create({
         role_id: res.role_id,
@@ -52,7 +53,7 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
  * 查找一个角色
  * @param {*} role_name 
  * @param {*} role_describe 
- * @returns {Promise<>} 返回一个角色，没有对应权限
+ * @returns {Promise<>} 返回一个角色，有对应权限
  */
 async function getRole (role_id) {
   try {
@@ -77,6 +78,7 @@ async function getRole (role_id) {
     ]);
     const permissionList = await permission.find({});
     resq.map(item => {
+      console.log(item.permission_identifier)
       item["permission"] = item.permission_identifier.map(item => {
         return searchPermissionName(item, permissionList);
       });
@@ -107,7 +109,7 @@ async function getRoleList (role_id) {
           role_name: 1,
           role_id: 1,
           role_describe: 1,
-          permission_identifier: '$info1.permission_identifier'
+          permission_identifier_array: '$info1.permission_identifier'
         }
       }
     ]);
@@ -229,6 +231,7 @@ async function SearchRole (searchValue) {
 
 /**
  * 用于计算本角色对应的权限，返回一个本角色对应的权限列表[字符数组]
+ * 已废弃
  * @param role_id
  * @return {Array[]}
  */
@@ -256,7 +259,7 @@ async function calcaulatePermission (role_id) {
     throw new Error(e.message)
   }
 }
-
+// 已废弃
 async function calcaulatePermissionIdentifier (role_id) {
   try {
     // 获取角色权限索引值列表
