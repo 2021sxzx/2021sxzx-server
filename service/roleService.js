@@ -323,8 +323,8 @@ async function addPermission (role_id, ...permission_identifier_array) {
         const res = await roleMapPermission.create({
           role_id,
           permission_identifier: item
-        })
-        return res
+        });
+        return res;
       })
     )
     return addedArr

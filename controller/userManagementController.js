@@ -164,7 +164,7 @@ async function setActivationAndReturn (account, unit_id) {
 }
 
 async function getUserById (unit_id) {
-
+  
 }
 
 module.exports = {
