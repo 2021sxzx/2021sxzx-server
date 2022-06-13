@@ -10,6 +10,7 @@ const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
 const modelDepartmentMapUsers = require('../model/departmentMapUser');
 const modelStatusMapPermissions = require('../model/statusMapPermissions')
+const modelUnit = require('../model/unit')
 const itemService = require('../service/itemService')
 const { dirname } = require('path')
 const modelRoleMapPermission = require('../model/roleMapPermission')
@@ -35,7 +36,7 @@ async function getItemStatusScheme() {
  * 获取用户列表
  * @returns 
  */
- async function getItemUsers({
+async function getItemUsers({
     department_name = null,
     user_name = null
 }) {
@@ -49,7 +50,7 @@ async function getItemStatusScheme() {
                 accounts.push(accounts.shift().account)
             }
             query['$and'].push({ account: { $in: accounts } })
-        }        
+        }
         var users = await modelUsers.aggregate([
             {
                 $match: query
@@ -79,7 +80,7 @@ async function getItemStatusScheme() {
         return new SuccessModel({ msg: '获取成功', data: users })
     } catch (err) {
         console.log(err)
-        return new ErrorModel({ msg: '获取失败', data: err.message})
+        return new ErrorModel({ msg: '获取失败', data: err.message })
     }
 }
 
@@ -88,15 +89,15 @@ async function getItemStatusScheme() {
  * @param {String} user_id 用户id
  * @returns 
  */
- async function getUserNameById({
-     user_id = null
- }) {
+async function getUserNameById({
+    user_id = null
+}) {
     try {
         var userName = await modelUsers.findOne({ _id: user_id }, { _id: 0, user_name: 1 })
         return new SuccessModel({ msg: '获取成功', data: userName })
     } catch (err) {
         console.log(err)
-        return new ErrorModel({ msg: '获取失败', data: err.message})
+        return new ErrorModel({ msg: '获取失败', data: err.message })
     }
 }
 
@@ -236,11 +237,12 @@ async function getItems({
             query['$and'].push({ creator_id: { $in: users } })
         }
         if (department_name !== null) {
-            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
-            for (let i = 0, len = accounts.length; i < len; i++) {
-                accounts.push(accounts.shift().account)
+            //这里不包含下级部门，只查询正则匹配的部门
+            let units = await modelUnit.find({ unit_name: { $regex: department_name } }, { unit_id: 1 })
+            for (let i = 0, len = units.length; i < len; i++) {
+                units.push(units.shift().unit_id)
             }
-            let users = await modelUsers.find({ account: { $in: accounts } }, { _id: 1 })
+            let users = await modelUsers.find({ unit_id: { $in: units } }, { _id: 1 })
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id)
             }
@@ -286,16 +288,16 @@ async function getItems({
                             },
                             {
                                 $lookup: {
-                                    from: modelDepartmentMapUsers.collection.name,
-                                    localField: 'user.account',
-                                    foreignField: 'account',
-                                    as: 'department'
+                                    from: modelUnit.collection.name,
+                                    localField: 'user.unit_id',
+                                    foreignField: 'unit_id',
+                                    as: 'unit'
                                 }
                             },
                             {
                                 $addFields: {
                                     user: { $arrayElemAt: ['$user', 0] },
-                                    department: { $arrayElemAt: ['$department', 0] },
+                                    department: { $arrayElemAt: ['$unit', 0] },
                                     region_info: { $arrayElemAt: ['$region_info', 0] }
                                 }
                             },
@@ -304,7 +306,7 @@ async function getItems({
                                     creator: {
                                         id: '$creator_id',
                                         name: '$user.user_name',
-                                        department_name: '$department.department_name'
+                                        department_name: '$unit.unit_name'
                                     },
                                     region_code: '$region_info.region_code'
                                 }
@@ -750,16 +752,16 @@ async function getItemGuide({
             },
             {
                 $lookup: {
-                    from: modelDepartmentMapUsers.collection.name,
-                    localField: 'user.account',
-                    foreignField: 'account',
-                    as: 'department'
+                    from: modelUnit.collection.name,
+                    localField: 'user.unit_id',
+                    foreignField: 'unit_id',
+                    as: 'unit'
                 }
             },
             {
                 $addFields: {
                     user: { $arrayElemAt: ['$user', 0] },
-                    department: { $arrayElemAt: ['$department', 0] }
+                    department: { $arrayElemAt: ['$unit', 0] }
                 }
             },
             {
@@ -767,7 +769,7 @@ async function getItemGuide({
                     creator: {
                         id: '$creator_id',
                         name: '$user.user_name',
-                        department_name: '$department.department_name'
+                        department_name: '$unit.unit_name'
                     }
                 }
             },
@@ -823,11 +825,12 @@ async function getItemGuides({
             query['$and'].push({ creator_id: { $in: users } })
         }
         if (department_name !== null) {
-            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
-            for (let i = 0, len = accounts.length; i < len; i++) {
-                accounts.push(accounts.shift().account)
+            //这里不包含下级部门，只查询了正则匹配的部门
+            let units = await modelUnit.find({ unit_name: { $regex: department_name } }, { unit_id: 1 })
+            for (let i = 0, len = units.length; i < len; i++) {
+                units.push(units.shift().unit_id)
             }
-            let users = await modelUsers.find({ account: { $in: accounts } }, { _id: 1 })
+            let users = await modelUsers.find({ unit_id: { $in: units } }, { _id: 1 })
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id)
             }
@@ -862,16 +865,16 @@ async function getItemGuides({
                             },
                             {
                                 $lookup: {
-                                    from: modelDepartmentMapUsers.collection.name,
-                                    localField: 'user.account',
-                                    foreignField: 'account',
-                                    as: 'department'
+                                    from: modelUnit.collection.name,
+                                    localField: 'user.unit_id',
+                                    foreignField: 'unit_id',
+                                    as: 'unit'
                                 }
                             },
                             {
                                 $addFields: {
                                     user: { $arrayElemAt: ['$user', 0] },
-                                    department: { $arrayElemAt: ['$department', 0] }
+                                    department: { $arrayElemAt: ['$unit', 0] }
                                 }
                             },
                             {
@@ -879,7 +882,7 @@ async function getItemGuides({
                                     creator: {
                                         id: '$creator_id',
                                         name: '$user.user_name',
-                                        department_name: '$department.department_name'
+                                        department_name: '$unit.unit_name'
                                     }
                                 }
                             },
@@ -1345,11 +1348,12 @@ async function getRegions({
             query['$and'].push({ creator_id: { $in: users } })
         }
         if (department_name !== null) {
-            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
-            for (let i = 0, len = accounts.length; i < len; i++) {
-                accounts.push(accounts.shift().account)
+            //这里不包含下级部门，只查询了正则匹配的部门
+            let units = await modelUnit.find({ unit_name: { $regex: department_name } }, { unit_id: 1 })
+            for (let i = 0, len = units.length; i < len; i++) {
+                units.push(units.shift().unit_id)
             }
-            let users = await modelUsers.find({ account: { $in: accounts } }, { _id: 1 })
+            let users = await modelUsers.find({ unit_id: { $in: units } }, { _id: 1 })
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id)
             }
@@ -1384,16 +1388,16 @@ async function getRegions({
                             },
                             {
                                 $lookup: {
-                                    from: modelDepartmentMapUsers.collection.name,
-                                    localField: 'user.account',
-                                    foreignField: 'account',
-                                    as: 'department'
+                                    from: modelUnit.collection.name,
+                                    localField: 'user.unit_id',
+                                    foreignField: 'unit_id',
+                                    as: 'unit'
                                 }
                             },
                             {
                                 $addFields: {
                                     user: { $arrayElemAt: ['$user', 0] },
-                                    department: { $arrayElemAt: ['$department', 0] }
+                                    department: { $arrayElemAt: ['$unit', 0] }
                                 }
                             },
                             {
@@ -1401,7 +1405,7 @@ async function getRegions({
                                     creator: {
                                         id: '$creator_id',
                                         name: '$user.user_name',
-                                        department_name: '$department.department_name'
+                                        department_name: '$unit.unit_name'
                                     }
                                 }
                             },
@@ -1811,11 +1815,12 @@ async function getRules({
             query['$and'].push({ creator_id: { $in: users } })
         }
         if (department_name !== null) {
-            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
-            for (let i = 0, len = accounts.length; i < len; i++) {
-                accounts.push(accounts.shift().account)
+            //这里不包含下级部门，只查询了正则匹配到的部门
+            let units = await modelUnit.find({ unit_name: { $regex: department_name } }, { unit_id: 1 })
+            for (let i = 0, len = units.length; i < len; i++) {
+                units.push(units.shift().unit_id)
             }
-            let users = await modelUsers.find({ account: { $in: accounts } }, { _id: 1 })
+            let users = await modelUsers.find({ unit_id: { $in: units } }, { _id: 1 })
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id)
             }
@@ -1841,16 +1846,16 @@ async function getRules({
             },
             {
                 $lookup: {
-                    from: modelDepartmentMapUsers.collection.name,
-                    localField: 'user.account',
-                    foreignField: 'account',
-                    as: 'department'
+                    from: modelUnit.collection.name,
+                    localField: 'user.unit_id',
+                    foreignField: 'unit_id',
+                    as: 'unit'
                 }
             },
             {
                 $addFields: {
                     user: { $arrayElemAt: ['$user', 0] },
-                    department: { $arrayElemAt: ['$department', 0] }
+                    department: { $arrayElemAt: ['$unit', 0] }
                 }
             },
             {
@@ -1858,7 +1863,7 @@ async function getRules({
                     creator: {
                         id: '$creator_id',
                         name: '$user.user_name',
-                        department_name: '$department.department_name'
+                        department_name: '$unit.unit_name'
                     }
                 }
             },
@@ -2165,13 +2170,37 @@ async function changeItemStatus({
                     }
                 })
                 //如果是转到审核通过状态，就更新一下事项的发布时间
-                if (status.eng_name === 'Success') {
-                    bulkOps.push({
-                        updateOne: {
-                            filter: { _id: item_id },
-                            update: { release_time: Date.now() }
+                for (let k = 0; k < itemStatus.length; k++) {
+                    if (itemStatus[k].id === next_status) {
+                        if (itemStatus[k].eng_name === 'Success') {
+                            bulkOps.push({
+                                updateOne: {
+                                    filter: { _id: item_id },
+                                    update: { release_time: Date.now() }
+                                }
+                            })
+                            //对接一下机器人平台
+                            try {
+                                var region = await modelRegion.findOne({ _id: item.region_id })
+                                if (region === null) {
+                                    throw new Error('区划不存在')
+                                }
+                                itemService.addQuestion(item.task_code, region.region_code)
+                            } catch (err) {
+                                console.log('对接机器人平台出错')
+                                console.log(err.message)
+                            }
+                        } else {
+                            //对接一下机器人平台
+                            try {
+                                itemService.deleteQuestions([item.task_code])
+                            } catch (err) {
+                                console.log('对接机器人平台出错')
+                                console.log(err.message)
+                            }
                         }
-                    })
+                        break
+                    }
                 }
                 break
             }
