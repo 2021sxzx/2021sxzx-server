@@ -62,9 +62,9 @@ router.post('/v1/user', async (req, res, next) => {
 
 // 修改用户
 router.patch('/v1/user', async (req, res, next) => {
-  const { user_name, password, role_id, account, new_account } = req.body
-  const unit_id = Number(req.cookies.unit_id)
-  const data = await updateUserAndReturnList(user_name, password, role_id, account, new_account, unit_id);
+  const { user_name, password, role_id, account, new_account, unit_id } = req.body
+  const my_unit_id = Number(req.cookies.unit_id)
+  const data = await updateUserAndReturnList(user_name, password, role_id, account, new_account, unit_id, my_unit_id);
   setStatusCode(res, data)
   res.json(data)
 })
