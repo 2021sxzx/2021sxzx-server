@@ -5,8 +5,6 @@ const {
   updateRole,
   deleteRole,
   SearchRole,
-  calcaulatePermission,
-  calcaulatePermissionIdentifier,
   getPermissionList,
   addPermission,
   deletePermission
@@ -19,16 +17,16 @@ const { SuccessModel, ErrorModel } = require('../utils/resultModel')
  * @param {*} role_describe
  * @param {*} role_rank
  * @param  {Array} permission_identifier_array
- * 有一个bug，就是这个role_id不存在
+ * role_id用时间戳
  */
 async function addRoleAndReturnObject (
   role_name,
   role_describe,
   permission_identifier_array,
-  role_rank
+  role_rank = 1
 ) {
   try {
-    const resq = await addRole(role_name, role_describe, permission_identifier_array, role_rank);
+    const resq = await addRole(role_name, role_describe, permission_identifier_array, role_rank = 1);
     // id在哪里？
     const res = await getRole(resq.role_id);
     // const calPermission = await calcaulatePermission(resq.role_id);
@@ -69,9 +67,9 @@ async function updateRoleAndReturnObject (role_name, role_id, role_describe) {
  * 返回一个角色权限列表
  * @returns {Promise<Array[]>}
  */
-async function returnRoleList (role_id) {
+async function returnRoleList () {
   try {
-    const roleList = await getRoleList(role_id);
+    const roleList = await getRoleList();
   
     return new SuccessModel({
       msg: '返回角色权限列表成功',
