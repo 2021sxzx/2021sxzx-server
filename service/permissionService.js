@@ -1,6 +1,9 @@
 const roleMapPermission = require('../model/roleMapPermission');
 const permission = require('../model/permission')
 
+// 缓存权限列表，缓存变量
+let permissionList = null;
+
 /**
  * 添加角色权限，在角色权限关联表里面进行添加
  * @param role_id
@@ -68,8 +71,10 @@ async function patchPermission (role_id, ...permission_identifier_array) {
  */ 
 async function getPermissionList () {
   try {
-    const res = await permission.find({})
-    return res
+    if (permissionList == null) {
+      permissionList = await permission.find({})
+    }
+    return permissionList;
   } catch (e) {
     throw new Error(e.message)
   }

@@ -1,21 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const {
-  addRoleAndReturnObject,
-  updateRoleAndReturnObject,
+  addRoleAndReturnList,
+  updateRoleAndReturnList,
   returnRoleList,
-  deleteRoleAndReturnObject,
-  getPermissionListAndReturnObject,
-  searchRoleAndReturnObject
+  deleteRoleAndReturnList,
+  searchRoleAndReturnList
 } = require("../controller/roleController");
-
-const {
-  calcaulatePermission
-} = require('../service/roleService')
-
-const {
-  setActivation
-} = require('../service/userManagementService');
 
 function setStatusCode(res, data) {
     if (data.code === 200) {
@@ -24,16 +15,12 @@ function setStatusCode(res, data) {
         res.statusCode = 404
     }
 }
-router.get('/test', async (req, res, next) => {
-  const resq = await setActivation('18029000390');
-  res.json(resq);
-})
 /**
  * 添加角色
  */
 router.post('/v1/role', async (req, res, next) => {
   const {role_name, role_describe, permission_identifier_array} = req.body
-  let data = await addRoleAndReturnObject(
+  let data = await addRoleAndReturnList(
     role_name,
     role_describe,
     permission_identifier_array
@@ -47,7 +34,7 @@ router.post('/v1/role', async (req, res, next) => {
  */
 router.delete('/v1/role', async (req, res, next) => {
   let role = req.body
-  let data = await deleteRoleAndReturnObject(Number(role.role_id));
+  let data = await deleteRoleAndReturnList(Number(role.role_id));
   setStatusCode(res, data)
   res.json(data)
 })
@@ -57,7 +44,7 @@ router.delete('/v1/role', async (req, res, next) => {
  */
 router.patch('/v1/role', async (req, res, next) => {
   let role = req.body
-  let data = await updateRoleAndReturnObject(role.role_name, Number(role.role_id), role.role_describe)
+  let data = await updateRoleAndReturnList(role.role_name, Number(role.role_id), role.role_describe)
   setStatusCode(res, data)
   res.json(data)
 })
@@ -77,7 +64,7 @@ router.get('/v1/role', async (req, res, next) => {
  */
 router.post('/v1/searchRole', async (req, res, next) => {
   let {searchValue} = req.body
-  let data = await searchRoleAndReturnObject(searchValue)
+  let data = await searchRoleAndReturnList(searchValue)
   setStatusCode(res, data)
   res.json(data)
 })

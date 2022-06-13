@@ -1,7 +1,18 @@
-const role = require('../model/role')
-const roleMapPermission = require('../model/roleMapPermission')
-const users = require('../model/users')
-const permission = require('../model/permission')
+const role = require('../model/role');
+const roleMapPermission = require('../model/roleMapPermission');
+const users = require('../model/users');
+const permission = require('../model/permission');
+
+// 权限列表的缓存
+// 因为权限是不涉及CRUD的，因此我们不需要设置锁变量
+let permissionList = null;
+
+// 角色列表的缓存
+// 角色涉及CRUD，我们需要设置锁变量
+let roleList = null;
+let isNeedUpdateRoleList = false;
+
+
 
 // 在此，role_rank不能作为访问控制的一环，已经作为一个废弃的量来处理
 
@@ -32,7 +43,7 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
       role_rank,
       role_id: Date.now()
     });
-
+    isNeedUpdateRoleList = true;
     // 往权限角色关联表里面添加关联
     // 多次插入，可能影响效率，后续做一次性优化处理
     permission_identifier_array.forEach((item) => {
@@ -58,6 +69,7 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
  */
 async function getRole () {
   try {
+    
     const resq = await role.aggregate([
       {
         $lookup: {
@@ -75,7 +87,10 @@ async function getRole () {
         }
       }
     ]);
-    const permissionList = await permission.find({});
+    if (permissionList == null) {
+      const _permissionList = await permission.find({});
+      permissionList = _permissionList;
+    }
     resq.map(item => {
       item["permission"] = item.permission_identifier_array.map(item => {
         return searchPermissionName(item, permissionList);
@@ -94,24 +109,34 @@ async function getRole () {
  */
 async function getRoleList () {
   try {
-    const resq = await role.aggregate([
-      {
-        $lookup: {
-          from: 'rolemappermissions',
-          localField: 'role_id',
-          foreignField: 'role_id',
-          as: "info1"
+    let resq = null;
+    if (roleList == null || isNeedUpdateRoleList == true) {
+      resq = await role.aggregate([
+        {
+          $lookup: {
+            from: 'rolemappermissions',
+            localField: 'role_id',
+            foreignField: 'role_id',
+            as: "info1"
+          }
+        }, {
+          $project: {
+            role_name: 1,
+            role_id: 1,
+            role_describe: 1,
+            permission_identifier_array: '$info1.permission_identifier'
+          }
         }
-      }, {
-        $project: {
-          role_name: 1,
-          role_id: 1,
-          role_describe: 1,
-          permission_identifier_array: '$info1.permission_identifier'
-        }
-      }
-    ]);
-    const permissionList = await permission.find({});
+      ]);
+      roleList = resq;
+      isNeedUpdateRoleList = false;
+    } else {
+      resq = roleList;
+    }
+    if (permissionList == null) {
+      const _permissionList = await permission.find({});
+      permissionList = _permissionList;
+    }
 
     resq.map(item => {
       item["permission"] = item.permission_identifier_array.map(item => {
@@ -139,10 +164,8 @@ async function updateRole (role_name, role_id, role_describe) {
       role_name,
       role_describe
     });
-
-    const res = await role.findOne({
-      role_id
-    });
+    isNeedUpdateRoleList = true;
+    const res = await getRoleList();
     return res
   } catch (e) {
     throw new Error(e.message)
@@ -165,9 +188,8 @@ async function deleteRole (role_id) {
     if (selectRoleMap.length > 0) {
       return new Error("有用户在使用该角色，不允许删除")
     }
-    const res = await role.deleteOne({
-      role_id
-    })
+    isNeedUpdateRoleList = true;
+    const res = await getRoleList();
     return res;
   } catch (e) {
     throw new Error(e.message)
@@ -186,34 +208,28 @@ async function SearchRole (searchValue) {
   }
   const reg = new RegExp(searchValue, 'i')
   try {
-    const resq = await role.aggregate([
-      {
-        $lookup: {
-          from: 'rolemappermissions',
-          localField: 'role_id',
-          foreignField: 'role_id',
-          as: "info1"
+    let resq = null;
+    if (roleList == null) {
+      // 如果为空，就加载一下
+      await getRoleList();
+    }
+
+    resq = roleList.filter(item => {
+      const permission = item.permission;
+      let isHavePermission = false;
+      permission.map(item => {
+        if (reg.test(item)) {
+          isHavePermission = true;
         }
-      }, {
-        $match: {
-          $or: [
-            {
-              role_name: { $regex : reg }
-            }, {
-              role_describe: { $regex : reg }
-            }
-          ]
-        }
-      }, {
-        $project: {
-          role_name: 1,
-          role_id: 1,
-          role_describe: 1,
-          permission_identifier_array: '$info1.permission_identifier'
-        }
-      }
-    ]);
-    const permissionList = await permission.find({});
+        return item;
+      })
+      return reg.test(item.role_name) || reg.test(item.role_describe) || isHavePermission;
+    });
+
+    if (permissionList == null) {
+      const _permissionList = await permission.find({});
+      permissionList = _permissionList;
+    }
 
     resq.map(item => {
       item["permission"] = item.permission_identifier_array.map(item => {
@@ -283,8 +299,11 @@ async function calcaulatePermissionIdentifier (role_id) {
  */ 
 async function getPermissionList () {
   try {
-    const res = permission.find({});
-    return res;
+    if (permissionList == null) {
+      const _permissionList = await permission.find({});
+      permissionList = _permissionList;
+    }
+    return permissionList;
   } catch (e) {
     throw new Error(e.message)
   }

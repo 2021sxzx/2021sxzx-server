@@ -18,7 +18,7 @@ const { SuccessModel, ErrorModel } = require('../utils/resultModel')
  * @param  {Array} permission_identifier_array
  * role_id用时间戳
  */
-async function addRoleAndReturnObject (
+async function addRoleAndReturnList (
   role_name,
   role_describe,
   permission_identifier_array,
@@ -46,7 +46,7 @@ async function addRoleAndReturnObject (
  * @param {*} role_name
  * @param {*} role_describe
  */
-async function updateRoleAndReturnObject (role_name, role_id, role_describe) {
+async function updateRoleAndReturnList (role_name, role_id, role_describe) {
   try {
     await updateRole(role_name, role_id, role_describe)
     const res = await getRoleList();
@@ -87,7 +87,7 @@ async function returnRoleList () {
  * @param {*} role_id 
  * @returns {Promise<*>} 
  */
-async function deleteRoleAndReturnObject (role_id) {
+async function deleteRoleAndReturnList (role_id) {
   try {
     const res = await deleteRole(role_id);
     await deletePermission(role_id);
@@ -105,7 +105,7 @@ async function deleteRoleAndReturnObject (role_id) {
 /**
  * 返回一个权限列表
  */
-async function getPermissionListAndReturnObject () {
+async function getPermissionListAndReturnList () {
   try {
     const res = await getPermissionList()
     return new SuccessModel({
@@ -124,7 +124,7 @@ async function getPermissionListAndReturnObject () {
  * @param {*} searchValue 
  * @returns {Promise<Array[]>}
  */
-async function searchRoleAndReturnObject (searchValue) {
+async function searchRoleAndReturnList (searchValue) {
   try {
     const Role = await SearchRole(searchValue) // 多个角色的数组
     return new SuccessModel({
@@ -157,11 +157,11 @@ async function updatePermission (role_id, permission_identifier_array) {
 }
 
 module.exports = {
-  addRoleAndReturnObject,
-  updateRoleAndReturnObject,
+  addRoleAndReturnList,
+  updateRoleAndReturnList,
   returnRoleList,
-  deleteRoleAndReturnObject,
-  getPermissionListAndReturnObject,
-  searchRoleAndReturnObject,
+  deleteRoleAndReturnList,
+  getPermissionListAndReturnList,
+  searchRoleAndReturnList,
   updatePermission
 }
