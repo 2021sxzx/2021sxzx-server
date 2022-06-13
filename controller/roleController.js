@@ -1,6 +1,5 @@
 const {
   addRole,
-  getRole,
   getRoleList,
   updateRole,
   deleteRole,
@@ -26,10 +25,9 @@ async function addRoleAndReturnObject (
   role_rank = 1
 ) {
   try {
-    const resq = await addRole(role_name, role_describe, permission_identifier_array, role_rank = 1);
-    // id在哪里？
-    const res = await getRole(resq.role_id);
-    // const calPermission = await calcaulatePermission(resq.role_id);
+    await addRole(role_name, role_describe, permission_identifier_array, role_rank = 1);
+    // 不需要id
+    const res = await getRoleList();
 
     return new SuccessModel({
       msg: '添加角色列表成功',
@@ -50,7 +48,8 @@ async function addRoleAndReturnObject (
  */
 async function updateRoleAndReturnObject (role_name, role_id, role_describe) {
   try {
-    const res = await updateRole(role_name, role_id, role_describe)
+    await updateRole(role_name, role_id, role_describe)
+    const res = await getRoleList();
     return new SuccessModel({
       msg: '更新用户角色成功',
       data: res

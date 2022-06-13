@@ -51,11 +51,12 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
 
 /**
  * 查找一个角色
+ * 已废弃
  * @param {*} role_name 
  * @param {*} role_describe 
  * @returns {Promise<>} 返回一个角色，有对应权限
  */
-async function getRole (role_id) {
+async function getRole () {
   try {
     const resq = await role.aggregate([
       {
@@ -66,20 +67,17 @@ async function getRole (role_id) {
           as: "info1"
         }
       }, {
-        $match: { role_id: role_id }
-      }, {
         $project: {
           role_name: 1,
           role_id: 1,
           role_describe: 1,
-          permission_identifier: '$info1.permission_identifier'
+          permission_identifier_array: '$info1.permission_identifier'
         }
       }
     ]);
     const permissionList = await permission.find({});
     resq.map(item => {
-      console.log(item.permission_identifier)
-      item["permission"] = item.permission_identifier.map(item => {
+      item["permission"] = item.permission_identifier_array.map(item => {
         return searchPermissionName(item, permissionList);
       });
       return item;
@@ -94,7 +92,7 @@ async function getRole (role_id) {
  * 返回一个角色列表
  * @return {Promise<Array[]>}
  */
-async function getRoleList (role_id) {
+async function getRoleList () {
   try {
     const resq = await role.aggregate([
       {
@@ -116,7 +114,7 @@ async function getRoleList (role_id) {
     const permissionList = await permission.find({});
 
     resq.map(item => {
-      item["permission"] = item.permission_identifier.map(item => {
+      item["permission"] = item.permission_identifier_array.map(item => {
         return searchPermissionName(item, permissionList);
       });
       return item;
@@ -201,7 +199,7 @@ async function SearchRole (searchValue) {
           $or: [
             {
               role_name: { $regex : reg }
-            },{
+            }, {
               role_describe: { $regex : reg }
             }
           ]
@@ -211,14 +209,14 @@ async function SearchRole (searchValue) {
           role_name: 1,
           role_id: 1,
           role_describe: 1,
-          permission_identifier: '$info1.permission_identifier'
+          permission_identifier_array: '$info1.permission_identifier'
         }
       }
     ]);
     const permissionList = await permission.find({});
 
     resq.map(item => {
-      item["permission"] = item.permission_identifier.map(item => {
+      item["permission"] = item.permission_identifier_array.map(item => {
         return searchPermissionName(item, permissionList);
       });
       return item;
@@ -285,8 +283,8 @@ async function calcaulatePermissionIdentifier (role_id) {
  */ 
 async function getPermissionList () {
   try {
-    const res = permission.find({})
-    return res
+    const res = permission.find({});
+    return res;
   } catch (e) {
     throw new Error(e.message)
   }
@@ -294,6 +292,7 @@ async function getPermissionList () {
 
 /**
  * 添加角色权限，在角色权限关联表里面进行添加
+ * 这里可以进行优化，要做一次性的添加，不要逐次添加
  * @param role_name
  * @param permission_identifier_array
  * @return {Promise<*>}
