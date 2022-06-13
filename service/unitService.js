@@ -1,6 +1,7 @@
 const unit = require('../model/unit');
-const { db } = require('../model/users');
-const users = require('../model/users')
+// const { db } = require('../model/users');
+const users = require('../model/users');
+const roles = require('../model/role');
 const { SuccessModel, ErrorModel } = require('../utils/resultModel')
 
 class unitService {
@@ -250,7 +251,16 @@ class unitService {
             as: 'agg',
           }
         }, {
+          $lookup: {
+            from: 'roles',
+            localField: 'role_id',
+            foreignField: 'role_id',
+            as: 'roleInfo'
+          }
+        }, {
           $unwind: '$agg'
+        }, {
+          $unwind: '$roleInfo'
         }, {
           $match: {
             unit_id: unit_id
@@ -264,7 +274,7 @@ class unitService {
             account: 1,
             password: 1,
             activation_status: 1,
-            role_name: 1,
+            role_name: '$roleInfo.role_name',
             unit_id: 1
           }
         }
