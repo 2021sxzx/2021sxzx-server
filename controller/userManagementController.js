@@ -95,11 +95,11 @@ async function returnUserList (unit_id) {
  * @param account   用户账户
  * @return {Promise<SuccessModel | ErrorModel>}
  */
-async function updateUserAndReturnList (user_name, password, role_id, account, new_account, unit_id) {
+async function updateUserAndReturnList (user_name, password, role_id, account, new_account, unit_id, my_unit_id) {
   try {
-    await updateUser(user_name, password, role_id, account, new_account);
+    await updateUser(user_name, password, role_id, account, new_account, unit_id);
     const result = await getUserList();
-    const res = await newUserList(result, unit_id);
+    const res = await newUserList(result, my_unit_id);
     return new SuccessModel({
       msg: '修改成功',
       data: res
@@ -164,7 +164,7 @@ async function setActivationAndReturn (account, unit_id) {
 }
 
 async function getUserById (unit_id) {
-  
+
 }
 
 module.exports = {

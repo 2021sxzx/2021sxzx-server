@@ -88,7 +88,7 @@ async function getUserList () {
  * @param new_account
  * @return {Promise<>}
  */
-async function updateUser (user_name, password, role_id, account, new_account) {
+async function updateUser (user_name, password, role_id, account, new_account, unit_id) {
   try {
     isNeedUpdateUserCache = true;
     return await users.updateOne({
@@ -97,7 +97,8 @@ async function updateUser (user_name, password, role_id, account, new_account) {
       user_name: user_name,
       password: password,
       role_id: role_id,
-      account: new_account
+      account: new_account,
+      unit_id: unit_id
     })
   } catch (e) {
     throw e.message
