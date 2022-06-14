@@ -14,6 +14,7 @@ const modelUnit = require('../model/unit')
 const itemService = require('../service/itemService')
 const { dirname } = require('path')
 const modelRoleMapPermission = require('../model/roleMapPermission')
+const modelStatusType = require('../model/statusType')
 
 /**
  * 获取事项状态表
@@ -57,20 +58,20 @@ async function getItemUsers({
             },
             {
                 $lookup: {
-                    from: modelDepartmentMapUsers.collection.name,
-                    localField: 'account',
-                    foreignField: 'account',
-                    as: 'department'
+                    from: modelUnit.collection.name,
+                    localField: 'unit_id',
+                    foreignField: 'unit_id',
+                    as: 'unit'
                 }
             },
             {
                 $addFields: {
-                    department: { $arrayElemAt: ['$department', 0] }
+                    unit: { $arrayElemAt: ['$unit', 0] }
                 }
             },
             {
                 $addFields: {
-                    department_name: '$department.department_name'
+                    department_name: '$unit.unit_name'
                 }
             },
             {
@@ -124,15 +125,21 @@ async function getUserRank({
                 }
             }
         }
-        //---------------------------------
-        //manage_status和audit_status用来筛选两个页面渲染的事项状态
-        //暂时写死
+
         let result = {
-            'manage_status': [0, 1, 2, 3, 4, 5],
-            'audit_status': [1, 2, 5],
+            'manage_status': [],
+            'audit_status': [],
             'operate_status': []
         }
-        //---------------------------------
+
+        let manageStatus = await modelStatusType.findOne({ status_type: 'manage_status' }, { status_ids: 1 })
+        let auditStatus = await modelStatusType.findOne({ status_type: 'audit_status' }, { status_ids: 1 })
+        for (let key in manageStatus.status_ids) {
+            result.manage_status.push(manageStatus.status_ids[key])
+        }
+        for (let key in auditStatus.status_ids) {
+            result.audit_status.push(auditStatus.status_ids[key])
+        }
         for (let key in statusMap) {
             result.operate_status.push(parseInt(key))
         }
