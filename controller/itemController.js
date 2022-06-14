@@ -2176,9 +2176,10 @@ async function changeItemStatus({
                         update: { item_status: next_status }
                     }
                 })
-                //如果是转到审核通过状态，就更新一下事项的发布时间
+                //看一下转到哪个状态
                 for (let k = 0; k < itemStatus.length; k++) {
                     if (itemStatus[k].id === next_status) {
+                        //转到审核通过状态，即发布事项
                         if (itemStatus[k].eng_name === 'Success') {
                             bulkOps.push({
                                 updateOne: {
@@ -2186,7 +2187,7 @@ async function changeItemStatus({
                                     update: { release_time: Date.now() }
                                 }
                             })
-                            //对接一下机器人平台
+                            //对接一下机器人平台，新增词条
                             try {
                                 var region = await modelRegion.findOne({ _id: item.region_id })
                                 if (region === null) {
@@ -2197,13 +2198,17 @@ async function changeItemStatus({
                                 console.log('对接机器人平台出错')
                                 console.log(err.message)
                             }
-                        } else {
-                            //对接一下机器人平台
-                            try {
-                                itemService.deleteQuestions([item.task_code])
-                            } catch (err) {
-                                console.log('对接机器人平台出错')
-                                console.log(err.message)
+                        }
+                        //转到其他状态
+                        else {
+                            //如果是审核通过状态转到其他状态，即撤销已发布的事项，就对接一下机器人平台，删除对应的词条
+                            if (itemStatus[k].eng_name === 'Recall') {
+                                try {
+                                    itemService.deleteQuestions([item.task_code])
+                                } catch (err) {
+                                    console.log('对接机器人平台出错')
+                                    console.log(err.message)
+                                }
                             }
                         }
                         break
