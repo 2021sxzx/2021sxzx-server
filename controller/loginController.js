@@ -44,9 +44,15 @@ async function postLogout(logoutData) {
 async function JudgeIsLogin (token) {
   try {
     const res = await isLogin(token);
-    return res
+    console.log("res", res);
+    return new SuccessModel({
+      msg: "判断结果为data的boolean值",
+      data:  {
+        isLogin: res
+      }
+    })
   } catch (err) {
-    return res
+    return err
   }
 }
 

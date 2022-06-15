@@ -4,7 +4,7 @@ const rediscl = require('../config/redis');
 
 const jwt_secret = "jwtfanhere";
 // token过期时间 设置为10分钟，10分钟后过期，判断登出
-const jwt_expiration = 60 * 10 * 1000;
+const jwt_expiration = 60 * 10;
 const jwt_refresh_expiration = 60 * 10 * 1000;
 //访问敏感路由时验证用户
 function validate_jwt(req, res, next) {

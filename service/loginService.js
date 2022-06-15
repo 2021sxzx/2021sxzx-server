@@ -28,9 +28,9 @@ async function authenticate(loginData) {
                 }
 
                 let refresh_token = generate_refresh_token(64);
-                const maxage = new Date();
-                let refresh_token_maxage = new Date(maxage.valueOf() + jwt_refresh_expiration);
-                console.log(refresh_token_maxage)
+                const maxage = new Date().valueOf();
+                let refresh_token_maxage = new Date(maxage + jwt_refresh_expiration);
+
                 const token = jwt.sign({
                     account: res.account,
                 }, jwt_secret, {
@@ -95,66 +95,47 @@ async function logout(logoutData) {
 // 如果redis的token过期了，那么就代表免密登录失败
 // 过期时间为600s
 async function isLogin (token) {
+  const maxage = new Date().valueOf();
+  let refresh_token_maxage = new Date(maxage + jwt_refresh_expiration);
+  let refresh_token = generate_refresh_token(64);
   try {
     const jw = await jwt.verify(token, jwt_secret);
     const account = jw.account;
 
     const thisTime = new Date();
     let redisData = await redisClient.get(account);
-    console.log(Date(JSON.parse(redisData).expires));
-    const rq = thisTime < Date(JSON.parse(redisData)).expires;
 
-    if (thisTime < Date(JSON.parse(redisData).expires)) {
+    if (thisTime < new Date(JSON.parse(redisData).expires)) {
       // 未过期，将redis刷新一下，重新生成一下token并放到cookie
       const newToken = jwt.sign({
         account: account
       }, jwt_secret, {
         expiresIn: jwt_expiration
       });
-      console.log("未过期")
-      await redisClient.set(res.account, JSON.stringify({
+      redisClient.set(account, JSON.stringify({
         refresh_token: refresh_token,
         expires: refresh_token_maxage,
         token: newToken
       }), redisClient.print);
-      return new SuccessModel({
-        msg: "判断结果为data的boolean值",
-        data: {
-          isLogin: true
-        }
-      })
+      return true;
     } else {
       // 已过期，数据用于在router层中做删除cookie的标识
-      await redisClient.del(res.account);
-      console.log("过期")
-      return new SuccessModel({
-        msg: "判断结果为data的boolean值",
-        data:  {
-          isLogin: false
-        }
-      })
+      await redisClient.del(account);
+      return false;
     }
   } catch (err) {
     // 这里判断是否过期
-    if(err.name == 'TokenExpiredError'){//token过期
-      let str = {
-        iat: 1,
-        exp: 0,
-        msg: 'token过期'
-      }
-      return new ErrorModel({
-        msg: str.msg
-      });
-    } else if (err.name == 'JsonWebTokenError'){//无效的token
-      let str = {
-        iat: 1,
-        exp: 0,
-        msg: '无效的token'
-      }
-      return new ErrorModel({
-        msg: str.msg
-      });
-    }
+    return false;
+    // if(err.name == 'TokenExpiredError'){//token过期
+    //   return false;
+    // } else if (err.name == 'JsonWebTokenError'){//无效的token
+    //   let str = {
+    //     iat: 1,
+    //     exp: 0,
+    //     msg: '无效的token'
+    //   }
+    //   return false;
+    // }
   }
 }
 
