@@ -1,11 +1,7 @@
 const users = require('../model/users');
-const redisClient = require('../config/redis');
 const jwt = require('jsonwebtoken');
 const { 
   jwt_secret,
-  // jwt_expiration,
-  // jwt_refresh_expiration,
-  // generate_refresh_token,
 } = require('../utils/validateJwt');
 const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
@@ -57,7 +53,7 @@ class personalService {
           exp:0,
           msg: 'token过期'
         }
-        throw new ErrorModel({
+        return new ErrorModel({
           msg: str.msg
         });
       }else if(err.name == 'JsonWebTokenError'){//无效的token
@@ -66,7 +62,7 @@ class personalService {
           exp:0,
           msg: '无效的token'
         }
-        throw new ErrorModel({
+        return new ErrorModel({
           msg: str.msg
         });
       }

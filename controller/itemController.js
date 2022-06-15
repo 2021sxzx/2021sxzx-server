@@ -15,6 +15,7 @@ const itemService = require('../service/itemService')
 const { dirname } = require('path')
 const modelRoleMapPermission = require('../model/roleMapPermission')
 const modelStatusType = require('../model/statusType')
+const unitService = require('../service/unitService')
 
 /**
  * 获取事项状态表
@@ -45,12 +46,11 @@ async function getItemUsers({
         var query = {}
         if (user_name !== null) query.user_name = { $regex: user_name }
         if (department_name !== null) {
-            query['$and'] = []
-            let accounts = await modelDepartmentMapUsers.find({ department_name: { $regex: department_name } }, { account: 1 })
-            for (let i = 0, len = accounts.length; i < len; i++) {
-                accounts.push(accounts.shift().account)
+            let units = await modelUnit.find({ unit_name: { $regex: department_name } }, { unit_id: 1 })
+            for (let i = 0, len = units.length; i < len; i++) {
+                units.push(units.shift().unit_id)
             }
-            query['$and'].push({ account: { $in: accounts } })
+            query.unit_id = { $in: units }
         }
         var users = await modelUsers.aggregate([
             {
@@ -204,6 +204,7 @@ async function getRegionTree() {
  * @returns
  */
 async function getItems({
+    user_id = null,
     create_start_time = null,
     create_end_time = null,
     release_start_time = null,
@@ -220,12 +221,28 @@ async function getItems({
     page_num = null
 }) {
     try {
+        if (user_id === null) {
+            throw new Error('需要user_id')
+        }
         var query = {}
         if (item_name !== null) query.item_name = { $regex: item_name }
         if (task_code !== null) query.task_code = { $in: task_code }
         if (item_status !== null) query.item_status = { $in: item_status }
         if (rule_id !== null) query.rule_id = { $in: rule_id }
         query['$and'] = []
+        //----------------------------------------------------
+        //只显示用户所属部门及其下属部门的事项
+        let user = await modelUsers.findOne({ _id: user_id })
+        if (user === null) {
+            throw new Error('user_id不合法')
+        }
+        let units = await unitService._allChildUnitArr(user.unit_id)
+        let users = await modelUsers.find({ unit_id: { $in: units } })
+        for (let i = 0, len = users.length; i < len; i++) {
+            users.push(users.shift()._id)
+        }
+        query['$and'].push({ creator_id: { $in: users } })
+        //------------------------------------------------------
         if (region_code !== null) {
             let regions = await modelRegion.find({ region_code: { $in: region_code } }, { _id: 1 })
             for (let i = 0, len = regions.length; i < len; i++) {
@@ -808,6 +825,7 @@ async function getItemGuide({
  * @returns 
  */
 async function getItemGuides({
+    user_id = null,
     task_status = null,
     task_code = null,
     task_name = null,
@@ -819,11 +837,27 @@ async function getItemGuides({
     page_num = null
 }) {
     try {
+        if (user_id === null) {
+            throw new Error('需要user_id')
+        }
         var query = {}
         if (task_status !== null) query.task_status = task_status
         if (task_code !== null) query.task_code = task_code
         if (task_name !== null) query.task_name = { $regex: task_name }
         query['$and'] = []
+        //----------------------------------------------------
+        //只显示用户所属部门及其下属部门的事项
+        let user = await modelUsers.findOne({ _id: user_id })
+        if (user === null) {
+            throw new Error('user_id不合法')
+        }
+        let units = await unitService._allChildUnitArr(user.unit_id)
+        let users = await modelUsers.find({ unit_id: { $in: units } })
+        for (let i = 0, len = users.length; i < len; i++) {
+            users.push(users.shift()._id)
+        }
+        query['$and'].push({ creator_id: { $in: users } })
+        //------------------------------------------------------
         if (creator_name !== null) {
             let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })
             for (let i = 0, len = users.length; i < len; i++) {
@@ -989,7 +1023,7 @@ async function createItemGuide({
     mobile_applt_website = null,
     submit_documents = null,
     zxpt = null,
-    qr_code = null,
+    // qr_code = null,
     zzzd = null
 }) {
     try {
@@ -1023,7 +1057,7 @@ async function createItemGuide({
             mobile_applt_website: null,
             submit_documents: null,
             zxpt: null,
-            qr_code: null,
+            // qr_code: null,
             zzzd: null,
             // creator: {
             //     id: user_id,
@@ -1065,21 +1099,21 @@ async function createItemGuide({
         if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
-        if (qr_code !== null) {
-            var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
-            if (!fs.existsSync(filePath)) {
-                fs.mkdirSync(filePath)
-            }
-            let fileName = task_code + '_' + Date.now().toString() + '.png'
-            filePath = path.join(filePath, fileName)
-            var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
-            var dataBuffer = Buffer.from(base64Data, 'base64')
-            fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('/imgs/itemGuideQRCode', fileName)
-            // newData.qr_code = qr_code
-        }
+        // if (qr_code !== null) {
+        //     var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
+        //     if (!fs.existsSync(filePath)) {
+        //         fs.mkdirSync(filePath)
+        //     }
+        //     let fileName = task_code + '_' + Date.now().toString() + '.png'
+        //     filePath = path.join(filePath, fileName)
+        //     var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+        //     var dataBuffer = Buffer.from(base64Data, 'base64')
+        //     fs.writeFileSync(filePath, dataBuffer)
+        //     newData.qr_code = path.join('/imgs/itemGuideQRCode', fileName)
+        //     // newData.qr_code = qr_code
+        // }
         if (zzzd !== null) newData.zzzd = zzzd
-        console.log(newData)
+        // console.log(newData)
         var result = await modelTask.create(newData)
         return new SuccessModel({ msg: '创建成功', data: result })
     } catch (err) {
@@ -1162,7 +1196,7 @@ async function updateItemGuide({
     mobile_applt_website = null,
     submit_documents = null,
     zxpt = null,
-    qr_code = null,
+    // qr_code = null,
     zzzd = null
 }) {
     try {
@@ -1247,19 +1281,19 @@ async function updateItemGuide({
         if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
-        if (qr_code !== null) {
-            var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
-            if (!fs.existsSync(filePath)) {
-                fs.mkdirSync(filePath)
-            }
-            let fileName = task_code + '_' + Date.now().toString() + '.png'
-            filePath = path.join(filePath, fileName)
-            var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
-            var dataBuffer = Buffer.from(base64Data, 'base64')
-            fs.writeFileSync(filePath, dataBuffer)
-            newData.qr_code = path.join('/imgs/itemGuideQRCode', fileName)
-            // newData.qr_code = qr_code
-        }
+        // if (qr_code !== null) {
+        //     var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
+        //     if (!fs.existsSync(filePath)) {
+        //         fs.mkdirSync(filePath)
+        //     }
+        //     let fileName = task_code + '_' + Date.now().toString() + '.png'
+        //     filePath = path.join(filePath, fileName)
+        //     var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
+        //     var dataBuffer = Buffer.from(base64Data, 'base64')
+        //     fs.writeFileSync(filePath, dataBuffer)
+        //     newData.qr_code = path.join('/imgs/itemGuideQRCode', fileName)
+        //     // newData.qr_code = qr_code
+        // }
         if (zzzd !== null) newData.zzzd = zzzd
         var result = await modelTask.updateOne({ task_code: task_code }, newData)
         await modelItem.bulkWrite(bulkOps)

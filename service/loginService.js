@@ -1,14 +1,14 @@
 const User = require('../model/users');
 const jwt = require('jsonwebtoken');
 
-const { jwt_secret,
-    jwt_expiration,
-    jwt_refresh_expiration,
-    generate_refresh_token,
+const { 
+  jwt_secret,
+  jwt_expiration,
+  jwt_refresh_expiration,
+  generate_refresh_token,
 } = require('../utils/validateJwt');
 
 const redisClient = require('../config/redis')
-
 
 /**
  * 验证用户身份、生成jwt
@@ -27,7 +27,8 @@ async function authenticate(loginData) {
                 }
 
                 let refresh_token = generate_refresh_token(64);
-                let refresh_token_maxage = new Date() + jwt_refresh_expiration;
+                const maxage = new Date().valueOf();
+                let refresh_token_maxage = new Date(maxage + jwt_refresh_expiration);
 
                 const token = jwt.sign({
                     account: res.account,
@@ -37,7 +38,7 @@ async function authenticate(loginData) {
 
 
                 // 将refresh_token保存在redis中
-                redisClient.set(res.account, JSON.stringify({
+                await redisClient.set(res.account, JSON.stringify({
                     refresh_token: refresh_token,
                     expires: refresh_token_maxage,
                     token: token
@@ -89,9 +90,46 @@ async function logout(logoutData) {
     }
 }
 
+// 判断是否达到免密登录标准
+// 如果redis的token过期了，那么就代表免密登录失败
+// 过期时间为600s
+async function isLogin (token) {
+  const maxage = new Date().valueOf();
+  let refresh_token_maxage = new Date(maxage + jwt_refresh_expiration);
+  let refresh_token = generate_refresh_token(64);
+  try {
+    const jw = await jwt.verify(token, jwt_secret);
+    const account = jw.account;
 
+    const thisTime = new Date();
+    let redisData = await redisClient.get(account);
+
+    if (thisTime < new Date(JSON.parse(redisData).expires)) {
+      // 未过期，将redis刷新一下，重新生成一下token并放到cookie
+      const newToken = jwt.sign({
+        account: account
+      }, jwt_secret, {
+        expiresIn: jwt_expiration
+      });
+      redisClient.set(account, JSON.stringify({
+        refresh_token: refresh_token,
+        expires: refresh_token_maxage,
+        token: newToken
+      }), redisClient.print);
+      return true;
+    } else {
+      // 已过期，数据用于在router层中做删除cookie的标识
+      await redisClient.del(account);
+      return false;
+    }
+  } catch (err) {
+    // 这里判断是否过期
+    return false;
+  }
+}
 
 module.exports = {
     authenticate,
-    logout
+    logout,
+    isLogin
 }

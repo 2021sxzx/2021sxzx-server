@@ -1,6 +1,7 @@
 const {
     authenticate,
-    logout
+    logout,
+    isLogin
 } = require("../service/loginService")
 const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
@@ -40,7 +41,23 @@ async function postLogout(logoutData) {
     }
 }
 
+async function JudgeIsLogin (token) {
+  try {
+    const res = await isLogin(token);
+    console.log("res", res);
+    return new SuccessModel({
+      msg: "判断结果为data的boolean值",
+      data:  {
+        isLogin: res
+      }
+    })
+  } catch (err) {
+    return err
+  }
+}
+
 module.exports = {
     postLogin,
-    postLogout
+    postLogout,
+    JudgeIsLogin
 }

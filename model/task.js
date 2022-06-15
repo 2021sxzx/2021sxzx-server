@@ -158,5 +158,5 @@ const taskSchema = new mongoose.Schema({
     }
 })
 
-const task = mongoose.model('task', taskSchema, 'tempTasks')
+const task = mongoose.model('task', taskSchema, 'tasks')
 module.exports = task

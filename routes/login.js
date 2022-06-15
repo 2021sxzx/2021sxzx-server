@@ -3,13 +3,13 @@ const router = express.Router();
 
 const {
     postLogin,
-    postLogout
+    postLogout,
+    JudgeIsLogin
 } = require("../controller/loginController")
 
 router.post('/v1/login', async (req, res) => {
     let loginData = req.body;
     let data = await postLogin(loginData);
-    console.log(data);
     if (data.code === 200) {
         const jwt = data.data.jwt;
         const token = jwt.token;
@@ -48,6 +48,12 @@ router.post('/v1/logout', async (req, res) => {
     res.status(403).send(data.msg);
   }
 })
+
+router.get('/v1/isLogin', async (req, res) => {
+  const token = req.cookies["auth-token"];
+  const result = await JudgeIsLogin(token);
+  res.json(result);
+});
 
 
 module.exports = router;

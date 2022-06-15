@@ -1,4 +1,3 @@
-// const systemFailure = require("../model/systemFailure");
 const {
     getMongoBackupCycle,
     changeBackupCycleService,
