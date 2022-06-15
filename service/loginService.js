@@ -39,7 +39,8 @@ async function authenticate(loginData) {
                 // 将refresh_token保存在redis中
                 redisClient.set(res.account, JSON.stringify({
                     refresh_token: refresh_token,
-                    expires: refresh_token_maxage
+                    expires: refresh_token_maxage,
+                    token: token
                 }),
                     redisClient.print
                 );
@@ -57,6 +58,7 @@ async function authenticate(loginData) {
                       },
                       role_id: res.role_id,
                       unit_id: res.unit_id,
+                      account: res.account,
                       _id: res._id,
                       refresh_token
                     }

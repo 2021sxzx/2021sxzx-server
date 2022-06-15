@@ -3,11 +3,6 @@ const router = express.Router();
 
 const personalService = require("../service/personalService");
 
-const {
-    jwtVerify
-} = require("../controller/verifyController")
-
-
 function setStatusCode(res, data) {
     if (data.code === 200) {
         res.statusCode = 200
@@ -16,30 +11,8 @@ function setStatusCode(res, data) {
     }
 }
 
-let test = ['login', 'user'];
-
-router.use('/v1/' + test[1], async (req, res, next) => {
-    let token = req.cookies['auth-token'] || '';
-    let data = await jwtVerify(token);
-    setStatusCode(res, data);
-    const user = data.data;
-    console.log('halo', user);
-    console.log(res.statusCode);
-
-    if (data) {
-        req.user = {
-            account: user.account,
-            user_rank: user.user_rank
-        };
-        next();
-    } else {
-        res.json({ message: data.message });
-    }
-});
-
-router.get('/test', async (req, res) => {
-  const k = await personalService.getPersonalMsg("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9");
-  console.log(k);
+router.get('/v1/test', async (req, res) => {
+  await personalService.getPersonalMsg("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiYWNjb3VudCIsImlhdCI6MTY1NTI2NDc2MCwiZXhwIjoxNjU1MjY1MzYwfQ._qsVsrq8XV4V53FJ1v_51uKQseuri9MVbCwPX50RdUo");
   res.json(1);
 });
 
