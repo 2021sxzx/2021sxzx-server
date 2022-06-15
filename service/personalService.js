@@ -1,11 +1,7 @@
 const users = require('../model/users');
-const redisClient = require('../config/redis');
 const jwt = require('jsonwebtoken');
 const { 
   jwt_secret,
-  // jwt_expiration,
-  // jwt_refresh_expiration,
-  // generate_refresh_token,
 } = require('../utils/validateJwt');
 const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 

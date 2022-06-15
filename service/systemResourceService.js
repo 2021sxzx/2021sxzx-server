@@ -69,27 +69,13 @@ async function viewProcessMessage1(){
   //  tasklist 是没有带命令行参数的。可以把这两个命令再cmd里面执行一下看一下效果
   // 注意：命令行获取的都带有换行符，获取之后需要更换换行符。可以执行配合这个使用 str.replace(/[\r\n]/g,""); 去除回车换行符 
   let cmd = process.platform === 'win32' ? 'tasklist' : 'ps aux'
-  //  var data='sdf'
-  //  exec(cmd, function (err, stdout, stderr) {
-  //    if (err) {
-  //      return console.error(err)
-  //    }
-  //    console.log(Object.prototype.toString.call(stdout))
-  //    data=stdout;
-  //    stdout.split('\n').filter((line) => {
-  //      let processMessage = line.trim().split(/\s+/)
-  //      let processName = processMessage[0] //processMessage[0]进程名称 ， processMessage[1]进程id
-  //      if (processName === name) {
-  //        return cb(processMessage[1])
-  //      }
-  //    })
-  //  })
+
    let data = await new Promise((resolve, reject) => {
      exec(cmd, function (err, stdout, stderr) {
        if (err) {
          return console.error(err);
        }
-      //  console.log(Object.prototype.toString.call(stdout));
+
        resolve(stdout);
      });
    });
@@ -123,19 +109,7 @@ function viewProcessMessage2() {
   // return 12;
   var a='haha'
   let data=await new Promise(function(resolve, reject) {
-    /* var cmd = "node -v";//监听80端口拿进程数
-    exec(cmd,function(err, stdout, stderr) {
-      if (err) {
-          console.log(err);
-          reject(err);
-      } else if (stderr.length > 0) {
-          reject(new Error(stderr.toString()));
-      } else {
-          // a=stdout;
-          console.log('stdout:',stdout);
-          resolve();
-      }
-    }) */
+
     var cmd = "netstat -nat|grep -i '80'|wc -l";//监听80端口拿进程数
     exec(cmd,{
         maxBuffer: 1024 * 2000
@@ -162,11 +136,11 @@ function viewProcessMessage2() {
  */
 async function resourceMonitor() {
     try {
-        // var rule = new schedule.RecurrenceRule()
+
         let data=await systemConfiguration.find({'name':'resource_threshold'});
         var error=[];//或者能够在向首页发送通知的时候写入日志里面
         var checkJob = schedule.scheduleJob('*/10 * * * * *', function () {
-            // console.log(data[0].configuration.CPU);
+
             let cpuRule=data[0].configuration.CPU;
             let cpu=getCpuPercentage().then(res=>{
               if(cpuRule.threshold>res.toString()){
@@ -201,19 +175,13 @@ async function resourceMonitor() {
                 console.log(diskRule.result,diskPercentage)
               }
             });
-            // console.log(cpu);
-/*            let disk=getDisk();
-            console.log(disk);
-            let memory=getMemory();
-            console.log(memory);*/
         })
         if(error.length){console.log('+++++++++++++++++++++++++++')}
-        // console.log('下一次检查时间：' + checkJob.nextInvocation())
     } catch (e) {
         return e;
     }
 }
-// resourceMonitor();
+
 module.exports = {
   getCpuPercentage,
   getMemory,

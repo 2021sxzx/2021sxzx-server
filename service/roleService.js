@@ -245,7 +245,6 @@ async function SearchRole (searchValue) {
 
 /**
  * 用于计算本角色对应的权限，返回一个本角色对应的权限列表[字符数组]
- * 已废弃
  * @param role_id
  * @return {Array[]}
  */
@@ -273,7 +272,7 @@ async function calcaulatePermission (role_id) {
     throw new Error(e.message)
   }
 }
-// 已废弃
+
 async function calcaulatePermissionIdentifier (role_id) {
   try {
     // 获取角色权限索引值列表

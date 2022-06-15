@@ -29,7 +29,6 @@ const getDay = (day) => {
     var tDate = today.getDate()
     tMonth = doHandleMonth(tMonth + 1)
     tDate = doHandleMonth(tDate)
-    // console.log(`${tYear}/${tMonth}/${tDate}`);
     return `${tYear}-${tMonth}-${tDate}`
 }
 // 获取近15天日期方法
@@ -78,7 +77,6 @@ async function getSystemLog2() {
             var tDate = today.getDate()
             tMonth = doHandleMonth(tMonth + 1)
             tDate = doHandleMonth(tDate)
-            // console.log(`${tYear}/${tMonth}/${tDate}`);
             return `${tYear}-${tMonth}-${tDate}`
         }
 // 获取近15天日期方法
@@ -98,7 +96,6 @@ async function getSystemLog2() {
             }
             console.log(datalist);
             return datalist.reverse();
-            // return xdata.reverse();
         }
 
         function doHandleMonth(month) {
@@ -137,7 +134,6 @@ async function getItemBrowseCount() {
         var itemBrowseCount = []
         chart2().forEach(item => {
             let name = item + ',' + '/api/v1/sideBar'
-            // console.log(name,':',countedNames[name])
             if (countedNames[name]) itemBrowseCount.push([name.substring(0, 10), countedNames[name]])
             else itemBrowseCount.push([name.substring(0, 10), 0])
         })
@@ -167,10 +163,6 @@ async function getAllSystemLogDetail() {
  */
 async function getSearchSystemLog(searchData) {
     let {myselfID, today, thisWeek} = searchData
-    /*    if(!myself) {
-          myself = false
-        }*/
-    // console.log('myself:',myself)
     if (!today) {
         today = false;
     }
@@ -191,12 +183,6 @@ async function getSearchSystemLog(searchData) {
  * @returns {Promise<ErrorModel|SuccessModel>}
  */
 async function getAdvancedSearchSystemLog(searchData) {
-    // if(!today) {
-    //   today = false;
-    // }
-    // if(!thisWeek) {
-    //   thisWeek = false
-    // }
     try {
       let data = await searchByAdvancedCondition(searchData)
       return new SuccessModel({msg: '查询成功', data:data});
