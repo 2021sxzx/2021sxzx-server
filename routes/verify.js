@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
+const personalService = require("../service/personalService");
+
 const {
     jwtVerify
 } = require("../controller/verifyController")
@@ -35,5 +37,10 @@ router.use('/v1/' + test[1], async (req, res, next) => {
     }
 });
 
+router.get('/test', async (req, res) => {
+  const k = await personalService.getPersonalMsg("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9");
+  console.log(k);
+  res.json(1);
+});
 
 module.exports = router;

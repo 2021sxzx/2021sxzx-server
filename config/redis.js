@@ -11,7 +11,7 @@ const redisClient = redis.createClient({
   });
 
 redisClient.on('connect', () => {
-    console.log(123);
+    console.log("redis连接成功");
 })
 
 redisClient.on('error', (error) => {

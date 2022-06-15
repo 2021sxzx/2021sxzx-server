@@ -67,6 +67,6 @@ router.post('/v1/searchRole', async (req, res, next) => {
   let data = await searchRoleAndReturnList(searchValue)
   setStatusCode(res, data)
   res.json(data)
-})
+});
 
 module.exports = router;

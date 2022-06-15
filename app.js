@@ -22,6 +22,7 @@ const systemBasicRouter = require('./routes/systemBasic.js')
 const systemBackupRouter=require('./routes/systemBackup')
 const userDepartmentRouter = require('./routes/userDepartment');
 const imageRouter = require('./routes/image');
+// const verify = require('./routes/verify');
 
 
 const { validate_jwt } = require('./utils/validateJwt');
@@ -85,6 +86,7 @@ app.use(validate_jwt);
 */
 
 // 处理路由
+// app.use('/api', verify);
 app.use('/api', unitRouter);
 app.use('/api', commentRouter);
 app.use('/api', taskRouter)

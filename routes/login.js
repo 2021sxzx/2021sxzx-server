@@ -37,11 +37,11 @@ router.post('/v1/login', async (req, res) => {
 });
 
 router.post('/v1/logout', async (req, res) => {
-  let logoutData = req.body;
+  let {logoutData}  = req.body;
   let data = await postLogout(logoutData);
   if (data.code === 200) {
     // 设置过期时间，让cookie被清除
-    res.clearCookie('auth-token');
+    res.clearCookie("auth-token");
     res.json(data);
   } else if (data.code === 404) {
     console.log(data.msg);
