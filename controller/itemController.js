@@ -14,6 +14,7 @@ const modelUnit = require('../model/unit')
 const itemService = require('../service/itemService')
 const { dirname } = require('path')
 const modelRoleMapPermission = require('../model/roleMapPermission')
+const modelStatusType = require('../model/statusType')
 
 /**
  * 获取事项状态表
@@ -57,20 +58,20 @@ async function getItemUsers({
             },
             {
                 $lookup: {
-                    from: modelDepartmentMapUsers.collection.name,
-                    localField: 'account',
-                    foreignField: 'account',
-                    as: 'department'
+                    from: modelUnit.collection.name,
+                    localField: 'unit_id',
+                    foreignField: 'unit_id',
+                    as: 'unit'
                 }
             },
             {
                 $addFields: {
-                    department: { $arrayElemAt: ['$department', 0] }
+                    unit: { $arrayElemAt: ['$unit', 0] }
                 }
             },
             {
                 $addFields: {
-                    department_name: '$department.department_name'
+                    department_name: '$unit.unit_name'
                 }
             },
             {
@@ -124,15 +125,21 @@ async function getUserRank({
                 }
             }
         }
-        //---------------------------------
-        //manage_status和audit_status用来筛选两个页面渲染的事项状态
-        //暂时写死
+
         let result = {
-            'manage_status': [0, 1, 2, 3, 4, 5],
-            'audit_status': [1, 2, 5],
+            'manage_status': [],
+            'audit_status': [],
             'operate_status': []
         }
-        //---------------------------------
+
+        let manageStatus = await modelStatusType.findOne({ status_type: 'manage_status' }, { status_ids: 1 })
+        let auditStatus = await modelStatusType.findOne({ status_type: 'audit_status' }, { status_ids: 1 })
+        for (let key in manageStatus.status_ids) {
+            result.manage_status.push(manageStatus.status_ids[key])
+        }
+        for (let key in auditStatus.status_ids) {
+            result.audit_status.push(auditStatus.status_ids[key])
+        }
         for (let key in statusMap) {
             result.operate_status.push(parseInt(key))
         }
@@ -2169,9 +2176,10 @@ async function changeItemStatus({
                         update: { item_status: next_status }
                     }
                 })
-                //如果是转到审核通过状态，就更新一下事项的发布时间
+                //看一下转到哪个状态
                 for (let k = 0; k < itemStatus.length; k++) {
                     if (itemStatus[k].id === next_status) {
+                        //转到审核通过状态，即发布事项
                         if (itemStatus[k].eng_name === 'Success') {
                             bulkOps.push({
                                 updateOne: {
@@ -2179,7 +2187,7 @@ async function changeItemStatus({
                                     update: { release_time: Date.now() }
                                 }
                             })
-                            //对接一下机器人平台
+                            //对接一下机器人平台，新增词条
                             try {
                                 var region = await modelRegion.findOne({ _id: item.region_id })
                                 if (region === null) {
@@ -2190,13 +2198,17 @@ async function changeItemStatus({
                                 console.log('对接机器人平台出错')
                                 console.log(err.message)
                             }
-                        } else {
-                            //对接一下机器人平台
-                            try {
-                                itemService.deleteQuestions([item.task_code])
-                            } catch (err) {
-                                console.log('对接机器人平台出错')
-                                console.log(err.message)
+                        }
+                        //转到其他状态
+                        else {
+                            //如果是审核通过状态转到其他状态，即撤销已发布的事项，就对接一下机器人平台，删除对应的词条
+                            if (itemStatus[k].eng_name === 'Recall') {
+                                try {
+                                    itemService.deleteQuestions([item.task_code])
+                                } catch (err) {
+                                    console.log('对接机器人平台出错')
+                                    console.log(err.message)
+                                }
                             }
                         }
                         break

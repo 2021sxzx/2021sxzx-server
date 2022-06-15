@@ -172,7 +172,6 @@ class sideBarData {
         }
         return [...map.values()];
       }
-      console.log(res);
       // 备份，注意这里是所有的数据，针对不同的角色也可以无需更新allData
       this.allData = deWeight(res);
       return deWeight(res).filter(item => { return item.role_id == role_id });

@@ -130,49 +130,12 @@ async function deleteUser (account) {
 async function searchUser (searchValue) {
   const reg = new RegExp(searchValue, 'i')
   try {
-    const res = await users.aggregate([
-      {
-        $lookup: {
-          from: 'units',
-          localField: 'unit_id',
-          foreignField: 'unit_id',
-          as: "info1"
-        }
-      }, {
-        $lookup: {
-          from: 'roles',
-          localField: 'role_id',
-          foreignField: 'role_id',
-          as: "info2"
-        }
-      }, {
-        $unwind: "$info1"
-      }, {
-        $unwind: "$info2"
-      }, {
-        $match: {
-          $or: [
-            {
-              user_name: {$regex: reg}
-            }, {
-              account: {$regex: reg}
-            }
-          ]
-        }
-      }, {
-        $project: {
-          _id: 0,
-          user_name: 1,
-          account: 1,
-          password: 1,
-          activation_status: 1,
-          unit_id: 1,
-          unit_name: '$info1.unit_name',
-          role_id: 1,
-          role_name: '$info2.role_name'
-        }
-      }
-    ]);
+    if (userCache == null) {
+      await getUserList();
+    }
+    let res = userCache.filter(item => {
+      return reg.test(item.user_name) || reg.test(item.unit_name) || reg.test(item.role_name)
+    })
     return res;
   } catch (e) {
     throw e.message
