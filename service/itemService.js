@@ -458,7 +458,8 @@ async function addQuestion(task_code, region_code) {
             return
         }
         var questionTitle = task.task_name + region_code
-        var answerDesc = '<p>网站首页地址: </p><p>' + task.wsyy + '</p>' +
+        var answerDesc = '<p>智能咨询系统地址: </p><p>10.196.130.27</p>' +
+            '<p>网站首页地址: </p><p>' + task.wsyy + '</p>' +
             '<p>办理条件: </p><p>' + task.conditions + '</p>' +
             '<p>窗口办理流程: </p><p>' + task.ckbllc + '</p>' +
             '<p>网上办理流程: </p><p>' + task.wsbllc + '</p>' +
@@ -470,7 +471,8 @@ async function addQuestion(task_code, region_code) {
             }
         }
         answerDesc = answerDesc + '</p>'
-        var answerTxt = '网站首页地址: ' + task.wsyy +
+        var answerTxt = '智能咨询系统地址: 10.196.130.27' +
+            '网站首页地址: ' + task.wsyy +
             '办理条件: ' + task.conditions +
             '窗口办理流程: ' + task.ckbllc +
             '网上办理流程: ' + task.wsbllc +
