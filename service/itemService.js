@@ -1161,25 +1161,24 @@ async function checkAllRegionsItems(regions, time) {
         if (regions.length <= 0) {
             regions = await getAllChildRegions(GZ_REGIONCODE)
             //检查一下区划信息
-            var inLocalNinRemote = []   //数据库有但是省政务没有
-            var inRemoteNinLocal = []   //省政务有但是数据库没有
-            try {
-                inLocalNinRemote = await modelRegion.find({ region_code: { $nin: regions } }, { region_code: 1 })
-                for (let i = 0, len = inLocalNinRemote.length; i < len; i++) {
-                    let region = inLocalNinRemote.shift()
-                    inLocalNinRemote.push(region.region_code)
-                }
-                for (let i = 0, len = regions.length; i < len; i++) {
-                    let exist = await modelRegion.exists({ region_code: regions[i] })
-                    if (exist === false) {
-                        inRemoteNinLocal.push(regions[i])
-                    }
-                }
-            } catch (err) {
-                console.log('检查区划信息失败')
-                throw new Error(err.message)
-            }
-
+            // var inLocalNinRemote = []   //数据库有但是省政务没有
+            // var inRemoteNinLocal = []   //省政务有但是数据库没有
+            // try {
+            //     inLocalNinRemote = await modelRegion.find({ region_code: { $nin: regions } }, { region_code: 1 })
+            //     for (let i = 0, len = inLocalNinRemote.length; i < len; i++) {
+            //         let region = inLocalNinRemote.shift()
+            //         inLocalNinRemote.push(region.region_code)
+            //     }
+            //     for (let i = 0, len = regions.length; i < len; i++) {
+            //         let exist = await modelRegion.exists({ region_code: regions[i] })
+            //         if (exist === false) {
+            //             inRemoteNinLocal.push(regions[i])
+            //         }
+            //     }
+            // } catch (err) {
+            //     console.log('检查区划信息失败')
+            //     throw new Error(err.message)
+            // }
         }
         var orgs = await getOrganOfRegions(regions)
     } catch (err) {
