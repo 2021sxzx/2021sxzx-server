@@ -22,7 +22,8 @@ const systemBasicRouter = require('./routes/systemBasic.js')
 const systemBackupRouter=require('./routes/systemBackup')
 const userDepartmentRouter = require('./routes/userDepartment');
 const imageRouter = require('./routes/image');
-// const verify = require('./routes/verify');
+const personalRouter = require('./routes/personal');
+const verify = require('./routes/verify');
 
 
 const { validate_jwt } = require('./utils/validateJwt');
@@ -86,7 +87,7 @@ app.use(validate_jwt);
 */
 
 // 处理路由
-// app.use('/api', verify);
+app.use('/api', verify);
 app.use('/api', unitRouter);
 app.use('/api', commentRouter);
 app.use('/api', taskRouter)
@@ -104,6 +105,7 @@ app.use('/api', systemMetaDataRouter)
 app.use('/api', systemBackupRouter)
 app.use('/api', imageRouter)
 app.use('/api', userDepartmentRouter)
+app.use('/api', personalRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
