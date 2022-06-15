@@ -9,7 +9,6 @@ const {
 } = require('../utils/validateJwt');
 
 const redisClient = require('../config/redis')
-const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
 /**
  * 验证用户身份、生成jwt
@@ -126,16 +125,6 @@ async function isLogin (token) {
   } catch (err) {
     // 这里判断是否过期
     return false;
-    // if(err.name == 'TokenExpiredError'){//token过期
-    //   return false;
-    // } else if (err.name == 'JsonWebTokenError'){//无效的token
-    //   let str = {
-    //     iat: 1,
-    //     exp: 0,
-    //     msg: '无效的token'
-    //   }
-    //   return false;
-    // }
   }
 }
 
