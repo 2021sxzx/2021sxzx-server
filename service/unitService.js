@@ -161,6 +161,7 @@ class unitService {
       allData = this.allData;
       const root = await this.findRoot(allData, unit_id);
       await this.renderTree(root, allData);
+
       return new SuccessModel({
         msg: '单位信息处理成功',
         data: root,
@@ -316,6 +317,32 @@ class unitService {
       root2 = allUnit.filter(item => { return item.unit_id == parent_unit });
     }
     return false;
+  }
+
+  // 所有的孩子节点[包括自己]
+  async _allChildUnitArr (unit_id) {
+    if (this.allUnit == null) {
+      await this.getAggregate();
+    }
+
+    async function asyncFilter (arr, AsyncCallback) {
+      const calFilterArr = await Promise.all(arr.map(AsyncCallback));
+      const res = arr.filter((_v, index) => {
+        return calFilterArr[index]
+      });
+      return res;
+    }
+
+    const res = await asyncFilter(this.allUnit, async (item) => {
+      const result = await this.calculateWhoIsParent(unit_id, item.unit_id);
+      return result;
+    })
+
+    const result = res.map(item => {
+      return item.unit_id;
+    })
+
+    return result;
   }
 }
 

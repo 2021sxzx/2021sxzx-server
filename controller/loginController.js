@@ -1,6 +1,7 @@
 const {
     authenticate,
-    logout
+    logout,
+    isLogin
 } = require("../service/loginService")
 const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
@@ -40,7 +41,17 @@ async function postLogout(logoutData) {
     }
 }
 
+async function JudgeIsLogin (token) {
+  try {
+    const res = await isLogin(token);
+    return res
+  } catch (err) {
+    return res
+  }
+}
+
 module.exports = {
     postLogin,
-    postLogout
+    postLogout,
+    JudgeIsLogin
 }

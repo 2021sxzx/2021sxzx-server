@@ -57,7 +57,7 @@ class personalService {
           exp:0,
           msg: 'token过期'
         }
-        throw new ErrorModel({
+        return new ErrorModel({
           msg: str.msg
         });
       }else if(err.name == 'JsonWebTokenError'){//无效的token
@@ -66,7 +66,7 @@ class personalService {
           exp:0,
           msg: '无效的token'
         }
-        throw new ErrorModel({
+        return new ErrorModel({
           msg: str.msg
         });
       }
