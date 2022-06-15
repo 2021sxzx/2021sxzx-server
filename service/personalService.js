@@ -3,9 +3,9 @@ const redisClient = require('../config/redis');
 const jwt = require('jsonwebtoken');
 const { 
   jwt_secret,
-  jwt_expiration,
-  jwt_refresh_expiration,
-  generate_refresh_token,
+  // jwt_expiration,
+  // jwt_refresh_expiration,
+  // generate_refresh_token,
 } = require('../utils/validateJwt');
 const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
@@ -23,7 +23,16 @@ class personalService {
             as: "info1"
           }
         }, {
+          $lookup: {
+            from: 'units',
+            localField: 'unit_id',
+            foreignField: 'unit_id',
+            as: 'unitInfo'
+          }
+        }, {
           $unwind: '$info1'
+        }, {
+          $unwind: '$unitInfo'
         }, {
           $match: {
             account: account
@@ -32,7 +41,8 @@ class personalService {
           $project: {
             account: 1,
             role_name: '$info1.role_name',
-            user_name: 1
+            user_name: 1,
+            unit_name: '$unitInfo.unit_name'
           }
         }
       ]);
