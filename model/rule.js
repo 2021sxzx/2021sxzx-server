@@ -36,5 +36,5 @@ const ruleSchema = new mongoose.Schema({
     }
 })
 
-const rule = mongoose.model('rule', ruleSchema, 'tempRule')
+const rule = mongoose.model('rule', ruleSchema, 'rules')
 module.exports = rule
