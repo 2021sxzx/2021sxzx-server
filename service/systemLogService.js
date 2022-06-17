@@ -30,13 +30,8 @@ function chargeTypeChange(value) {
  */
   async function getUserById(id) {
   try {
-    // console.log("first")
-    // return "id";
-    // let data =await users.find({ 'account':'noKPI' });
     let data =await users.find({ '_id':id });
-    // console.log(data[0])
     return {name:data[0].user_name,account:data[0].account};
-    // return data
   } catch (e) {
     return e.message;
   }

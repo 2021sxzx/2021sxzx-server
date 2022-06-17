@@ -1,9 +1,59 @@
 const users = require('../model/users');
+const unit = require('../model/unit');
+const role = require('../model/role');
 
 // 用户数据拉取之后放到这里，下次便于取出，无需交互数据库
 let userCache = null;
 // 一个控制是否将数据重新从数据库拉取的变量
 let isNeedUpdateUserCache = false;
+
+let allUnit = null;
+let allRole = null;
+
+const inisilize = async () => {
+  try {
+    userCache = await users.aggregate([
+      {
+        $lookup: {
+          from: 'units',
+          localField: 'unit_id',
+          foreignField: 'unit_id',
+          as: "info1"
+        }
+      }, {
+        $lookup: {
+          from: 'roles',
+          localField: 'role_id',
+          foreignField: 'role_id',
+          as: "info2"
+        }
+      }, {
+        $unwind: "$info1"
+      }, {
+        $unwind: "$info2"
+      }, {
+        $project: {
+          _id: 0,
+          user_name: 1,
+          account: 1,
+          password: 1,
+          activation_status: 1,
+          unit_id: 1,
+          unit_name: '$info1.unit_name',
+          role_id: 1,
+          role_name: '$info2.role_name'
+        }
+      }
+    ]);
+    allUnit = await unit.find({});
+    allRole = await role.find({});
+  } catch (error) {
+    await inisilize()
+  }
+};
+
+// 初始化信息[信息拉取到后台]
+inisilize();
 
 /**
  * 添加后台用户
@@ -182,25 +232,54 @@ async function setActivation (account) {
     throw e.message
   }
 }
+
+async function findRoleNameAndReturnId (role_name, allRole) {
+  let id = null;
+  allRole.forEach(item => {
+    if (item.role_name == role_name) {
+      id = item.role_id;
+    }
+  });
+  return id ? id : 15815115112;
+}
+
+async function findUnitNameAndReturnId (unit_name, allUnit) {
+  let id = null;
+  allUnit.forEach(item => {
+    if (item.unit_name == unit_name) {
+      id = item.unit_id;
+    }
+  });
+  return id ? id : 1653018366962;
+}
+
 // 批量添加，注意要添加unit_id
 async function batchImportedUser (imported_array) {
   try {
+    if (allUnit == null || allRole == null) {
+      allUnit = await unit.find({});
+      allRole = await role.find({});
+    }
     isNeedUpdateUserCache = true;
-    let mapArray = imported_array.map(item => {
-      return {
-        user_name: item.user_name,
-        role_id: item.role_id,
-        unit_id: item.unit_id,
-        account: item.account,
-        password: item.password,
-        activation_status: 1,
-        user_rank: 0,
-      }
-    })
+    let mapArray = await Promise.all(
+      imported_array.map(async item => {
+        const role_id = await findRoleNameAndReturnId(item.role_name, allRole);
+        const unit_id = await findUnitNameAndReturnId(item.unit_name, allUnit);
+        return {
+          user_name: item.user_name,
+          role_id: role_id,
+          unit_id: unit_id,
+          account: item.account,
+          password: item.password,
+          activation_status: 1,
+          user_rank: 0,
+        }
+      })
+    )
     let res = await users.insertMany(mapArray, (err) => { console.log(err) });
     return res;
   } catch {
-    throw e.message
+    throw e.message;
   }
 }
 
