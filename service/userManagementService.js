@@ -227,15 +227,17 @@ async function batchImportedUser (imported_array) {
     )
 
     // 将 userCache 变成哈希表，实现 O(1) 查询
-    const userCacheMap = new Set(userCache.map((item)=>{return [item.account,true]}))
+    const userCacheMap = new Map(userCache.map((item)=>{return [item.account,true]}))
     // 去除重复导入的账号
-    mapArray = mapArray.filter((items,)=>{
+    mapArray = mapArray.filter((items)=>{
+      console.log('items',items.account,!(userCacheMap.has(items.account)))
       return !(userCacheMap.has(items.account))
     })
+    console.log('mapArray',mapArray)
+    // console.log('userCacheMap',userCacheMap)
 
     isNeedUpdateUserCache = true;
-    let res = await users.create(mapArray);
-    return res;
+    return await users.create(mapArray);
   } catch {
     throw e.message;
   }
