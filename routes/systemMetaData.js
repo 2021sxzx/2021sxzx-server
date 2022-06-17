@@ -128,16 +128,13 @@ router.get('/v1/site-settings',function(req,res){
     ServiceHotline:"171",
     Address:"广州",
     Disclaimers:"不关我事，昨天很早就睡了"
-  })
+  });
 })
 
 //提交修改
 router.post('/v1/site-settings',function(req,res){
-  // res.send("收到")
   console.log('收到')
   console.log(req.body)
-    // a=req.body.WebsiteAbbreviation
-    // b=req.body.WebsiteDomainName
   res.send('结束')
 })
 
@@ -148,7 +145,6 @@ router.get('/v1/core-settings',function(req,res,next){
     })
 })
 router.post('/v1/core-settings',function(req,res){
-    // res.send("收到")
     console.log('收到核心设置')
     console.log(req.body)
     res.send('结束')
@@ -160,7 +156,6 @@ router.get('/v1/interface-configuration',function(req,res,next){
     })
 })
 router.post('/v1/interface-configuration',function(req,res){
-    // res.send("收到")
     console.log('收到核心设置')
     console.log(req.body)
     res.send('结束')
