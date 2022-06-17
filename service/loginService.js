@@ -15,8 +15,19 @@ const redisClient = require('../config/redis')
  * @param loginData
  * @returns {Promise<*>}
  */
+
+async function selectRedisDatabase (db) {
+  try {
+    await redisClient.select(db);
+    console.log(`已切换到${db}`);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 async function authenticate(loginData) {
     try {
+        await selectRedisDatabase (1)
         const { account, password } = loginData;
         let res = await User.findOne({ account: account });
         if (res !== null) {
@@ -83,6 +94,7 @@ async function authenticate(loginData) {
  */
 async function logout(logoutData) {
     try {
+        await selectRedisDatabase (1)
         let res = await redisClient.del(logoutData.account);
         return res;
     } catch (e) {
@@ -94,6 +106,7 @@ async function logout(logoutData) {
 // 如果redis的token过期了，那么就代表免密登录失败
 // 过期时间为600s
 async function isLogin (token) {
+  await selectRedisDatabase (1)
   const maxage = new Date().valueOf();
   let refresh_token_maxage = new Date(maxage + jwt_refresh_expiration);
   let refresh_token = generate_refresh_token(64);
