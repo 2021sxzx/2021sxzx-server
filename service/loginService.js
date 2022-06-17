@@ -21,13 +21,12 @@ async function selectRedisDatabase (db) {
     await redisClient.select(db);
     console.log(`已切换到${db}`);
   } catch (error) {
-    console.log(error);
+    await redisClient.select(db);
   }
 }
 
 async function authenticate(loginData) {
     try {
-        await selectRedisDatabase (1)
         const { account, password } = loginData;
         let res = await User.findOne({ account: account });
         if (res !== null) {
@@ -47,7 +46,8 @@ async function authenticate(loginData) {
                     expiresIn: jwt_expiration
                 });
 
-
+                // 切换redis数据库至db1
+                await selectRedisDatabase (1)
                 // 将refresh_token保存在redis中
                 await redisClient.set(res.account, JSON.stringify({
                     refresh_token: refresh_token,
@@ -56,7 +56,7 @@ async function authenticate(loginData) {
                 }),
                     redisClient.print
                 );
-
+                await selectRedisDatabase (0)
                 return ({
                     msg: 'You have successfully logged in!',
                     code: 200,
@@ -81,7 +81,6 @@ async function authenticate(loginData) {
         } else {
             return ({ msg: '该账号不存在.', code: 403 });
         }
-
     } catch (e) {
         return e.message;
     }
@@ -93,11 +92,13 @@ async function authenticate(loginData) {
  * @returns {Promise<EnforceDocument<unknown, {}>[]>}
  */
 async function logout(logoutData) {
+    await selectRedisDatabase (1)
     try {
-        await selectRedisDatabase (1)
         let res = await redisClient.del(logoutData.account);
+        await selectRedisDatabase (0)
         return res;
     } catch (e) {
+        await selectRedisDatabase (0)
         throw new Error(e.message)
     }
 }
@@ -129,13 +130,17 @@ async function isLogin (token) {
         expires: refresh_token_maxage,
         token: newToken
       }), redisClient.print);
+      await selectRedisDatabase (0)
       return true;
     } else {
+      await selectRedisDatabase (1)
       // 已过期，数据用于在router层中做删除cookie的标识
       await redisClient.del(account);
+      await selectRedisDatabase (0);
       return false;
     }
   } catch (err) {
+    await selectRedisDatabase (0);
     // 这里判断是否过期
     return false;
   }
