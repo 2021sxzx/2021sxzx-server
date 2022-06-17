@@ -53,12 +53,9 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    console.log(isNeedUpdateUserCache)
-    if (userCache!= null && !isNeedUpdateUserCache) {
-      console.log("走了缓存")
+    if (userCache != null && !isNeedUpdateUserCache) {
       return userCache;
     } else {
-      console.log("走了数据库");
       const res = await users.aggregate([
         {
           $lookup: {
@@ -80,7 +77,7 @@ async function getUserList () {
           $unwind: "$info2"
         }, {
           $project: {
-            _id: 0,
+            _id: 1,
             user_name: 1,
             account: 1,
             password: 1,
@@ -92,10 +89,7 @@ async function getUserList () {
           }
         }
       ]);
-      console.log("res", res.length);
       userCache = res;
-
-      console.log("userCache", userCache.length);
       isNeedUpdateUserCache = false;
       return res;
     }
@@ -162,18 +156,6 @@ async function searchUser (searchValue) {
       return reg.test(item.user_name) || reg.test(item.unit_name) || reg.test(item.role_name)
     });
   } catch (e) {
-    throw e.message
-  }
-}
-
-async function isActivation (account) {
-  try {
-    return await users.findOne({
-      account
-    }, {
-      activation_status: 1
-    });
-  } catch {
     throw e.message
   }
 }
@@ -259,6 +241,16 @@ async function batchImportedUser (imported_array) {
   }
 }
 
+async function getUserById (id) {
+  if (!userCache) {
+    await getUserList();
+  }
+  const res = await userCache.filter(item => {
+    return item._id == id;
+  });
+  return res[0];
+}
+
 module.exports = {
   addUser,
   getUserList,
@@ -266,5 +258,6 @@ module.exports = {
   deleteUser,
   searchUser,
   setActivation,
-  batchImportedUser
+  batchImportedUser,
+  getUserById
 }

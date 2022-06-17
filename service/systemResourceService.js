@@ -53,7 +53,7 @@ async function getDisk() {
   try {
     let disk = await new Promise((resolve, reject) => {
       si.fsSize()
-        .then((data) => {resolve(data);})
+        .then((data) => {resolve(data);console.log("first",data)})
         .catch((error) => console.error(error));
     });
     return disk;
@@ -141,12 +141,16 @@ async function resourceMonitor() {
         var error=[];//或者能够在向首页发送通知的时候写入日志里面
         var checkJob = schedule.scheduleJob('*/10 * * * * *', function () {
 
+            // 目前没有给别人响应，需要自己写进log
+            // 发布-监听模式
             let cpuRule=data[0].configuration.CPU;
             let cpu=getCpuPercentage().then(res=>{
+              // 存疑点
               if(cpuRule.threshold>res.toString()){
                 console.log('res:', res);
               }else{
-                console.log(cpuRule.result,res)
+                // 报错
+                console.log(cpuRule.result,res);
               }
             });
             let memoryRule=data[0].configuration.Memory;
