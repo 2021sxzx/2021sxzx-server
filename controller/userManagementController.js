@@ -37,14 +37,13 @@ async function newUserList (res, unit_id) {
 /**
  * 用来添加一个用户，然后返回添加后的用户列表
  * @param userInfo  用户信息对象，有[user_name][account][password][role_name]
- * @return {Promise<SuccessModel | ErrorModel>} 
+ * @return {Promise<SuccessModel | ErrorModel>}
  */
 async function addUserAndReturnList (userInfo, unit_id) {
   try {
     await addUser(userInfo);
     const result = await getUserList();
     const res = await newUserList(result, unit_id);
-    // newUserList()
     return new SuccessModel({
       msg: '添加成功',
       data: res
@@ -57,13 +56,14 @@ async function addUserAndReturnList (userInfo, unit_id) {
 /**
  * 批量添加用户
  */
-async function addUserBatchingAndReturnList (imported_array) {
+async function addUserBatchingAndReturnList (imported_array, unit_id) {
   try {
     await batchImportedUser(imported_array);
-    const res_ = await getUserList();
+    const result = await getUserList();
+    const res = await newUserList(result, unit_id);
     return new SuccessModel({
       msg: '添加成功',
-      data: res_
+      data: res
     })
   } catch (error) {
     return new ErrorModel({msg: error.message});
@@ -72,7 +72,7 @@ async function addUserBatchingAndReturnList (imported_array) {
 
 /**
  * 用于返回一个变化后的全体列表
- * @return {Promise<SuccessModel | ErrorModel>} 
+ * @return {Promise<SuccessModel | ErrorModel>}
  */
 async function returnUserList (unit_id) {
   try {
@@ -129,7 +129,7 @@ async function deleteUserAndReturnList (account, unit_id) {
 }
 
 /**
- * @param searchValue 
+ * @param searchValue
  */
 async function searchUserAndReturnList (searchValue, unit_id) {
   try {
