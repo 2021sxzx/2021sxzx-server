@@ -12,42 +12,11 @@ let allRole = null;
 
 const inisilize = async () => {
   try {
-    userCache = await users.aggregate([
-      {
-        $lookup: {
-          from: 'units',
-          localField: 'unit_id',
-          foreignField: 'unit_id',
-          as: "info1"
-        }
-      }, {
-        $lookup: {
-          from: 'roles',
-          localField: 'role_id',
-          foreignField: 'role_id',
-          as: "info2"
-        }
-      }, {
-        $unwind: "$info1"
-      }, {
-        $unwind: "$info2"
-      }, {
-        $project: {
-          _id: 0,
-          user_name: 1,
-          account: 1,
-          password: 1,
-          activation_status: 1,
-          unit_id: 1,
-          unit_name: '$info1.unit_name',
-          role_id: 1,
-          role_name: '$info2.role_name'
-        }
-      }
-    ]);
     allUnit = await unit.find({});
     allRole = await role.find({});
+    console.log("拉取用户成功")
   } catch (error) {
+    console.log("拉取用户失败")
     await inisilize()
   }
 };
@@ -84,9 +53,12 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    if (userCache !== null && !isNeedUpdateUserCache) {
-      return userCache
+    console.log(isNeedUpdateUserCache)
+    if (userCache!= null && !isNeedUpdateUserCache) {
+      console.log("走了缓存")
+      return userCache;
     } else {
+      console.log("走了数据库");
       const res = await users.aggregate([
         {
           $lookup: {
@@ -120,7 +92,10 @@ async function getUserList () {
           }
         }
       ]);
+      console.log("res", res.length);
       userCache = res;
+
+      console.log("userCache", userCache.length);
       isNeedUpdateUserCache = false;
       return res;
     }
@@ -183,10 +158,9 @@ async function searchUser (searchValue) {
     if (userCache == null) {
       await getUserList();
     }
-    let res = userCache.filter(item => {
+    return userCache.filter(item => {
       return reg.test(item.user_name) || reg.test(item.unit_name) || reg.test(item.role_name)
-    })
-    return res;
+    });
   } catch (e) {
     throw e.message
   }
@@ -219,15 +193,13 @@ async function setActivation (account) {
     }, {
       activation_status: tmp
     });
-    let resq = await users.findOne({
+    return await users.findOne({
       account
     }, {
       _id: 1,
       account: 1,
       activation_status: 1
-    })
-
-    return resq;
+    });
   } catch (e) {
     throw e.message
   }
@@ -256,11 +228,6 @@ async function findUnitNameAndReturnId (unit_name, allUnit) {
 // 批量添加，注意要添加unit_id
 async function batchImportedUser (imported_array) {
   try {
-    if (allUnit == null || allRole == null) {
-      allUnit = await unit.find({});
-      allRole = await role.find({});
-    }
-    isNeedUpdateUserCache = true;
     let mapArray = await Promise.all(
       imported_array.map(async item => {
         const role_id = await findRoleNameAndReturnId(item.role_name, allRole);
@@ -276,6 +243,15 @@ async function batchImportedUser (imported_array) {
         }
       })
     )
+
+    // // 将 userCache 变成哈希表，实现 O(1) 查询
+    // const userCacheMap = new Set(userCache.map((item)=>{return [item.account,true]}))
+    // // 去除重复导入的账号
+    // mapArray = mapArray.filter((items,)=>{
+    //   return !(userCacheMap.has(items.account))
+    // })
+
+    isNeedUpdateUserCache = true;
     let res = await users.insertMany(mapArray, (err) => { console.log(err) });
     return res;
   } catch {
@@ -289,7 +265,6 @@ module.exports = {
   updateUser,
   deleteUser,
   searchUser,
-  isActivation,
   setActivation,
   batchImportedUser
 }

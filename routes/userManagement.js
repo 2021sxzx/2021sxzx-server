@@ -36,7 +36,7 @@ router.get('/v1/user', async (req, res, next) => {
   const data = await returnUserList(unit_id);
   setStatusCode(res, data)
   res.json(data)
-})  
+})
 
 // 添加用户
 router.post('/v1/user', async (req, res, next) => {
@@ -95,7 +95,8 @@ router.post('/v1/setActivation', async function (req, res, next) {
 
 router.post('/v1/batchImportUser', async (req, res, next) => {
   const { imported_array } = req.body;
-  const data = await addUserBatchingAndReturnList(imported_array);
+  const unit_id = Number(req.cookies.unit_id);
+  const data = await addUserBatchingAndReturnList(imported_array, unit_id);
   setStatusCode(res, data);
   res.json(data);
 })
