@@ -346,4 +346,4 @@ class unitService {
   }
 }
 
-module.exports = new unitService()
+module.exports = new unitService();

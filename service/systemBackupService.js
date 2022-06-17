@@ -14,21 +14,22 @@ function getDate() {
   var date = new Date(new Date().getTime() + 8 * 3600 * 1000);
   return date.toISOString();
 }
-var cycle=''
-var checkJob=''
-getMongoBackupCycle().then(res =>{
+var cycle = '';
+var checkJob = '';
+getMongoBackupCycle().then(res => {
   cycle='0 0 */'+res+' * * *' //"*/10 * * * * *"
   checkJob = schedule.scheduleJob(cycle, function () {
+    // 读脚本 sh + 脚本[绝对]路径 而且要加权限
     child.exec("sh " + filePath, function (err, stdout, stderr) {
       if (err) {
-        console.log(err);
         const writeStream2 = fs.createWriteStream(logPath, { flags: "a" });
         let logString = "定时备份故障[" + getDate() + "]" + err + "\n";
         writeStream2.write(logString);
         writeStream2.end();
-        return 0;
+        return;
       }
 
+        // 日志写记录：你备份了
         const writeStream = fs.createWriteStream(logPath, { flags: "a" });
         var backup_name = stdout.toString().split("\n");
         backup_name = backup_name[backup_name.length - 2];
@@ -47,7 +48,7 @@ getMongoBackupCycle().then(res =>{
  */
  async function getMongoBackupCycle() {
   try {
-    var data=await systemConfiguration.findOne({'name':'backup_cycle'})
+    var data = await systemConfiguration.findOne({'name': 'backup_cycle'})
     // console.log(data.configuration.cycle)
     return data.configuration.cycle;
     // console.log(data)
@@ -242,7 +243,7 @@ async function changeBackupCycleService(data) {
  }
 
 module.exports = {
-  getMongoBackupCycle,
+    getMongoBackupCycle,
     changeBackupCycleService,
     handleBackup,
     getSystemBackup,

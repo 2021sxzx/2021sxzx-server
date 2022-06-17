@@ -73,18 +73,19 @@ function chargeTypeChange(value) {
     var dataLength=data.length;
     for (let i = 0; i < dataLength; i++){
       // name=await getUserName('6237ed0e0842000062005753')
-        user = await getUserById(data[i].slice(0,data[i].indexOf(":")-1))
-        if (!user) {
-          continue
-        }
-        dataArray.push({
-          log_id: i,
-          create_time: data[i].substr(data[i].indexOf("[") + 1, 20),
-          content: chargeTypeChange(data[i].slice(data[i].indexOf("\"") + 1, data[i].indexOf("H") - 1)),
-          user_name: user.user_name,
-          idc: user.account,
-          _id: data[i].slice(0, data[i].indexOf(":") - 1)
-        })
+      // 系统id我们弄为000
+      user = await getUserById(data[i].slice(0,data[i].indexOf(":")-1))
+      if (!user) {
+        continue
+      }
+      dataArray.push({
+        log_id: i,
+        create_time: data[i].substr(data[i].indexOf("[") + 1, 20),
+        content: chargeTypeChange(data[i].slice(data[i].indexOf("\"") + 1, data[i].indexOf("H") - 1)),
+        user_name: user.user_name,
+        idc: user.account,
+        _id: data[i].slice(0, data[i].indexOf(":") - 1)
+      });
     }
     return (dataArray);
   } catch (e) {
