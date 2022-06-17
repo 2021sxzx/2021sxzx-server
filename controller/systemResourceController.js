@@ -20,7 +20,7 @@ const {
     }
   }
 
-    /**
+  /**
    * 查看内存信息
    * @returns {Promise<ErrorModel|SuccessModel>}
    */
