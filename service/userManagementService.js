@@ -244,15 +244,15 @@ async function batchImportedUser (imported_array) {
       })
     )
 
-    // // 将 userCache 变成哈希表，实现 O(1) 查询
-    // const userCacheMap = new Set(userCache.map((item)=>{return [item.account,true]}))
-    // // 去除重复导入的账号
-    // mapArray = mapArray.filter((items,)=>{
-    //   return !(userCacheMap.has(items.account))
-    // })
+    // 将 userCache 变成哈希表，实现 O(1) 查询
+    const userCacheMap = new Set(userCache.map((item)=>{return [item.account,true]}))
+    // 去除重复导入的账号
+    mapArray = mapArray.filter((items,)=>{
+      return !(userCacheMap.has(items.account))
+    })
 
     isNeedUpdateUserCache = true;
-    let res = await users.insertMany(mapArray, (err) => { console.log(err) });
+    let res = await users.create(mapArray);
     return res;
   } catch {
     throw e.message;
