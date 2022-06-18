@@ -19,9 +19,8 @@ const redisClient = require('../config/redis')
 async function selectRedisDatabase (db) {
   try {
     await redisClient.select(db);
-    console.log(`已切换到${db}`);
   } catch (error) {
-    await redisClient.select(db);
+    await selectRedisDatabase (db);
   }
 }
 

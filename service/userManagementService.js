@@ -227,6 +227,7 @@ async function findUnitNameAndReturnId (unit_name, allUnit) {
 
 // 批量添加，注意要添加unit_id
 async function batchImportedUser (imported_array) {
+  // 目前我们无法捕捉部门和单位的动态变化，在这里我们采用直接全部拉取的方式
   await inisilize()
   try {
     let mapArray = await Promise.all(
