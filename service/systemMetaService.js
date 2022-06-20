@@ -43,9 +43,10 @@ class systemMetaService {
 
   // 测试接口的网络连接质量
   async networkQualityOfInterface (url) {
-    await cp.execFile("ping", [url], function(err, stdout, stderr){
+    await cp.execFile("ping -c 4 -n", [url], function(err, stdout, stderr){
       if(err){console.log(err)}
-      const a = iconv.decode(Buffer.from(stdout, 'binary'), 'gbk')
+      const a = iconv.decode(Buffer.from(stdout, 'binary'), 'gbk');
+      console.log(stdout);
       console.log(a);
     })
 
