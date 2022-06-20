@@ -108,7 +108,7 @@ function viewProcessMessage2() {
  async function viewProcessMessage () {//name, cb
   // return 12;
   var a='haha'
-  let data=await new Promise(function(resolve, reject) {
+  let data = await new Promise(function(resolve, reject) {
 
     var cmd = "netstat -nat|grep -i '80'|wc -l";//监听80端口拿进程数
     exec(cmd,{
@@ -162,16 +162,16 @@ async function resourceMonitor() {
               }
             });
             let diskRule=data[0].configuration.Disk;
-            let disk=getDisk().then(res=>{
+            let disk=getDisk().then(res => {
               var calc = {
                 used:0,
                 sum: 0,
               };
-              function myFunction(item, index){
-                this.used+=  Math.floor(item.used/1024/1024/1024 * 100) / 100;
-                this.sum+=  Math.floor(item.size/1024/1024/1024 * 100) / 100;
+              function myFunction (item, index) {
+                this.used += Math.floor(item.used/1024/1024/1024 * 100) / 100;
+                this.sum += Math.floor(item.size/1024/1024/1024 * 100) / 100;
               }
-              res.forEach(myFunction,calc)
+              res.forEach(myFunction, calc);
               let diskPercentage=calc.used/calc.sum*100
               if(diskRule.threshold>diskPercentage){
                 console.log('res:', diskPercentage);

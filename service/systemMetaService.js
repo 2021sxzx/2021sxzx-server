@@ -5,7 +5,7 @@ const { SuccessModel, ErrorModel } = require('../utils/resultModel');
 
 class systemMetaService {
   constructor () {
-
+    this.userNumber = [];
   }
 
   // 切换db池
@@ -34,6 +34,11 @@ class systemMetaService {
         msg: '获取在线用户数目失败'
       });
     }
+  }
+
+  // 获取当天最大用户数目
+  async getUserOnlineNumberOnThisDay () {
+
   }
 
   // 测试接口的网络连接质量
