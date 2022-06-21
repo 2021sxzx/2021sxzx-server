@@ -98,7 +98,7 @@ router.post('/v1/batchImportUser', async (req, res, next) => {
   const unit_id = Number(req.cookies.unit_id);
   const data = await addUserBatchingAndReturnList(imported_array, unit_id);
   setStatusCode(res, data);
-  res.json(data);
+  res.status(200).json(data);
 })
 
 module.exports = router;
