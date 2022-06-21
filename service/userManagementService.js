@@ -255,9 +255,10 @@ async function batchImportedUser (imported_array) {
     })
 
     isNeedUpdateUserCache = true;
+    console.log(mapArray)
     return await users.create(mapArray);
-  } catch {
-    throw e.message;
+  } catch (e) {
+    return e.message;
   }
 }
 
