@@ -4,6 +4,7 @@ const fs = require('fs')
 const {
   getUserById
 } = require('../service/userManagementService');
+const { start } = require("repl");
 //与数据库默认的_id进行匹配
 var ObjectID = require('mongoose').ObjectId;
 
@@ -48,27 +49,10 @@ function chargeTypeChange(value) {
  */
  async function showSystemLog() {
   try {
-    // let data = fs.readFile('2021sxzx-server\service\test.txt')
-    // return "data";
-    // fs.readFile('service/test.txt',function(err,data){
-    //   return "data";
-    //   if (err){
-    //     return "data";
-    //     console.error(err);
-    //   }
-    //   else{
-    //     return "data";
-    //   }
-    // })
     var data = fs.readFileSync('log/access.log');
-    data=data.toString().split("\n");
-    var dataArray=[]
-    var user=""//objectkey for循环
-    // data.forEach(async function(item,index){
-    //   //目前先拿id，之后会在这里根据id搜索到名字和手机号
-    //   name=await getUserName('6237ed0e0842000062005753')
-    //   dataArray.push({log_id:index,create_time:item.substr(item.indexOf("[")+1,20),content:chargeTypeChange(item.slice(item.indexOf("\"")+1,item.indexOf("H")-1)),user_name:name,idc:'133'})//item.slice(0,item.indexOf(":")-1)
-    // })
+    data = data.toString().split("\n");
+    var dataArray = []
+    var user = ""//objectkey for循环
 
     var dataLength=data.length;
     for (let i = 0; i < dataLength; i++){
@@ -79,14 +63,15 @@ function chargeTypeChange(value) {
       }
       dataArray.push({
         log_id: i,
-        create_time: data[i].substr(data[i].indexOf("[") + 1, 20),
+        create_time: data[i].substr(data[i].indexOf("[") + 1, 19), //! 做修改，不要将[.]包被进来
         content: chargeTypeChange(data[i].slice(data[i].indexOf("\"") + 1, data[i].indexOf("H") - 1)),
         user_name: user.user_name,
         idc: user.account,
         _id: data[i].slice(0, data[i].indexOf(":") - 1)
       });
     }
-    return (dataArray);
+    // 做一个筛选
+    return dataArray.filter(item => !!item.content);
   } catch (e) {
     return "showSystemLog:" + e.message;
   }
@@ -253,12 +238,38 @@ async function searchByCondition({ myselfID, today, thisWeek }) {
  * @returns {Promise<*>}
  */
 async function searchByAdvancedCondition(searchData) {
-    try {
-        let {rangePicker, prefix, inputVal} = searchData
-        
-    } catch (e) {
-        return e.message;
-    }
+  const ID = '证件号';
+  const NAME = '操作人';
+  const DESCRIPTION = '操作描述';
+  let {searchValue, searchType, startTime, endTime} = searchData;
+  if (!searchValue) searchValue = '.';
+  if (!searchType) searchType = ID;
+  if (!startTime) startTime = '0';
+  if (!endTime) startTime = '3';
+  if (startTime > endTime) {
+    let temp = null;
+    temp = endTime;
+    endTime = startTime;
+    startTime = temp;
+  }
+
+  const reg = new RegExp(searchValue, 'i');
+  try {
+    const allLog = await showSystemLog();
+    const res = allLog.filter(item => {
+      return (
+        (searchType == ID && reg.test(item.idc)) || 
+        (searchType == NAME && reg.test(item.user_name)) || 
+        (searchType == DESCRIPTION && reg.test(item.content))
+      ) && (
+        (startTime <= item.create_time.split('T')[0]) &&
+        (endTime >= item.create_time.split('T')[0])
+      )
+    })
+    return res;
+  } catch (e) {
+    return e.message;
+  }
 }
 
 
