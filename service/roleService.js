@@ -12,6 +12,15 @@ let permissionList = null;
 let roleList = null;
 let isNeedUpdateRoleList = false;
 
+const iniRoleListAndPermissionList  = async () => {
+  try {
+    await getRole ()
+  } catch (err) {
+    await iniRoleListAndPermissionList();
+  }
+}
+
+iniRoleListAndPermissionList();
 
 
 // 在此，role_rank不能作为访问控制的一环，已经作为一个废弃的量来处理
@@ -358,5 +367,6 @@ module.exports = {
   calcaulatePermissionIdentifier,
   getPermissionList,
   addPermission,
-  deletePermission
+  deletePermission,
+  roleList
 }

@@ -4,6 +4,17 @@ const permission = require('../model/permission')
 // 缓存权限列表，缓存变量
 let permissionList = null;
 
+async function iniPermission () {
+  try {
+    permissionList = await getPermissionList();
+    console.log('拉取权限列表成功');
+  } catch (e) {
+    await iniPermission();
+  }
+}
+
+iniPermission();
+
 /**
  * 添加角色权限，在角色权限关联表里面进行添加
  * @param role_id

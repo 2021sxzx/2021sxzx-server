@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const redisClient = require('../config/redis');
 
-const personalService = require("../service/personalService");
+const systemMetaService = require('../service/systemMetaService');
 
 function setStatusCode(res, data) {
     if (data.code === 200) {
@@ -12,7 +13,8 @@ function setStatusCode(res, data) {
 }
 
 router.get('/v1/test', async (req, res) => {
-  await personalService.getPersonalMsg("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiYWNjb3VudCIsImlhdCI6MTY1NTI2NDc2MCwiZXhwIjoxNjU1MjY1MzYwfQ._qsVsrq8XV4V53FJ1v_51uKQseuri9MVbCwPX50RdUo");
+  // 获取数据库中使用者的数目
+  await systemMetaService.networkQualityOfInterface("www.baidu.com");
   res.json(1);
 });
 

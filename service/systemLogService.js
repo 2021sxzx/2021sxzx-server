@@ -1,6 +1,9 @@
 const systemLog = require("../model/systemLog");
 const users = require("../model/users");
 const fs = require('fs')
+const {
+  getUserById
+} = require('../service/userManagementService');
 //与数据库默认的_id进行匹配
 var ObjectID = require('mongoose').ObjectId;
 
@@ -9,6 +12,7 @@ var ObjectID = require('mongoose').ObjectId;
  * @returns {Promise<*|*>}
  */
 function chargeTypeChange(value) {
+  // TODO: 后续补全操作映射表
   var chargeTypeGroup = {
       "GET /api/v1/allSystemLog":"查询所有日志",
       "GET /api/v1/allSystemLogDetail":"查询详细日志",
@@ -28,14 +32,15 @@ function chargeTypeChange(value) {
  * @param id 操作人的id
  * @returns {Promise<*>}
  */
-  async function getUserById(id) {
-  try {
-    let data =await users.find({ '_id':id });
-    return {name:data[0].user_name,account:data[0].account};
-  } catch (e) {
-    return e.message;
-  }
-}
+
+// async function getUserById(id) {
+//   try {
+//     let data =await users.find({ '_id':id });
+//     return {name:data[0].user_name,account:data[0].account};
+//   } catch (e) {
+//     return e.message;
+//   }
+// }
 
 /**
  * 读取日志内容
@@ -66,14 +71,25 @@ function chargeTypeChange(value) {
     // })
 
     var dataLength=data.length;
-    for (let i=0;i<dataLength;i++){
+    for (let i = 0; i < dataLength; i++){
       // name=await getUserName('6237ed0e0842000062005753')
-      user=await getUserById(data[i].slice(0,data[i].indexOf(":")-1))
-        dataArray.push({log_id:i,create_time:data[i].substr(data[i].indexOf("[")+1,20),content:chargeTypeChange(data[i].slice(data[i].indexOf("\"")+1,data[i].indexOf("H")-1)),user_name:user.name,idc:user.account,_id:data[i].slice(0,data[i].indexOf(":")-1)})//item.slice(0,item.indexOf(":")-1)
+      // 系统id我们弄为000
+      user = await getUserById(data[i].slice(0,data[i].indexOf(":")-1))
+      if (!user) {
+        continue
+      }
+      dataArray.push({
+        log_id: i,
+        create_time: data[i].substr(data[i].indexOf("[") + 1, 20),
+        content: chargeTypeChange(data[i].slice(data[i].indexOf("\"") + 1, data[i].indexOf("H") - 1)),
+        user_name: user.user_name,
+        idc: user.account,
+        _id: data[i].slice(0, data[i].indexOf(":") - 1)
+      });
     }
     return (dataArray);
   } catch (e) {
-    return "showSystemLog:"+e.message;
+    return "showSystemLog:" + e.message;
   }
 }
 /**

@@ -1,6 +1,7 @@
 const users = require('../model/users');
 const unit = require('../model/unit');
 const role = require('../model/role');
+const unitService = require('../service/unitService');
 
 // 用户数据拉取之后放到这里，下次便于取出，无需交互数据库
 let userCache = null;
@@ -53,12 +54,9 @@ async function addUser (userInfo) {
  */
 async function getUserList () {
   try {
-    console.log(isNeedUpdateUserCache)
-    if (userCache!= null && !isNeedUpdateUserCache) {
-      console.log("走了缓存")
+    if (userCache != null && !isNeedUpdateUserCache) {
       return userCache;
     } else {
-      console.log("走了数据库");
       const res = await users.aggregate([
         {
           $lookup: {
@@ -80,7 +78,7 @@ async function getUserList () {
           $unwind: "$info2"
         }, {
           $project: {
-            _id: 0,
+            _id: 1,
             user_name: 1,
             account: 1,
             password: 1,
@@ -92,10 +90,7 @@ async function getUserList () {
           }
         }
       ]);
-      console.log("res", res.length);
       userCache = res;
-
-      console.log("userCache", userCache.length);
       isNeedUpdateUserCache = false;
       return res;
     }
@@ -159,21 +154,9 @@ async function searchUser (searchValue) {
       await getUserList();
     }
     return userCache.filter(item => {
-      return reg.test(item.user_name) || reg.test(item.unit_name) || reg.test(item.role_name)
+      return reg.test(item.user_name) || reg.test(item.unit_name) || reg.test(item.role_name);
     });
   } catch (e) {
-    throw e.message
-  }
-}
-
-async function isActivation (account) {
-  try {
-    return await users.findOne({
-      account
-    }, {
-      activation_status: 1
-    });
-  } catch {
     throw e.message
   }
 }
@@ -206,20 +189,37 @@ async function setActivation (account) {
 }
 
 async function findRoleNameAndReturnId (role_name, allRole) {
-  let id = null;
-  allRole.forEach(item => {
+  for (let item of allUnit) {
     if (item.role_name == role_name) {
+      return item.role_id;
+    }
+  }
+  let id = null;
+  const roleReg = new RegExp(role_name, 'i');
+  // 改进，依据正则，一定程度上可以避免一些粗暴赋予业务员的问题
+  allRole.some(item => {
+    const roleRegInItem = new RegExp(item.role_name, 'i');
+    if (roleRegInItem.test(role_name) || roleReg.test(item.role_name)) {
       id = item.role_id;
+      return true;
     }
   });
   return id ? id : 15815115112;
 }
 
 async function findUnitNameAndReturnId (unit_name, allUnit) {
-  let id = null;
-  allUnit.forEach(item => {
+  for (let item of allUnit) {
     if (item.unit_name == unit_name) {
+      return item.unit_id;
+    }
+  }
+  let id = null;
+  const unitReg = new RegExp(unit_name, 'i');
+  allUnit.some(item => {
+    const unitRegInItem = new RegExp(item.unit_name, 'i');
+    if (unitReg.test(item.unit_name) || unitRegInItem.test(unit_name)) {
       id = item.unit_id;
+      return true;
     }
   });
   return id ? id : 1653018366962;
@@ -227,6 +227,8 @@ async function findUnitNameAndReturnId (unit_name, allUnit) {
 
 // 批量添加，注意要添加unit_id
 async function batchImportedUser (imported_array) {
+  // 目前我们无法捕捉部门和单位的动态变化，在这里我们采用直接全部拉取的方式
+  await inisilize()
   try {
     let mapArray = await Promise.all(
       imported_array.map(async item => {
@@ -242,23 +244,34 @@ async function batchImportedUser (imported_array) {
           user_rank: 0,
         }
       })
-    )
+    );
 
     // 将 userCache 变成哈希表，实现 O(1) 查询
     const userCacheMap = new Map(userCache.map((item)=>{return [item.account,true]}))
     // 去除重复导入的账号
     mapArray = mapArray.filter((items)=>{
-      console.log('items',items.account,!(userCacheMap.has(items.account)))
       return !(userCacheMap.has(items.account))
     })
-    console.log('mapArray',mapArray)
-    // console.log('userCacheMap',userCacheMap)
 
     isNeedUpdateUserCache = true;
     return await users.create(mapArray);
   } catch {
     throw e.message;
   }
+}
+
+async function getUserById (id) {
+  if (!userCache) {
+    await getUserList();
+  }
+  const res = await userCache.filter(item => {
+    return item._id == id;
+  });
+
+  return res.length > 0 ? res[0] : {
+    user_name: '系统',
+    account: '系统无id'
+  };
 }
 
 module.exports = {
@@ -268,5 +281,6 @@ module.exports = {
   deleteUser,
   searchUser,
   setActivation,
-  batchImportedUser
+  batchImportedUser,
+  getUserById
 }

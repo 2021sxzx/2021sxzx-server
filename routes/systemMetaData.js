@@ -302,5 +302,7 @@ router.post(
     res.send(req.file);
   }
 );
+
+
 //基础管理
-  module.exports = router;
+module.exports = router;
