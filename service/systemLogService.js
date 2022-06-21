@@ -72,7 +72,6 @@ function chargeTypeChange(value) {
 
     var dataLength=data.length;
     for (let i = 0; i < dataLength; i++){
-      // name=await getUserName('6237ed0e0842000062005753')
       // 系统id我们弄为000
       user = await getUserById(data[i].slice(0,data[i].indexOf(":")-1))
       if (!user) {
@@ -256,113 +255,7 @@ async function searchByCondition({ myselfID, today, thisWeek }) {
 async function searchByAdvancedCondition(searchData) {
     try {
         let {rangePicker, prefix, inputVal} = searchData
-        console.log('!!!',{rangePicker, prefix, inputVal});
-        return 0;
-        let condition = {};
-        condition.pageNum = 0;
-        let systemLogData = await showSystemLog();
-        let newSystemLogData = [];
-        if (rangePicker === null && inputVal === undefined || rangePicker === null && inputVal === '') {
-            return systemLogData
-        }
-        if (prefix === 'phone_num'&& inputVal !== ''||prefix === 'phone_num'&& inputVal !== undefined) {
-            newSystemLogData = systemLogData.filter((currentItem) => {
-                // console.log(currentItem)
-                // console.log(currentItem._id,':',myself)
-                return currentItem.idc === inputVal;
-            });
-        }
-        if (prefix === 'user'&& inputVal !== ''||prefix === 'user'&& inputVal !== undefined) {
-            newSystemLogData = systemLogData.filter((currentItem) => {
-                return currentItem.user_name === inputVal;
-            });
-        }
-        if (rangePicker!==null) {
-            newSystemLogData = systemLogData.filter((currentItem) => {
-                const date=currentItem.create_time.substring(0,10).replace('-','');
-                const date1=rangePicker[0].replace('-','');
-                const date2=rangePicker[1].replace('-','');
-                return date1<=date<=date2;
-            });
-        }
-        if (today === true) {
-            let d = new Date();
-            newSystemLogData = systemLogData.filter((currentItem) => {
-                // console.log(currentItem.create_time.substring(0, 10),'||',d.toJSON().substring(0,10))
-                return currentItem.create_time.substring(0, 10) === d.toJSON().substring(0,10);
-            });
-            // console.log(newSystemLogData)
-        }
-        if (thisWeek === true) {
-            let date1 = new Date();
-            let w = date1.getDay(); //获取一下今天是周几
-            let delta1 = 1 - w; //算算差几天到周一
-            date1.setDate(date1.getDate() + delta1);
-            date1 = date1.toJSON();
-            date1 = date1.substring(0, 10);
-            let date7 = new Date();
-            let delta7 = 7 - w; //算算差几天到周日
-            date7.setDate(date7.getDate() + delta7);
-            date7 = date7.toJSON();
-            date7 = date7.substring(0, 10);
-            let date1number = parseInt(date1.replace(/-/g, ""));
-            let date7number = parseInt(date7.replace(/-/g, ""));
-            newSystemLogData = systemLogData.filter((currentItem) => {
-                return (
-                    date1number <=
-                    parseInt(
-                        currentItem.create_time.substring(0, 10).replace(/-/g, "")
-                    ) &&
-                    parseInt(
-                        currentItem.create_time.substring(0, 10).replace(/-/g, "")
-                    ) <= date7number
-                );
-            });
-        }
-        return newSystemLogData
-        // if (myself == false) {
-        //   if (today == false) {
-        //     if (thisWeek ==false) {
-        //       return (newSystemLogData = systemLogData.filter((currentItem) => {
-        //         return currentItem.user_name === "张奕凯";
-        //       }));
-        //     }
-        //   }
-        // } else {
-        //   return newSystemLogData
-        // }
-        // if (myself == false) {
-        //   if (today == false) {
-        //     if (thisWeek == false) {
-        //       return "systemLogData";
-        //     }else {
-        //       return "only week"
-        //     }
-        //   }
-        //   else {
-        //     return "only today"
-        //   }
-        // }else{
-        //   return "myself"
-        // }
-        // } else if (myself) {
-        //   return newSystemLogData = systemLogData.filter((currentItem) => {
-        //     return currentItem.user_name === "张毅";
-        //   });
-        // } else if (today==true) {
-        //   let d = new Date();
-        //   return d;
-        // return newSystemLogData = systemLogData.filter((currentItem) => {
-        //   return (
-        //     currentItem.create_time.substring(0, 10) ==
-        //     d.toJSON().substring(0, 10)
-        //   );
-        // });
-        // } else {
-        //   return newSystemLogData = systemLogData.filter((currentItem) => {
-        //     return currentItem.user_name === "张奕凯";
-        //   });
-        // }
+        
     } catch (e) {
         return e.message;
     }
