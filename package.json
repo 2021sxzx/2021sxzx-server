@@ -15,6 +15,7 @@
     "express": "~4.16.1",
     "http-errors": "~1.6.3",
     "iconv-lite": "^0.6.3",
+    "internet-available": "^1.0.0",
     "jade": "~1.11.0",
     "jfum": "^1.0.3",
     "jsonwebtoken": "^8.5.1",
@@ -28,5 +29,18 @@
     "request": "^2.88.2",
     "systeminformation": "^5.11.9",
     "xss": "^1.0.11"
-  }
+  },
+  "description": "- 首先对js包括es6有一定的学习\r - 对node环境的js运行有一定的了解\r - 学习过express框架的基本操作，b站上有很多的教程，也可以直接看express的官方文档\r - 对mongodb有一定的了解，使用mongoose来对mongodb进行操作，b站也有资源，mongoose的文档也比较容易懂",
+  "main": "app.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2021sxzx/2021sxzx-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/2021sxzx/2021sxzx-server/issues"
+  },
+  "homepage": "https://github.com/2021sxzx/2021sxzx-server#readme"
 }
