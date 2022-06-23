@@ -238,7 +238,7 @@ async function searchByCondition({ myselfID, today, thisWeek }) {
  * @returns {Promise<*>}
  */
 async function searchByAdvancedCondition(searchData) {
-  const ID = '证件号';
+  const ID = '账号';
   const NAME = '操作人';
   const DESCRIPTION = '操作描述';
   let {searchValue, searchType, startTime, endTime} = searchData;

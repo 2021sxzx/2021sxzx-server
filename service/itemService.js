@@ -1566,6 +1566,6 @@ module.exports = {
     setCheckJobRule,
     getCheckJobRule,
     getCheckResult,
-    addQuestion,
-    deleteQuestions
+    // addQuestion,
+    // deleteQuestions
 }

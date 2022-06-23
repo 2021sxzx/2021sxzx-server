@@ -4,8 +4,6 @@ const redisClient = require('../config/redis');
 
 const systemMetaService = require('../service/systemMetaService');
 
-var internetAvailable = require("internet-available");
-
 var child = require('child_process');
 
 function setStatusCode(res, data) {
@@ -22,7 +20,7 @@ router.get('/v1/test', async (req, res) => {
   //   [{ "ip": "www.baidu.com", "name": "node2" }],
   //   [{ "ip": "www.csdn.com", "name": "node2" }]
   // ];
-  await systemMetaService.networkQualityOfInterface();
+  await systemMetaService.getInterfaceMessage();
   let resqa = [];
   // for (let element of array) {
   //   await p(element, resqa);

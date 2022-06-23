@@ -29,6 +29,39 @@ class systemMetaService {
     }
   }
 
+  async setApiData (api) {
+    try {
+      // CentOS的CMD指令集，和window的指令是不兼容的，如果需要在window跑起该代码，需要改为：ping ${this.api.xxx}
+      // const SHBAPP_DATA = await exec(`ping -c 4 -n ${api.SHBAPP}`);
+      // const GZSRSJGW_DATA = await exec(`ping -c 4 -n ${api.GZSRSJGW}`);
+      // const ZNFWJQRYPT_DATA = await exec(`ping -c 4 -n ${api.ZNFWJQRYPT}`);
+      // const GDZWFWPT_DATA = await exec(`ping -c 4 -n ${api.GDZWFWPT}`);
+      // const BDDT_DATA = await exec(`ping -c 4 -n ${api.BDDT}`);
+      const SHBAPP_DATA = await exec(`ping ${api.SHBAPP}`);
+      const GZSRSJGW_DATA = await exec(`ping ${api.GZSRSJGW}`);
+      const ZNFWJQRYPT_DATA = await exec(`ping ${api.ZNFWJQRYPT}`);
+      const GDZWFWPT_DATA = await exec(`ping ${api.GDZWFWPT}`);
+      const BDDT_DATA = await exec(`ping ${api.BDDT}`);
+      const SHBAPP = SHBAPP_DATA.stderr ? SHBAPP_DATA.stderr : SHBAPP_DATA.stdout;
+      const GZSRSJGW = GZSRSJGW_DATA.stderr ? GZSRSJGW_DATA.stderr : GZSRSJGW_DATA.stdout;
+      const ZNFWJQRYPT = ZNFWJQRYPT_DATA.stderr ? ZNFWJQRYPT_DATA.stderr : ZNFWJQRYPT_DATA.stdout;
+      const GDZWFWPT = GDZWFWPT_DATA.stderr ? GDZWFWPT_DATA.stderr : GDZWFWPT_DATA.stdout;
+      const BDDT = BDDT_DATA.stderr ? BDDT_DATA.stderr : BDDT_DATA.stdout;
+      this.interfaceData = { 
+        SHBAPP: SHBAPP.split('\r\n').filter(item => item != ''), 
+        GZSRSJGW: GZSRSJGW.split('\r\n').filter(item => item != ''), 
+        ZNFWJQRYPT: ZNFWJQRYPT.split('\r\n').filter(item => item != ''),
+        GDZWFWPT: GDZWFWPT.split('\r\n').filter(item => item != ''),
+        BDDT: BDDT.split('\r\n').filter(item => item != '')
+        // SHBAPP, GZSRSJGW, ZNFWJQRYPT, GDZWFWPT, BDDT
+      };
+    } catch (error) {
+      return new ErrorModel({
+        msg: error
+      });
+    }
+  }
+
   async init () {
     const [domain] = await systemMeta.find({});
     this.api = {
@@ -39,34 +72,21 @@ class systemMetaService {
       BDDT: domain.BDDT
     };
 
+    // 第一次的触发执行
+    await this.setApiData(this.api);
+    const that = this;
     // 每隔一个钟来ping一下
     setInterval(async () => {
-      const SHBAPP_DATA = await exec(`ping ${this.api.SHBAPP}`);
-      const GZSRSJGW_DATA = await exec(`ping ${this.api.GZSRSJGW}`);
-      const ZNFWJQRYPT_DATA = await exec(`ping ${this.api.ZNFWJQRYPT}`);
-      const GDZWFWPT_DATA = await exec(`ping ${this.api.GDZWFWPT}`);
-      const BDDT_DATA = await exec(`ping ${this.api.BDDT}`);
-      // console.log('stdout:', SHBAPP_DATA.stdout);
-      // console.error('stderr:', SHBAPP_DATA.stderr);
-      const SHBAPP = SHBAPP_DATA.stderr ? SHBAPP_DATA.stderr : SHBAPP_DATA.stdout;
-      const GZSRSJGW = GZSRSJGW_DATA.stderr ? GZSRSJGW_DATA.stderr : GZSRSJGW_DATA.stdout;
-      const ZNFWJQRYPT = ZNFWJQRYPT_DATA.stderr ? ZNFWJQRYPT_DATA.stderr : ZNFWJQRYPT_DATA.stdout;
-      const GDZWFWPT = GDZWFWPT_DATA.stderr ? GDZWFWPT_DATA.stderr : GDZWFWPT_DATA.stdout;
-      const BDDT = BDDT_DATA.stderr ? BDDT_DATA.stderr : BDDT_DATA.stdout;
-      this.interfaceData = {
-        SHBAPP,
-        GZSRSJGW,
-        ZNFWJQRYPT,
-        GDZWFWPT,
-        BDDT
-      }
-      console.log(this.interfaceData);
-    }, 3600 * 1000);
+      // 注意this的换绑问题，箭头函数本身是没有this的
+      await that.setApiData(this.api);
+    }, 3600);
   }
 
+  // 修改接口
   async patchInterface (api) {
     try {
       await systemMeta.updateOne({ id: 0 }, api);
+      this.api = api;
     } catch (error) {
       return new ErrorModel({
         msg: '获取修改接口失败'
@@ -74,6 +94,17 @@ class systemMetaService {
     }
   }
   
+  async getInterfaceMessage () {
+    const regexp = /[0-9]+/g
+    for (let index in this.interfaceData) {
+      this.interfaceData[index] = this.interfaceData[index].map(item => {
+        return item.match(regexp)
+      })
+    }
+    console.log(this.interfaceData);
+  }
+
+
   // 切换db池
   async selectRedisDatabase (db) {
     try {
@@ -121,20 +152,6 @@ class systemMetaService {
       msg: '获取平均用户数目成功',
       data: res / this.userNumber.length
     })
-  }
-
-  // 测试接口的网络连接质量
-  async networkQualityOfInterface (url) {
-    // cp.exec(`ping ${url}`, function(err, stdout, stderr){
-    //   if(err){console.log(err)}
-    //   const a = iconv.decode(Buffer.from(stdout, 'binary'), 'gbk');
-    //   console.log(stdout);
-    //   console.log(a);
-    // });
-    // await cp.exec(`ping ${url}`, { encoding: 'binary' }, function(err, stdout, stderr){
-    //   console.log(stdout);
-    //   console.log(iconv.decode(new Buffer(stdout, 'binary'), 'cp936'));
-    // });
   }
 }
 
