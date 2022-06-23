@@ -10,20 +10,38 @@ function setStatusCode(res,data) {
 }
 
 class systemMetaController {
-  async getUserOnlineNumber (req, res) {
+  // 获取在线人数和当日最大人数
+  async getUserOnlineNumberAndMaxOnlineNumber (req, res) {
     try {
-      const result = await systemMetaService.getUserOnlineNumber();
+      const result = await systemMetaService.getUserOnlineNumberAndMaxOnlineNumber();
       setStatusCode(res, result);
       res.json(result);
     } catch (error) {
-      return new ErrorModel({
-        msg: error.message
-      })
+      res.json(new Error(error.message));
     }
   }
 
-  async networkQualityOfInterface (req, res) {
-    
+  // 获取网络状态
+  async getNetworkStatus (req, res) {
+    try {
+      const result = await systemMetaService.getInterfaceMessage();
+      setStatusCode(res, result);
+      res.json(result);
+    } catch (error) {
+      res.json(new Error(error.message));
+    }
+  }
+
+  // 修改域名并获取网络状态
+  async patchNetworkStatus (req, res) {
+    try {
+      const api = req.body;
+      const result = await systemMetaService.patchInterface(api);
+      setStatusCode(res, result);
+      res.json(result);
+    } catch (error) {
+      res.json(new Error(error.message));
+    }
   }
 }
 

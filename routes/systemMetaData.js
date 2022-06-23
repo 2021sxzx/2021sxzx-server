@@ -2,36 +2,34 @@ const express = require('express');
 const router = express.Router();
 const multer=require('multer');
 const bodyParser = require('body-parser');
+const systemMetaController = require('../controller/systemMetaController');
 // const formidable = require('express-formidable')
 const path = require('path');
 // router.use(bodyParser.urlencoded({ limit: '50mb', extended: true,parameterLimit:50000 }))
 // router.use(bodyParser.json({limit: '50mb'}))
-function setStatusCode(res,data) {
-    if(data.code === 200) {
-      res.statusCode = 200
-    }else {
-      res.statusCode = 404
+function wrap(handler) {
+  return async (req, res, next) => {
+    try {
+      await handler(req, res, next);
+    } catch (e) {
+      throw new ErrorModel({
+        msg: "获取侧边栏失败",
+        data: e.message
+      });
     }
-  }
+  };
+}
 
-    /* 系统基础管理相关的路由处理. */
+/* 系统基础管理相关的路由处理. */
   
-  /**
-   * 服务器端上传图片的接口
-   */
-  //  const storage = multer.diskStorage({
-  //   destination(req,res,cb){
-  //     cb();
-  //   },
-  //   filename(req,file,cb){
-  //     const filenameArr = file.originalname.split('.');
-  //     cb(null,Date.now() + '-' + filenameArr[filenameArr.length-1]);
-  //   }
-  // });
+/**
+ * 服务器端上传图片的接口
+ */
+
 /**
  *  上传excel文件测试
  */
- var enter="file"
+var enter="file"
 var storage = multer.diskStorage({
   destination(req,res,cb){
     cb(null,'upload');
@@ -43,23 +41,6 @@ var storage = multer.diskStorage({
 });
 var upload = multer({storage});
 
-// var enter;var storage;var upload;
-// router.use("/v1/upload", (req, res, next) => {
-//   console.log("first use");
-//   enter = req.enter;
-//   storage = multer.diskStorage({
-//     destination(req, res, cb) {
-//       cb(null, "upload");
-//     },
-//     filename(req, file, cb) {
-//       const filenameArr = file.originalname.split(".");
-//       cb(null, enter + "." + filenameArr[filenameArr.length - 1]);
-//     },
-//   });
-//   upload = multer({ storage });
-//   next();
-// });
-
 //跨域
 router.all('*', function(req, res, next) {
   // console.log('跨域')
@@ -70,6 +51,13 @@ router.all('*', function(req, res, next) {
   if(req.method=="OPTIONS") res.sendStatus(200);/*让options请求快速返回*/
   else  next();
 });
+
+// 接口状态管理
+router.get('/v1/Interface', wrap(systemMetaController.getNetworkStatus));
+router.patch('/v1/Interface', wrap(systemMetaController.patchNetworkStatus));
+// 在线人数显示
+router.get('/v1/peopleNumber', wrap(systemMetaController.getUserOnlineNumberAndMaxOnlineNumber));
+
 // router.all(formidable())
 // router.use(formidable())
 
@@ -133,8 +121,6 @@ router.get('/v1/site-settings',function(req,res){
 
 //提交修改
 router.post('/v1/site-settings',function(req,res){
-  console.log('收到')
-  console.log(req.body)
   res.send('结束')
 })
 
