@@ -300,39 +300,39 @@ function getRuleDic() {
 //------------------------------------------------------------------------------
 //以下为连接机器人平台的代码
 
-const getToken_Url_Robot = 'http://10.194.67.198/basic/serviceLogin/4'
-const addQuestion_Url_Robot = 'http://10.194.67.198/robotQuestion/add'
-const deleteQuestion_Url_Robot = 'http://10.194.67.198/robotQuestion/delete'
-const loginUser = ''
-const loginPwd = ''
-var token_Robot = ''
+// const getToken_Url_Robot = 'http://10.194.67.198/basic/serviceLogin/4'
+// const addQuestion_Url_Robot = 'http://10.194.67.198/robotQuestion/add'
+// const deleteQuestion_Url_Robot = 'http://10.194.67.198/robotQuestion/delete'
+// const loginUser = ''
+// const loginPwd = ''
+// var token_Robot = ''
 
 /**
  * 获取访问机器人平台的token
  * @returns {String} token
  */
-function getToken_Robot() {
-    return new Promise(function (resolve, reject) {
-        var option = {
-            url: getToken_Url_Robot,
-            method: 'POST',
-            json: true,
-            headers: { 'content-type': 'application/json' },
-            form: {
-                loginUser: loginUser,
-                loginPwd: loginPwd
-            },
-            timeout: 20000
-        }
-        request(option, function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                resolve(body.item)
-            } else {
-                reject(error)
-            }
-        })
-    })
-}
+// function getToken_Robot() {
+//     return new Promise(function (resolve, reject) {
+//         var option = {
+//             url: getToken_Url_Robot,
+//             method: 'POST',
+//             json: true,
+//             headers: { 'content-type': 'application/json' },
+//             form: {
+//                 loginUser: loginUser,
+//                 loginPwd: loginPwd
+//             },
+//             timeout: 20000
+//         }
+//         request(option, function (error, response, body) {
+//             if (!error && response.statusCode == 200) {
+//                 resolve(body.item)
+//             } else {
+//                 reject(error)
+//             }
+//         })
+//     })
+// }
 
 /**
  * 往机器人平台添加单个词条
@@ -341,109 +341,109 @@ function getToken_Robot() {
  * @param {String} answerTxt 答案纯文本信息
  * @returns {String} docId 
  */
-function addQuestion_Robot(questionTitle, answerDesc, answerTxt) {
-    return new Promise(async function (resolve, reject) {
-        if (token_Robot === '') {
-            try {
-                token_Robot = await getToken_Robot()
-            } catch (err) {
-                console.log('GET ROBOT TOKEN ERROR')
-                token_Robot = ''
-                resolve('RETRY')
-            }
-        }
-        var requestData = {
-            questionTitle: questionTitle,
-            answerDesc: answerDesc,
-            answerTxt: answerTxt
-        }
-        var option = {
-            url: addQuestion_Url_Robot,
-            method: 'POST',
-            json: true,
-            headers: {
-                'content-type': 'application/json',
-                'temp-id': token_Robot
-            },
-            form: requestData,
-            timeout: 20000
-        }
-        request(option, function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                if (body.data.docId) {
-                    resolve(body.data.docId)
-                } else {
-                    console.log('机器人平台有问题，返回了一个空字符串')
-                    resolve('')
-                }
-            } else {
-                if (!error) {
-                    console.log('POST: ' + addQuestion_Url_Robot + ' 失败')
-                    console.log('请求体: ' + JSON.stringify(requestData))
-                    console.log(response)
-                }
-                else if (error.code !== 'ESOCKETTIMEDOUT') {
-                    console.log('POST: ' + addQuestion_Url_Robot + ' 失败')
-                    console.log('请求体: ' + JSON.stringify(requestData))
-                    console.log(error)
-                }
-                token_Robot = ''
-                resolve('RETRY')
-            }
-        })
-    })
-}
+// function addQuestion_Robot(questionTitle, answerDesc, answerTxt) {
+//     return new Promise(async function (resolve, reject) {
+//         if (token_Robot === '') {
+//             try {
+//                 token_Robot = await getToken_Robot()
+//             } catch (err) {
+//                 console.log('GET ROBOT TOKEN ERROR')
+//                 token_Robot = ''
+//                 resolve('RETRY')
+//             }
+//         }
+//         var requestData = {
+//             questionTitle: questionTitle,
+//             answerDesc: answerDesc,
+//             answerTxt: answerTxt
+//         }
+//         var option = {
+//             url: addQuestion_Url_Robot,
+//             method: 'POST',
+//             json: true,
+//             headers: {
+//                 'content-type': 'application/json',
+//                 'temp-id': token_Robot
+//             },
+//             form: requestData,
+//             timeout: 20000
+//         }
+//         request(option, function (error, response, body) {
+//             if (!error && response.statusCode == 200) {
+//                 if (body.data.docId) {
+//                     resolve(body.data.docId)
+//                 } else {
+//                     console.log('机器人平台有问题，返回了一个空字符串')
+//                     resolve('')
+//                 }
+//             } else {
+//                 if (!error) {
+//                     console.log('POST: ' + addQuestion_Url_Robot + ' 失败')
+//                     console.log('请求体: ' + JSON.stringify(requestData))
+//                     console.log(response)
+//                 }
+//                 else if (error.code !== 'ESOCKETTIMEDOUT') {
+//                     console.log('POST: ' + addQuestion_Url_Robot + ' 失败')
+//                     console.log('请求体: ' + JSON.stringify(requestData))
+//                     console.log(error)
+//                 }
+//                 token_Robot = ''
+//                 resolve('RETRY')
+//             }
+//         })
+//     })
+// }
 
 /**
  * 在机器人平台中删除词条
  * @param {String} docId 词条id，删除多个以英文分号隔开
  * @returns 
  */
-function deleteQuestion_Robot(docId) {
-    return new Promise(async function (resolve, reject) {
-        if (token_Robot === '') {
-            try {
-                token_Robot = await getToken_Robot()
-            } catch (err) {
-                console.log('GET ROBOT TOKEN ERROR')
-                token_Robot = ''
-                resolve('RETRY')
-            }
-        }
-        var requestData = {
-            docId: docId
-        }
-        var option = {
-            url: deleteQuestion_Url_Robot,
-            method: 'POST',
-            json: true,
-            headers: {
-                'content-type': 'application/json',
-                'temp-id': token_Robot
-            },
-            form: requestData,
-            timeout: 20000
-        }
-        request(option, function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                resolve(body)
-            } else {
-                if (!error) {
-                    console.log('POST: ' + deleteQuestion_Url_Robot + ' 失败')
-                    console.log('请求体: ' + JSON.stringify(requestData))
-                    console.log(response)
-                }
-                else if (error.code !== 'ESOCKETTIMEDOUT') {
-                    console.log('POST: ' + deleteQuestion_Url_Robot + ' 失败')
-                    console.log('请求体: ' + JSON.stringify(requestData))
-                    console.log(error)
-                }
-                token_Robot = ''
-                resolve('RETRY')
-            }
-        })
-    })
-}
+// function deleteQuestion_Robot(docId) {
+//     return new Promise(async function (resolve, reject) {
+//         if (token_Robot === '') {
+//             try {
+//                 token_Robot = await getToken_Robot()
+//             } catch (err) {
+//                 console.log('GET ROBOT TOKEN ERROR')
+//                 token_Robot = ''
+//                 resolve('RETRY')
+//             }
+//         }
+//         var requestData = {
+//             docId: docId
+//         }
+//         var option = {
+//             url: deleteQuestion_Url_Robot,
+//             method: 'POST',
+//             json: true,
+//             headers: {
+//                 'content-type': 'application/json',
+//                 'temp-id': token_Robot
+//             },
+//             form: requestData,
+//             timeout: 20000
+//         }
+//         request(option, function (error, response, body) {
+//             if (!error && response.statusCode == 200) {
+//                 resolve(body)
+//             } else {
+//                 if (!error) {
+//                     console.log('POST: ' + deleteQuestion_Url_Robot + ' 失败')
+//                     console.log('请求体: ' + JSON.stringify(requestData))
+//                     console.log(response)
+//                 }
+//                 else if (error.code !== 'ESOCKETTIMEDOUT') {
+//                     console.log('POST: ' + deleteQuestion_Url_Robot + ' 失败')
+//                     console.log('请求体: ' + JSON.stringify(requestData))
+//                     console.log(error)
+//                 }
+//                 token_Robot = ''
+//                 resolve('RETRY')
+//             }
+//         })
+//     })
+// }
 
 /**
  * 往机器人平台中添加单个词条
@@ -451,86 +451,86 @@ function deleteQuestion_Robot(docId) {
  * @param {String} region_code 区划编码
  * @returns 
  */
-async function addQuestion(task_code, region_code) {
-    try {
-        var task = await modelTask.findOne({ task_code: task_code })
-        if (task === null) {
-            return
-        }
-        var questionTitle = task.task_name + region_code
-        var answerDesc = '<p>智能咨询系统地址: </p><p>10.196.130.27</p>' +
-            '<p>网站首页地址: </p><p>' + task.wsyy + '</p>' +
-            '<p>办理条件: </p><p>' + task.conditions + '</p>' +
-            '<p>窗口办理流程: </p><p>' + task.ckbllc + '</p>' +
-            '<p>网上办理流程: </p><p>' + task.wsbllc + '</p>' +
-            '<p>办理材料: </p><p>'
-        for (let i = 0; i < task.submit_documents.length; i++) {
-            answerDesc = answerDesc + task.submit_documents[i].materials_name
-            if (i !== task.submit_documents.length - 1) {
-                answerDesc = answerDesc + '、'
-            }
-        }
-        answerDesc = answerDesc + '</p>'
-        var answerTxt = '智能咨询系统地址: 10.196.130.27' +
-            '网站首页地址: ' + task.wsyy +
-            '办理条件: ' + task.conditions +
-            '窗口办理流程: ' + task.ckbllc +
-            '网上办理流程: ' + task.wsbllc +
-            '办理材料: '
-        for (let i = 0; i < task.submit_documents.length; i++) {
-            answerTxt = answerTxt + task.submit_documents[i].materials_name
-            if (i !== task.submit_documents.length - 1) {
-                answerTxt = answerTxt + '、'
-            }
-        }
-        var docId = ''
-        var retry = 10
-        do {
-            docId = await addQuestion_Robot(questionTitle, answerDesc, answerTxt)
-            retry -= 1
-        } while (docId === 'RETRY' && retry > 0)
-        if (docId === 'RETRY') {
-            console.log('往机器人平台中添加' + task_code + '词条失败，重试了' + retry + '次')
-            return
-        }
-        var result = await modelTaskCode2docId.create({ task_code: task_code, docId: docId })
-    } catch (err) {
-        console.log('往机器人平台添加词条失败')
-        console.log(err.message)
-    }
-}
+// async function addQuestion(task_code, region_code) {
+//     try {
+//         var task = await modelTask.findOne({ task_code: task_code })
+//         if (task === null) {
+//             return
+//         }
+//         var questionTitle = task.task_name + region_code
+//         var answerDesc = '<p>智能咨询系统地址: </p><p>10.196.130.27</p>' +
+//             '<p>网站首页地址: </p><p>' + task.wsyy + '</p>' +
+//             '<p>办理条件: </p><p>' + task.conditions + '</p>' +
+//             '<p>窗口办理流程: </p><p>' + task.ckbllc + '</p>' +
+//             '<p>网上办理流程: </p><p>' + task.wsbllc + '</p>' +
+//             '<p>办理材料: </p><p>'
+//         for (let i = 0; i < task.submit_documents.length; i++) {
+//             answerDesc = answerDesc + task.submit_documents[i].materials_name
+//             if (i !== task.submit_documents.length - 1) {
+//                 answerDesc = answerDesc + '、'
+//             }
+//         }
+//         answerDesc = answerDesc + '</p>'
+//         var answerTxt = '智能咨询系统地址: 10.196.130.27' +
+//             '网站首页地址: ' + task.wsyy +
+//             '办理条件: ' + task.conditions +
+//             '窗口办理流程: ' + task.ckbllc +
+//             '网上办理流程: ' + task.wsbllc +
+//             '办理材料: '
+//         for (let i = 0; i < task.submit_documents.length; i++) {
+//             answerTxt = answerTxt + task.submit_documents[i].materials_name
+//             if (i !== task.submit_documents.length - 1) {
+//                 answerTxt = answerTxt + '、'
+//             }
+//         }
+//         var docId = ''
+//         var retry = 10
+//         do {
+//             docId = await addQuestion_Robot(questionTitle, answerDesc, answerTxt)
+//             retry -= 1
+//         } while (docId === 'RETRY' && retry > 0)
+//         if (docId === 'RETRY') {
+//             console.log('往机器人平台中添加' + task_code + '词条失败，重试了' + retry + '次')
+//             return
+//         }
+//         var result = await modelTaskCode2docId.create({ task_code: task_code, docId: docId })
+//     } catch (err) {
+//         console.log('往机器人平台添加词条失败')
+//         console.log(err.message)
+//     }
+// }
 
 /**
  * 在机器人平台中删除词条
  * @param {Array<String>} taskCodes 事项指南编码数组
  * @returns 
  */
-async function deleteQuestions(taskCodes) {
-    try {
-        var result = await modelTaskCode2docId.find({ task_code: { $in: taskCodes } })
-        var docId = ''
-        for (let i = 0; i < result.length; i++) {
-            docId = docId + result[i].docId
-            if (i !== result.length - 1) {
-                docId = docId + ';'
-            }
-        }
-        var body = {}
-        var retry = 10
-        do {
-            body = await deleteQuestion_Robot(docId)
-            retry -= 1
-        } while (body === 'RETRY' && retry > 0)
-        if (body === 'RETRY') {
-            console.log('在机器人平台删除' + docId + '词条失败，重试了' + retry + '次')
-            return
-        }
-        var res = await modelTaskCode2docId.deleteMany({ task_code: { $in: taskCodes } })
-    } catch (err) {
-        console.log('在机器人平台删除词条失败')
-        console.log(err.message)
-    }
-}
+// async function deleteQuestions(taskCodes) {
+//     try {
+//         var result = await modelTaskCode2docId.find({ task_code: { $in: taskCodes } })
+//         var docId = ''
+//         for (let i = 0; i < result.length; i++) {
+//             docId = docId + result[i].docId
+//             if (i !== result.length - 1) {
+//                 docId = docId + ';'
+//             }
+//         }
+//         var body = {}
+//         var retry = 10
+//         do {
+//             body = await deleteQuestion_Robot(docId)
+//             retry -= 1
+//         } while (body === 'RETRY' && retry > 0)
+//         if (body === 'RETRY') {
+//             console.log('在机器人平台删除' + docId + '词条失败，重试了' + retry + '次')
+//             return
+//         }
+//         var res = await modelTaskCode2docId.deleteMany({ task_code: { $in: taskCodes } })
+//     } catch (err) {
+//         console.log('在机器人平台删除词条失败')
+//         console.log(err.message)
+//     }
+// }
 
 //---------------------------------------------------------------------
 //以下为检查事项指南详情的代码

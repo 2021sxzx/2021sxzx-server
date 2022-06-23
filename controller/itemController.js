@@ -2222,29 +2222,29 @@ async function changeItemStatus({
                                 }
                             })
                             //对接一下机器人平台，新增词条
-                            try {
-                                var region = await modelRegion.findOne({ _id: item.region_id })
-                                if (region === null) {
-                                    throw new Error('区划不存在')
-                                }
-                                itemService.addQuestion(item.task_code, region.region_code)
-                            } catch (err) {
-                                console.log('对接机器人平台出错')
-                                console.log(err.message)
-                            }
+                            // try {
+                            //     var region = await modelRegion.findOne({ _id: item.region_id })
+                            //     if (region === null) {
+                            //         throw new Error('区划不存在')
+                            //     }
+                            //     itemService.addQuestion(item.task_code, region.region_code)
+                            // } catch (err) {
+                            //     console.log('对接机器人平台出错')
+                            //     console.log(err.message)
+                            // }
                         }
                         //转到其他状态
-                        else {
-                            //如果是审核通过状态转到其他状态，即撤销已发布的事项，就对接一下机器人平台，删除对应的词条
-                            if (itemStatus[k].eng_name === 'Recall') {
-                                try {
-                                    itemService.deleteQuestions([item.task_code])
-                                } catch (err) {
-                                    console.log('对接机器人平台出错')
-                                    console.log(err.message)
-                                }
-                            }
-                        }
+                        // else {
+                        //     //如果是审核通过状态转到其他状态，即撤销已发布的事项，就对接一下机器人平台，删除对应的词条
+                        //     if (itemStatus[k].eng_name === 'Recall') {
+                        //         try {
+                        //             itemService.deleteQuestions([item.task_code])
+                        //         } catch (err) {
+                        //             console.log('对接机器人平台出错')
+                        //             console.log(err.message)
+                        //         }
+                        //     }
+                        // }
                         break
                     }
                 }
