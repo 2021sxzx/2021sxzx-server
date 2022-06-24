@@ -36,7 +36,7 @@ router.get('/v1/user', async (req, res, next) => {
   const data = await returnUserList(unit_id);
   setStatusCode(res, data)
   res.json(data)
-})
+});
 
 // 添加用户
 router.post('/v1/user', async (req, res, next) => {

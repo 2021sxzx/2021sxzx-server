@@ -55,8 +55,8 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
     isNeedUpdateRoleList = true;
     // 往权限角色关联表里面添加关联
     // 多次插入，可能影响效率，后续做一次性优化处理
-    permission_identifier_array.forEach((item) => {
-      roleMapPermission.create({
+    permission_identifier_array.forEach(async (item) => {
+      await roleMapPermission.create({
         role_id: res.role_id,
         permission_identifier: item
       })
