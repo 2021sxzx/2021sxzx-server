@@ -2,23 +2,10 @@ const express = require('express');
 const router = express.Router();
 const multer=require('multer');
 const bodyParser = require('body-parser');
-const systemMetaController = require('../controller/systemMetaController');
 // const formidable = require('express-formidable')
 const path = require('path');
 // router.use(bodyParser.urlencoded({ limit: '50mb', extended: true,parameterLimit:50000 }))
 // router.use(bodyParser.json({limit: '50mb'}))
-function wrap(handler) {
-  return async (req, res, next) => {
-    try {
-      await handler(req, res, next);
-    } catch (e) {
-      throw new ErrorModel({
-        msg: "获取侧边栏失败",
-        data: e.message
-      });
-    }
-  };
-}
 
 /* 系统基础管理相关的路由处理. */
   
@@ -43,7 +30,6 @@ var upload = multer({storage});
 
 //跨域
 router.all('*', function(req, res, next) {
-  // console.log('跨域')
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
   res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
@@ -51,12 +37,6 @@ router.all('*', function(req, res, next) {
   if(req.method=="OPTIONS") res.sendStatus(200);/*让options请求快速返回*/
   else  next();
 });
-
-// 接口状态管理
-router.get('/v1/Interface', wrap(systemMetaController.getNetworkStatus));
-router.patch('/v1/Interface', wrap(systemMetaController.patchNetworkStatus));
-// 在线人数显示
-router.get('/v1/peopleNumber', wrap(systemMetaController.getUserOnlineNumberAndMaxOnlineNumber));
 
 // router.all(formidable())
 // router.use(formidable())
@@ -288,7 +268,6 @@ router.post(
     res.send(req.file);
   }
 );
-
 
 //基础管理
 module.exports = router;

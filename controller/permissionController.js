@@ -95,7 +95,7 @@ class permissionController {
         msg: '返回权限列表成功',
         data: result_
       })
-      setStatusCode(res, result)
+      setStatusCode(res, result);
       res.json(result);
     } catch (error) {
       res.json(error);

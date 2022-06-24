@@ -1,9 +1,7 @@
 const systemLog = require("../model/systemLog");
 const users = require("../model/users");
 const fs = require('fs')
-const {
-  getUserById
-} = require('../service/userManagementService');
+const { getUserById } = require('../service/userManagementService');
 const { start } = require("repl");
 //与数据库默认的_id进行匹配
 var ObjectID = require('mongoose').ObjectId;
@@ -33,15 +31,6 @@ function chargeTypeChange(value) {
  * @param id 操作人的id
  * @returns {Promise<*>}
  */
-
-// async function getUserById(id) {
-//   try {
-//     let data =await users.find({ '_id':id });
-//     return {name:data[0].user_name,account:data[0].account};
-//   } catch (e) {
-//     return e.message;
-//   }
-// }
 
 /**
  * 读取日志内容

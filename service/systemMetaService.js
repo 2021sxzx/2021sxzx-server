@@ -31,57 +31,64 @@ class systemMetaService {
     try {
       // CentOS的CMD指令集，和window的指令是不兼容的，如果需要在window跑起该代码，需要改为：ping ${this.api.xxx}
       // 获取文本数据
-      const SHBAPP_DATA = await exec(`ping -c 4 -n ${api.SHBAPP}`);
-      const GZSRSJGW_DATA = await exec(`ping -c 4 -n ${api.GZSRSJGW}`);
-      const ZNFWJQRYPT_DATA = await exec(`ping -c 4 -n ${api.ZNFWJQRYPT}`);
-      const GDZWFWPT_DATA = await exec(`ping -c 4 -n ${api.GDZWFWPT}`);
-      const BDDT_DATA = await exec(`ping -c 4 -n ${api.BDDT}`);
+      // const SHBAPP_DATA = await exec(`ping -c 4 -n ${api.SHBAPP}`);
+      // const GZSRSJGW_DATA = await exec(`ping -c 4 -n ${api.GZSRSJGW}`);
+      // const ZNFWJQRYPT_DATA = await exec(`ping -c 4 -n ${api.ZNFWJQRYPT}`);
+      // const GDZWFWPT_DATA = await exec(`ping -c 4 -n ${api.GDZWFWPT}`);
+      // const BDDT_DATA = await exec(`ping -c 4 -n ${api.BDDT}`);
 
-      // 提取文本或者错误回调
-      const SHBAPP = SHBAPP_DATA.stderr ? SHBAPP_DATA.stderr : SHBAPP_DATA.stdout;
-      const GZSRSJGW = GZSRSJGW_DATA.stderr ? GZSRSJGW_DATA.stderr : GZSRSJGW_DATA.stdout;
-      const ZNFWJQRYPT = ZNFWJQRYPT_DATA.stderr ? ZNFWJQRYPT_DATA.stderr : ZNFWJQRYPT_DATA.stdout;
-      const GDZWFWPT = GDZWFWPT_DATA.stderr ? GDZWFWPT_DATA.stderr : GDZWFWPT_DATA.stdout;
-      const BDDT = BDDT_DATA.stderr ? BDDT_DATA.stderr : BDDT_DATA.stdout;
+      // // 提取文本或者错误回调
+      // const SHBAPP = SHBAPP_DATA.stderr ? SHBAPP_DATA.stderr : SHBAPP_DATA.stdout;
+      // const GZSRSJGW = GZSRSJGW_DATA.stderr ? GZSRSJGW_DATA.stderr : GZSRSJGW_DATA.stdout;
+      // const ZNFWJQRYPT = ZNFWJQRYPT_DATA.stderr ? ZNFWJQRYPT_DATA.stderr : ZNFWJQRYPT_DATA.stdout;
+      // const GDZWFWPT = GDZWFWPT_DATA.stderr ? GDZWFWPT_DATA.stderr : GDZWFWPT_DATA.stdout;
+      // const BDDT = BDDT_DATA.stderr ? BDDT_DATA.stderr : BDDT_DATA.stdout;
 
-      // 处理文本数据
-      const SHBAPP_ARRAY = SHBAPP.split('\n').filter(item => item != '');
-      const GZSRSJGW_ARRAY = GZSRSJGW.split('\n').filter(item => item != '');
-      const ZNFWJQRYPT_ARRAY = ZNFWJQRYPT.split('\n').filter(item => item != '');
-      const GDZWFWPT_ARRAY = GDZWFWPT.split('\n').filter(item => item != '');
-      const BDDT_ARRAY = BDDT.split('\n').filter(item => item != '');
+      // // 处理文本数据
+      // const SHBAPP_ARRAY = SHBAPP.split('\n').filter(item => item != '');
+      // const GZSRSJGW_ARRAY = GZSRSJGW.split('\n').filter(item => item != '');
+      // const ZNFWJQRYPT_ARRAY = ZNFWJQRYPT.split('\n').filter(item => item != '');
+      // const GDZWFWPT_ARRAY = GDZWFWPT.split('\n').filter(item => item != '');
+      // const BDDT_ARRAY = BDDT.split('\n').filter(item => item != '');
 
-      // 大致信息
-      const APPROXIMATE_SHBAPP = SHBAPP_ARRAY[SHBAPP_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
-      const APPROXIMATE_GZSRSJGW = GZSRSJGW_ARRAY[GZSRSJGW_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
-      const APPROXIMATE_ZNFWJQRYPT = ZNFWJQRYPT_ARRAY[ZNFWJQRYPT_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
-      const APPROXIMATE_GDZWFWPT = GDZWFWPT_ARRAY[GDZWFWPT_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
-      const APPROXIMATE_BDDT = BDDT_ARRAY[BDDT_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
+      // // 大致信息
+      // const APPROXIMATE_SHBAPP = SHBAPP_ARRAY[SHBAPP_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
+      // const APPROXIMATE_GZSRSJGW = GZSRSJGW_ARRAY[GZSRSJGW_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
+      // const APPROXIMATE_ZNFWJQRYPT = ZNFWJQRYPT_ARRAY[ZNFWJQRYPT_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
+      // const APPROXIMATE_GDZWFWPT = GDZWFWPT_ARRAY[GDZWFWPT_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
+      // const APPROXIMATE_BDDT = BDDT_ARRAY[BDDT_ARRAY.length - 1].split('=')[1].split(' ')[0].split('/');
 
-      // 详细信息
-      const DETAILED_SHBAPP = SHBAPP_ARRAY[SHBAPP_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
-      const DETAILED_GZSRSJGW = GZSRSJGW_ARRAY[GZSRSJGW_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
-      const DETAILED_ZNFWJQRYPT = ZNFWJQRYPT_ARRAY[ZNFWJQRYPT_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
-      const DETAILED_GDZWFWPT = GDZWFWPT_ARRAY[GDZWFWPT_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
-      const DETAILED_BDDT = BDDT_ARRAY[SHBAPP_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
+      // // 详细信息
+      // const DETAILED_SHBAPP = SHBAPP_ARRAY[SHBAPP_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
+      // const DETAILED_GZSRSJGW = GZSRSJGW_ARRAY[GZSRSJGW_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
+      // const DETAILED_ZNFWJQRYPT = ZNFWJQRYPT_ARRAY[ZNFWJQRYPT_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
+      // const DETAILED_GDZWFWPT = GDZWFWPT_ARRAY[GDZWFWPT_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
+      // const DETAILED_BDDT = BDDT_ARRAY[SHBAPP_ARRAY.length - 2].split(' ').filter(item => { return !Number.isNaN(Number(item)) }).map(item => Number(item));
 
-      async function judgeConnectingIsSuccessful (APPROXIMATE, DETAILED) {
-        if (DETAILED[0] > DETAILED[1]) {
-          return "差"
-        } else {
-          if (APPROXIMATE[2] - APPROXIMATE[0] < 200 && APPROXIMATE[1] < 150) {
-            return "优"
-          } else {
-            return "良"
-          }
-        }
-      }
+      // async function judgeConnectingIsSuccessful (APPROXIMATE, DETAILED) {
+      //   if (DETAILED[0] > DETAILED[1]) {
+      //     return "差"
+      //   } else {
+      //     if (APPROXIMATE[2] - APPROXIMATE[0] < 200 && APPROXIMATE[1] < 150) {
+      //       return "优"
+      //     } else {
+      //       return "良"
+      //     }
+      //   }
+      // }
 
-      const SHBAPP_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_SHBAPP, DETAILED_SHBAPP);
-      const GZSRSJGW_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_GZSRSJGW, DETAILED_GZSRSJGW);
-      const ZNFWJQRYPT_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_ZNFWJQRYPT, DETAILED_ZNFWJQRYPT);
-      const GDZWFWPT_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_GDZWFWPT, DETAILED_GDZWFWPT);
-      const BDDT_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_BDDT, DETAILED_BDDT);
+      // const SHBAPP_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_SHBAPP, DETAILED_SHBAPP);
+      // const GZSRSJGW_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_GZSRSJGW, DETAILED_GZSRSJGW);
+      // const ZNFWJQRYPT_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_ZNFWJQRYPT, DETAILED_ZNFWJQRYPT);
+      // const GDZWFWPT_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_GDZWFWPT, DETAILED_GDZWFWPT);
+      // const BDDT_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_BDDT, DETAILED_BDDT);
+
+      // 在window使用的测试数据
+      const SHBAPP_INTERFACE_STATUS = '优';
+      const GZSRSJGW_INTERFACE_STATUS = '优';
+      const ZNFWJQRYPT_INTERFACE_STATUS = '优';
+      const GDZWFWPT_INTERFACE_STATUS = '优';
+      const BDDT_INTERFACE_STATUS = '优';
 
       this.interfaceData = {
         SHBAPP: SHBAPP_INTERFACE_STATUS,
@@ -111,7 +118,7 @@ class systemMetaService {
 
     // 第一次的触发执行
     await this.setApiData(this.api);
-    const that = this;
+    let that = this;
 
     // 网络接口问题：每隔12个小时来ping一下
     setInterval(async () => {
@@ -122,7 +129,7 @@ class systemMetaService {
     
     // 15分钟做一次用户获取状态
     setInterval(async () => {
-      await this.getUserOnlineNumber();
+      await that.getUserOnlineNumber();
     }, 15 * 60 * 1000);
   }
 
@@ -163,7 +170,7 @@ class systemMetaService {
     try {
       await redisClient.select(db);
     } catch (error) {
-      throw new Error(error.message);
+      await selectRedisDatabase(db);
     }
   }
 
@@ -190,7 +197,7 @@ class systemMetaService {
   async getMaxUserOnlineNumberOnThisDay () {
     try {
       await this.getUserOnlineNumber();
-      return this.userNumber.sort((a, b) => b - a)[0];
+      return this.userNumber.sort((a, b) => b - a)[0] ? this.userNumber.sort((a, b) => b - a)[0] : 0;
     } catch (error) {
       throw new Error(error.message);
     }
@@ -203,12 +210,12 @@ class systemMetaService {
       return new SuccessModel({
         msg: '获取在线用户数目成功',
         data: {
-          UserOnlineNumber,
-          MaxUserOnlineNumberOnThisDay
+          userOnline: UserOnlineNumber,
+          userMax: MaxUserOnlineNumberOnThisDay
         }
       });
     } catch (error) {
-      return new ErrorModel({
+      throw new ErrorModel({
         msg: '获取在线用户数目失败'
       });
     }

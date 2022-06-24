@@ -23,6 +23,7 @@ const systemBackupRouter=require('./routes/systemBackup')
 const userDepartmentRouter = require('./routes/userDepartment');
 const imageRouter = require('./routes/image');
 const personalRouter = require('./routes/personal');
+const systemMetaAboutUserRouter = require('./routes/systemMetaDataAboutUser');
 const verify = require('./routes/verify');
 
 
@@ -105,7 +106,8 @@ app.use('/api', systemMetaDataRouter)
 app.use('/api', systemBackupRouter)
 app.use('/api', imageRouter)
 app.use('/api', userDepartmentRouter)
-app.use('/api', personalRouter);
+app.use('/api', personalRouter)
+app.use('/api', systemMetaAboutUserRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
