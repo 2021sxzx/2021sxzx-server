@@ -3,7 +3,7 @@ const mongoose = require("mongoose")
 // 系统故障表的定义
 const systemFailureSchema = new mongoose.Schema({
   failure_picture:{
-    type:String,
+    type:Array,
   },
   failure_des:{
     type:String,
@@ -17,7 +17,7 @@ const systemFailureSchema = new mongoose.Schema({
     type:String,
     required:true
   },
-  idc:{
+  user_name:{
     type:String,
     required:true
   }
