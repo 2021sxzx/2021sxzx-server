@@ -197,6 +197,7 @@ class systemMetaService {
   // 获取当天最大用户数目
   async getMaxUserOnlineNumberOnThisDay () {
     try {
+      await this.getUserOnlineNumber();
       return this.userNumber.sort((a, b) => b - a)[0] ? this.userNumber.sort((a, b) => b - a)[0] : 0;
     } catch (error) {
       throw new Error(error.message);

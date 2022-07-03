@@ -8,6 +8,7 @@ var execFile = require("child_process").execFile;
 const schedule = require('node-schedule')
 const logger=require('morgan')
 
+//系统启动时，就自动备份
 var filePath = path.join(__dirname, "./MongoDBBak.sh");
 var logPath = path.join(__dirname, "../log/access.log");
 function getDate() {
@@ -49,19 +50,7 @@ getMongoBackupCycle().then(res => {
  async function getMongoBackupCycle() {
   try {
     var data = await systemConfiguration.findOne({'name': 'backup_cycle'})
-    // console.log(data.configuration.cycle)
     return data.configuration.cycle;
-    // console.log(data)
-    /* var data = fs.readFileSync('log/MongoDB_bak.sh');
-    console.log(Object.prototype.toString.call(data))
-    // console.log(data)
-    var dataString = "";
-    for (var i = 0; i < data.length; i++) {
-        dataString += String.fromCharCode(data[i]);
-    }
-    console.log('dataString')
-    console.log(dataString) */
-    // return res;
   } catch (e) {
     return e.message;
   }
@@ -108,12 +97,6 @@ getMongoBackupCycle().then(res => {
  */
 async function changeBackupCycleService(data) {
     try {
-        // console.log('data.time:',data.time);
-/*         await systemConfiguration.updateOne({name:'backup_cycle'},{
-            _id:_id,
-            name:name,
-            configuration:{cycle:data.time},
-        }) */
         await systemConfiguration.updateOne({name:'backup_cycle'},{
           $set: {configuration:{cycle:data.time}}
         })
@@ -123,8 +106,6 @@ async function changeBackupCycleService(data) {
         })
         var config = await systemConfiguration.findOne({'name': 'backup_cycle'});
         return 'success'
-        // console.log("config:");
-        // console.log(config);
     } catch (e) {
         return e.message;
     }
@@ -133,7 +114,7 @@ async function changeBackupCycleService(data) {
 
 
 /**
- * 定时系统备份
+ * 定时系统备份（这个函数可能不会用上）
  * @returns {Promise<*|*>}
  */
  async function autoBackup() {
@@ -164,44 +145,8 @@ async function changeBackupCycleService(data) {
            createSystemBackup(backup_name,"系统");
            writeStream.write(logString);
            writeStream.end();
-/*
-         const writeStream1 = fs.createWriteStream(logPath, { flags: "a" });
-         //let logString="手动系统备份完成["+getDate()+"]"+stdout+"\n"
-         let logString = "定时系统备份完成[" + getDate() + "]\n";
-         //读取文件发生错误事件
-         writeStream1.on("error", (err) => {
-           console.log("发生异常:", err);
-         });
-         //已打开要写入的文件事件
-         writeStream1.on("open", (fd) => {
-           console.log("文件已打开:");
-         });
-         writeStream1.write(logString);
-         writeStream1.end();
-         //文件已经就写入完成事件
-         writeStream1.on("finish", () => {
-           console.log("写入已完成..");
-           // console.log("读取文件内容:", fs.readFileSync(logPath, "utf8")); //打印写入的内容
-           // console.log(writeStream);
-         });
-         //文件关闭事件
-         writeStream1.on("close", () => {
-           console.log("文件已关闭！");
-         });
-*/
        });
      });
-
-     /*     execFile("ping",["www.baidu.com"],function(err,stdout,stderr){
-      if(err){console.log(err)}
-      console.log("stdout:",stdout)
-      console.log("stderr:",stderr);
-    }) */
-     /*     execFile("cmd",["node -v"],function(err,stdout,stderr){
-      if(err){console.log(err)}
-      console.log("stdout:",stdout)
-      console.log("stderr:",stderr);
-    }) */
    } catch (e) {
      return e.message;
    }

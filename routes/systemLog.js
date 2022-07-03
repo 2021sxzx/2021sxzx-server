@@ -60,11 +60,5 @@ router.get('/v1/itemBrowseCount',async (req,res,next) => {
   res.json(data.data)
 })
 
-router.get('/v1/metaDataLog1',async (req,res,next) => {
-    let data = [[1,25],[2,60],[3,10]]
-    // setStatusCode(res,data)
-    res.json(data)
-})
-
 
 module.exports = router;

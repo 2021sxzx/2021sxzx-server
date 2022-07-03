@@ -77,9 +77,7 @@ router.post('/v1/change-backup-cycle', async (req,res,next) => {
  * 删除一个备份
  */
  router.post('/v1/delete-system-backup', async (req, res, next) => {
-  // console.log("first")
   let data=req.body;
-  // console.log(data);
   var backupPath=path.join('/www/backup/mongodb_bak/mongodb_bak_list',data.backup_name)
   fs.unlink(backupPath, function(err){
     if(err)throw err;

@@ -2,10 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer=require('multer');
 const bodyParser = require('body-parser');
-// const formidable = require('express-formidable')
 const path = require('path');
-// router.use(bodyParser.urlencoded({ limit: '50mb', extended: true,parameterLimit:50000 }))
-// router.use(bodyParser.json({limit: '50mb'}))
 
 /* 系统基础管理相关的路由处理. */
   
@@ -37,54 +34,6 @@ router.all('*', function(req, res, next) {
   if(req.method=="OPTIONS") res.sendStatus(200);/*让options请求快速返回*/
   else  next();
 });
-
-// router.all(formidable())
-// router.use(formidable())
-
-//  router.post(
-//    "/v1/upload",
-//    multer({
-//      dest: "upload",filename:"testname"
-//    }).single("file"),
-//    (req, res) => {
-//     //  res.header("Access-Control-Allow-Origin", "*");
-//     //  res.header("Access-Control-Allow-Headers", "Content-Type");
-//     //  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-//      // 获取文件基本信息
-//     //  req.file.filename=req.file.originalname;
-//      console.log(req.file.originalname);
-//      res.send(req.file);
-//    }
-//  );
-// var myself=express.Router()
-// var App=express()
-//测试中间件
-// myself.use(function(req, res,next){
-//   console.log("use")
-//   next()
-// })
-// router.use('/v1/use',async(req,res,next)=>{
-//   req.enter="file"
-//   const storage = multer.diskStorage({
-//     destination(req,res,cb){
-//       cb(null,'upload');
-//     },
-//     filename(req,file,cb){
-//       const filenameArr = file.originalname.split('.');
-//       cb(null,req.enter + '.' + filenameArr[filenameArr.length-1]);
-//     }
-//   });
-//   req.upload=multer({storage});
-//   next()
-// })
-// router.post('/v1/use',req.upload.single(req.enter),async(req,res)=>{
-//   console.log(req.body)
-//   // res.send(req.);
-// })
-// myself.get('/',async(req,res,next)=>{
-//   res.json("index");
-// })
-// App.use('/use',myself)
 
 //拿到网站设置中其他input等表单项
 router.get('/v1/site-settings',function(req,res){

@@ -82,31 +82,11 @@ async function viewProcessMessage1(){
    return data;
 }
 
-function viewProcessMessage2() {
-  return new Promise(function(resolve, reject) {
-      var cmd = "node -v";
-      exec(cmd,{
-          maxBuffer: 1024 * 2000
-      }, function(err, stdout, stderr) {
-          if (err) {
-              console.log(err);
-              reject(err);
-          } else if (stderr.length > 0) {
-              reject(new Error(stderr.toString()));
-          } else {
-              console.log('stdout:',stdout);
-              resolve();
-          }
-      });
-  });
-};
-
 /**
  * 获取进程
  * @returns {Promise<*|*>}
  */
  async function viewProcessMessage () {//name, cb
-  // return 12;
   var a='haha'
   let data = await new Promise(function(resolve, reject) {
 

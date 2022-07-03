@@ -221,9 +221,9 @@ async function getItems({
     page_num = null
 }) {
     try {
-        if (user_id === null) {
-            throw new Error('需要user_id')
-        }
+        // if (user_id === null) {
+        //     throw new Error('需要user_id')
+        // }
         var query = {}
         if (item_name !== null) query.item_name = { $regex: item_name }
         if (task_code !== null) query.task_code = { $in: task_code }
@@ -232,16 +232,18 @@ async function getItems({
         query['$and'] = []
         //----------------------------------------------------
         //只显示用户所属部门及其下属部门的事项
-        let user = await modelUsers.findOne({ _id: user_id })
-        if (user === null) {
-            throw new Error('user_id不合法')
+        if (user_id !== null) {
+            let user = await modelUsers.findOne({ _id: user_id })
+            if (user === null) {
+                throw new Error('user_id不合法')
+            }
+            let units = await unitService._allChildUnitArr(user.unit_id)
+            let users = await modelUsers.find({ unit_id: { $in: units } })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
         }
-        let units = await unitService._allChildUnitArr(user.unit_id)
-        let users = await modelUsers.find({ unit_id: { $in: units } })
-        for (let i = 0, len = users.length; i < len; i++) {
-            users.push(users.shift()._id)
-        }
-        query['$and'].push({ creator_id: { $in: users } })
         //------------------------------------------------------
         if (region_code !== null) {
             let regions = await modelRegion.find({ region_code: { $in: region_code } }, { _id: 1 })
@@ -837,9 +839,9 @@ async function getItemGuides({
     page_num = null
 }) {
     try {
-        if (user_id === null) {
-            throw new Error('需要user_id')
-        }
+        // if (user_id === null) {
+        //     throw new Error('需要user_id')
+        // }
         var query = {}
         if (task_status !== null) query.task_status = task_status
         if (task_code !== null) query.task_code = task_code
@@ -847,16 +849,18 @@ async function getItemGuides({
         query['$and'] = []
         //----------------------------------------------------
         //只显示用户所属部门及其下属部门的事项
-        let user = await modelUsers.findOne({ _id: user_id })
-        if (user === null) {
-            throw new Error('user_id不合法')
+        if (user_id !== null) {
+            let user = await modelUsers.findOne({ _id: user_id })
+            if (user === null) {
+                throw new Error('user_id不合法')
+            }
+            let units = await unitService._allChildUnitArr(user.unit_id)
+            let users = await modelUsers.find({ unit_id: { $in: units } })
+            for (let i = 0, len = users.length; i < len; i++) {
+                users.push(users.shift()._id)
+            }
+            query['$and'].push({ creator_id: { $in: users } })
         }
-        let units = await unitService._allChildUnitArr(user.unit_id)
-        let users = await modelUsers.find({ unit_id: { $in: units } })
-        for (let i = 0, len = users.length; i < len; i++) {
-            users.push(users.shift()._id)
-        }
-        query['$and'].push({ creator_id: { $in: users } })
         //------------------------------------------------------
         if (creator_name !== null) {
             let users = await modelUsers.find({ user_name: { $regex: creator_name } }, { _id: 1 })

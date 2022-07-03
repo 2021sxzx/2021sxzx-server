@@ -53,14 +53,13 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
       role_id: Date.now()
     });
     isNeedUpdateRoleList = true;
-    // 往权限角色关联表里面添加关联
-    // 多次插入，可能影响效率，后续做一次性优化处理
-    permission_identifier_array.forEach(async (item) => {
-      await roleMapPermission.create({
+    const insertValue = permission_identifier_array.map(item => {
+      return {
         role_id: res.role_id,
         permission_identifier: item
-      })
-    })
+      }
+    });
+    await roleMapPermission.create(insertValue);
     // 返回一个角色，没有权限
     return res
 
@@ -120,6 +119,7 @@ async function getRoleList () {
   try {
     let resq = null;
     if (roleList == null || isNeedUpdateRoleList == true) {
+      console.log(1);
       resq = await role.aggregate([
         {
           $lookup: {
@@ -137,6 +137,7 @@ async function getRoleList () {
           }
         }
       ]);
+      console.log(resq);
       roleList = resq;
       isNeedUpdateRoleList = false;
     } else {
@@ -147,11 +148,10 @@ async function getRoleList () {
       permissionList = _permissionList;
     }
 
-    resq.map(item => {
+    resq.forEach(item => {
       item["permission"] = item.permission_identifier_array.map(item => {
         return searchPermissionName(item, permissionList);
       });
-      return item;
     });
     return resq
   } catch (e) {
@@ -326,16 +326,13 @@ async function getPermissionList () {
  */
 async function addPermission (role_id, ...permission_identifier_array) {
   try {
-    let addedArr = await Promise.all(
-      permission_identifier_array.map(async (item) => {
-        const res = await roleMapPermission.create({
-          role_id,
-          permission_identifier: item
-        });
-        return res;
-      })
-    )
-    return addedArr
+    const insertValue = permission_identifier_array.map(item => {
+      return {
+        role_id,
+        permission_identifier: item
+      }
+    });
+    return await roleMapPermission.create(insertValue);
 
   } catch (error) {
     throw new Error(e.message)

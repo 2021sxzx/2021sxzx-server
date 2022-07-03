@@ -147,8 +147,13 @@ async function searchRoleAndReturnList (searchValue) {
 async function updatePermission (role_id, permission_identifier_array) {
   try {
     await deletePermission(role_id)
-    const res = await addPermission(role_id, permission_identifier_array)
-    return res
+    await addPermission(role_id, ...permission_identifier_array);
+    const res = await getRoleList();
+
+    return new SuccessModel({
+      msg: '修改角色权限成功',
+      data: res
+    })
   } catch (error) {
     throw new ErrorModel({
       msg: error.message
