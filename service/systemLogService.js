@@ -110,41 +110,19 @@ async function searchByCondition({ myselfID, today, thisWeek }) {
     condition.pageNum = 0;
     let systemLogData = await showSystemLog();
     let newSystemLogData = [];
-    // thisWeek=true;
-    // myself=true;
-    // return { myself, today, thisWeek }
     if (myselfID === '' && today === false && thisWeek === false) {
       return systemLogData
-      // return [{idc:"001"}]
-  //     TimeZone time = TimeZone.getTimeZone("Etc/GMT-8");  //转换为中国时区
-
-  // TimeZone.setDefault(time);
-  //     var d = new Date();
-  //     return d;
-  //     newSystemLogData = systemLogData.filter((currentItem) => {
-  //       return currentItem.create_time.substring(0, 10) == d.toJSON().substring(0,10);
-  //     });
     }
-    // else {
-    //   return (newSystemLogData = systemLogData.filter((currentItem) => {
-    //     return currentItem.user_name === "张毅";
-    //   }));
-    // }
     if (myselfID) {
-      // console.log('myself:',myselfID)
       newSystemLogData = systemLogData.filter((currentItem) => {
-        // console.log(currentItem)
-        // console.log(currentItem._id,':',myself)
         return currentItem._id === myselfID;
       });
     }
     if (today === true) {
       let d = new Date();
       newSystemLogData = systemLogData.filter((currentItem) => {
-        // console.log(currentItem.create_time.substring(0, 10),'||',d.toJSON().substring(0,10))
         return currentItem.create_time.substring(0, 10) === d.toJSON().substring(0,10);
       });
-      // console.log(newSystemLogData)
     }
     if (thisWeek === true) {
       let date1 = new Date();
@@ -173,49 +151,6 @@ async function searchByCondition({ myselfID, today, thisWeek }) {
       });
     }
     return newSystemLogData
-    // if (myself == false) {
-    //   if (today == false) {
-    //     if (thisWeek ==false) {
-    //       return (newSystemLogData = systemLogData.filter((currentItem) => {
-    //         return currentItem.user_name === "张奕凯";
-    //       }));
-    //     }
-    //   }
-    // } else {
-    //   return newSystemLogData
-    // }
-    // if (myself == false) {
-    //   if (today == false) {
-    //     if (thisWeek == false) {
-    //       return "systemLogData";
-    //     }else {
-    //       return "only week"
-    //     }
-    //   }
-    //   else {
-    //     return "only today"
-    //   }
-    // }else{
-    //   return "myself"
-    // }
-    // } else if (myself) {
-    //   return newSystemLogData = systemLogData.filter((currentItem) => {
-    //     return currentItem.user_name === "张毅";
-    //   });
-    // } else if (today==true) {
-    //   let d = new Date();
-    //   return d;
-      // return newSystemLogData = systemLogData.filter((currentItem) => {
-      //   return (
-      //     currentItem.create_time.substring(0, 10) ==
-      //     d.toJSON().substring(0, 10)
-      //   );
-      // });
-    // } else {
-    //   return newSystemLogData = systemLogData.filter((currentItem) => {
-    //     return currentItem.user_name === "张奕凯";
-    //   });
-    // }
   } catch (e) {
     return e.message;
   }
