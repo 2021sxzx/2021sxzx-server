@@ -1,7 +1,6 @@
 const users = require('../model/users');
 const unit = require('../model/unit');
 const role = require('../model/role');
-const unitService = require('../service/unitService');
 
 // 用户数据拉取之后放到这里，下次便于取出，无需交互数据库
 let userCache = null;

@@ -119,7 +119,6 @@ async function getRoleList () {
   try {
     let resq = null;
     if (roleList == null || isNeedUpdateRoleList == true) {
-      console.log(1);
       resq = await role.aggregate([
         {
           $lookup: {
@@ -137,7 +136,6 @@ async function getRoleList () {
           }
         }
       ]);
-      console.log(resq);
       roleList = resq;
       isNeedUpdateRoleList = false;
     } else {
