@@ -8,7 +8,6 @@ const modelTask = require('../model/task')
 const modelUserRank = require('../model/userRank')
 const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
-const modelDepartmentMapUsers = require('../model/departmentMapUser');
 const modelStatusMapPermissions = require('../model/statusMapPermissions')
 const modelUnit = require('../model/unit')
 const itemService = require('../service/itemService')
@@ -313,6 +312,12 @@ async function getItems({
                                 }
                             },
                             {
+                                $addFields: {
+                                    user: { $arrayElemAt: ['$user', 0] },
+                                    region_info: { $arrayElemAt: ['$region_info', 0] }
+                                }
+                            },
+                            {
                                 $lookup: {
                                     from: modelUnit.collection.name,
                                     localField: 'user.unit_id',
@@ -322,9 +327,7 @@ async function getItems({
                             },
                             {
                                 $addFields: {
-                                    user: { $arrayElemAt: ['$user', 0] },
-                                    department: { $arrayElemAt: ['$unit', 0] },
-                                    region_info: { $arrayElemAt: ['$region_info', 0] }
+                                    unit: { $arrayElemAt: ['$unit', 0] }
                                 }
                             },
                             {
@@ -337,7 +340,7 @@ async function getItems({
                                     region_code: '$region_info.region_code'
                                 }
                             },
-                            { $project: { __v: 0, user: 0, department: 0, creator_id: 0, region_info: 0 } }
+                            { $project: { __v: 0, user: 0, unit: 0, creator_id: 0, region_info: 0 } }
                         ]
                     }
                 }
@@ -393,18 +396,22 @@ async function getItems({
                 }
             },
             {
+                $addFields: {
+                    user: { $arrayElemAt: ['$user', 0] },
+                    region_info: { $arrayElemAt: ['$region_info', 0] }
+                }
+            },
+            {
                 $lookup: {
-                    from: modelDepartmentMapUsers.collection.name,
-                    localField: 'user.account',
-                    foreignField: 'account',
-                    as: 'department'
+                    from: modelUnit.collection.name,
+                    localField: 'user.unit_id',
+                    foreignField: 'unit_id',
+                    as: 'unit'
                 }
             },
             {
                 $addFields: {
-                    user: { $arrayElemAt: ['$user', 0] },
-                    department: { $arrayElemAt: ['$department', 0] },
-                    region_info: { $arrayElemAt: ['$region_info', 0] }
+                    unit: { $arrayElemAt: ['$unit', 0] }
                 }
             },
             {
@@ -412,12 +419,12 @@ async function getItems({
                     creator: {
                         id: '$creator_id',
                         name: '$user.user_name',
-                        department_name: '$department.department_name'
+                        department_name: '$unit.unit_name'
                     },
                     region_code: '$region_info.region_code'
                 }
             },
-            { $project: { __v: 0, user: 0, department: 0, creator_id: 0, region_info: 0 } }
+            { $project: { __v: 0, user: 0, unit: 0, creator_id: 0, region_info: 0 } }
         ])
         //计算规则路径和区划路径
         var ruleDic = itemService.getRuleDic()
@@ -777,6 +784,11 @@ async function getItemGuide({
                 }
             },
             {
+                $addFields: {
+                    user: { $arrayElemAt: ['$user', 0] }
+                }
+            },
+            {
                 $lookup: {
                     from: modelUnit.collection.name,
                     localField: 'user.unit_id',
@@ -786,8 +798,7 @@ async function getItemGuide({
             },
             {
                 $addFields: {
-                    user: { $arrayElemAt: ['$user', 0] },
-                    department: { $arrayElemAt: ['$unit', 0] }
+                    unit: { $arrayElemAt: ['$unit', 0] }
                 }
             },
             {
@@ -799,7 +810,7 @@ async function getItemGuide({
                     }
                 }
             },
-            { $project: { __v: 0, user: 0, department: 0, creator_id: 0 } }
+            { $project: { __v: 0, user: 0, unit: 0, creator_id: 0 } }
         ])
         //aggregate返回的结果是数组，需要处理一下
         if (res.length > 0) {
@@ -909,6 +920,11 @@ async function getItemGuides({
                                 }
                             },
                             {
+                                $addFields: {
+                                    user: { $arrayElemAt: ['$user', 0] }
+                                }
+                            },
+                            {
                                 $lookup: {
                                     from: modelUnit.collection.name,
                                     localField: 'user.unit_id',
@@ -918,8 +934,7 @@ async function getItemGuides({
                             },
                             {
                                 $addFields: {
-                                    user: { $arrayElemAt: ['$user', 0] },
-                                    department: { $arrayElemAt: ['$unit', 0] }
+                                    unit: { $arrayElemAt: ['$unit', 0] }
                                 }
                             },
                             {
@@ -955,17 +970,21 @@ async function getItemGuides({
                 }
             },
             {
+                $addFields: {
+                    user: { $arrayElemAt: ['$user', 0] }
+                }
+            },
+            {
                 $lookup: {
-                    from: modelDepartmentMapUsers.collection.name,
-                    localField: 'user.account',
-                    foreignField: 'account',
-                    as: 'department'
+                    from: modelUnit.collection.name,
+                    localField: 'user.unit_id',
+                    foreignField: 'unit_id',
+                    as: 'unit'
                 }
             },
             {
                 $addFields: {
-                    user: { $arrayElemAt: ['$user', 0] },
-                    department: { $arrayElemAt: ['$department', 0] }
+                    unit: { $arrayElemAt: ['$unit', 0] }
                 }
             },
             {
@@ -973,7 +992,7 @@ async function getItemGuides({
                     creator: {
                         id: '$creator_id',
                         name: '$user.user_name',
-                        department_name: '$department.department_name'
+                        department_name: '$unit.unit_name'
                     }
                 }
             },
@@ -1039,8 +1058,8 @@ async function createItemGuide({
         if (user === null) {
             throw new Error('user_id不存在: ' + user_id)
         }
-        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
-        if (department === null) {
+        var unit = await modelUnit.findOne({ unit_id: user.unit_id }, { __v: 0 })
+        if (unit === null) {
             throw new Error('用户没有所属部门')
         }
         var newData = {
@@ -1432,6 +1451,11 @@ async function getRegions({
                                 }
                             },
                             {
+                                $addFields: {
+                                    user: { $arrayElemAt: ['$user', 0] }
+                                }
+                            },
+                            {
                                 $lookup: {
                                     from: modelUnit.collection.name,
                                     localField: 'user.unit_id',
@@ -1441,8 +1465,7 @@ async function getRegions({
                             },
                             {
                                 $addFields: {
-                                    user: { $arrayElemAt: ['$user', 0] },
-                                    department: { $arrayElemAt: ['$unit', 0] }
+                                    unit: { $arrayElemAt: ['$unit', 0] }
                                 }
                             },
                             {
@@ -1454,7 +1477,7 @@ async function getRegions({
                                     }
                                 }
                             },
-                            { $project: { __v: 0, user: 0, department: 0, creator_id: 0 } }
+                            { $project: { __v: 0, user: 0, unit: 0, creator_id: 0 } }
                         ]
                     }
                 }
@@ -1493,17 +1516,21 @@ async function getRegions({
                 }
             },
             {
+                $addFields: {
+                    user: { $arrayElemAt: ['$user', 0] }
+                }
+            },
+            {
                 $lookup: {
-                    from: modelDepartmentMapUsers.collection.name,
-                    localField: 'user.account',
-                    foreignField: 'account',
-                    as: 'department'
+                    from: modelUnit.collection.name,
+                    localField: 'user.unit_id',
+                    foreignField: 'unit_id',
+                    as: 'unit'
                 }
             },
             {
                 $addFields: {
-                    user: { $arrayElemAt: ['$user', 0] },
-                    department: { $arrayElemAt: ['$department', 0] }
+                    unit: { $arrayElemAt: ['$unit', 0] }
                 }
             },
             {
@@ -1511,11 +1538,11 @@ async function getRegions({
                     creator: {
                         id: '$creator_id',
                         name: '$user.user_name',
-                        department_name: '$department.department_name'
+                        department_name: '$unit.unit_name'
                     }
                 }
             },
-            { $project: { __v: 0, user: 0, department: 0, creator_id: 0 } }
+            { $project: { __v: 0, user: 0, unit: 0, creator_id: 0 } }
         ])
         //计算区划路径
         var regionDic = itemService.getRegionDic()
@@ -1558,8 +1585,8 @@ async function createItems({
         if (user === null) {
             throw new Error('user_id不存在: ' + user_id)
         }
-        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
-        if (department === null) {
+        var unit = await modelUnit.findOne({ unit_id: user.unit_id }, { __v: 0 })
+        if (unit === null) {
             throw new Error('用户没有所属部门')
         }
         //遍历数组创建事项
@@ -1890,6 +1917,11 @@ async function getRules({
                 }
             },
             {
+                $addFields: {
+                    user: { $arrayElemAt: ['$user', 0] }
+                }
+            },
+            {
                 $lookup: {
                     from: modelUnit.collection.name,
                     localField: 'user.unit_id',
@@ -1899,8 +1931,7 @@ async function getRules({
             },
             {
                 $addFields: {
-                    user: { $arrayElemAt: ['$user', 0] },
-                    department: { $arrayElemAt: ['$unit', 0] }
+                    unit: { $arrayElemAt: ['$unit', 0] }
                 }
             },
             {
@@ -1913,7 +1944,7 @@ async function getRules({
                 }
             },
             {
-                $project: { __v: 0, user: 0, department: 0, creator_id: 0 }
+                $project: { __v: 0, user: 0, unit: 0, creator_id: 0 }
             }
         ])
         //计算规则路径
@@ -1963,8 +1994,8 @@ async function createRegion({
         if (user === null) {
             throw new Error('user_id不存在: ' + user_id)
         }
-        var department = await modelDepartmentMapUsers.findOne({ account: user.account }, { __v: 0 })
-        if (department === null) {
+        var unit = await modelUnit.findOne({ unit_id: user.unit_id }, { __v: 0 })
+        if (unit === null) {
             throw new Error('用户没有所属部门')
         }
         //检查region_level和parentId的合法性
