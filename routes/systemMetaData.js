@@ -3,6 +3,7 @@ const router = express.Router();
 const multer=require('multer');
 const bodyParser = require('body-parser');
 const path = require('path');
+const { route } = require('./systemMetaDataAboutUser');
 
 /* 系统基础管理相关的路由处理. */
   
@@ -67,6 +68,16 @@ router.post('/v1/core-settings',function(req,res){
     console.log('收到核心设置')
     console.log(req.body)
     res.send('结束')
+})
+
+//日志配置
+router.get('/v1/log-path', function (req, res) {
+  res.send({
+    systemLogPath: '/root/sxzx/sxzx/log',
+    databaseLogPath: '/usr/local/mongodb/logs',
+    OSLogPath: '/var/log',
+    middlewareLogPath: '/usr/local/redis/log',
+  })
 })
 
 //上传首页轮播图
