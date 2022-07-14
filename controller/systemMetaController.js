@@ -1,6 +1,5 @@
 const systemMetaService = require('../service/systemMetaService');
 const {ErrorModel} = require('../utils/resultModel');
-const {calculateUV} = require('../utils/caculateUV')
 
 function setStatusCode(res,data) {
   if(data.code === 200) {
@@ -53,6 +52,29 @@ class systemMetaController {
       res.json(result);
     } catch (error) {
       res.json(new Error(error.message));
+    }
+  }
+
+  // 获取核心设置
+  async getCoreSetting(req,res){
+    try {
+      const result = await systemMetaService.getCoreSetting()
+      setStatusCode(res,result)
+      res.json(result);
+    }catch (error){
+      res.json(new Error(error.message))
+    }
+  }
+
+  // 修改核心设置
+  async patchCoreSetting(req,res){
+    try {
+      const CoreSetting = req.body
+      const result = await systemMetaService.patchCoreSetting(CoreSetting)
+      setStatusCode(res,result)
+      res.json(result);
+    }catch (error){
+      res.json(new Error(error.message))
     }
   }
 }

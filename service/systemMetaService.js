@@ -177,14 +177,13 @@ class systemMetaService {
         { name: 'interface-setting' },
         'data'
       )
-      console.log(InterfaceUrl.data)
       return new SuccessModel({
         msg: "获取接口URL成功",
         data: InterfaceUrl.data
       });
     } catch (error) {
       return new ErrorModel({
-        msg: '修改接口URL失败'
+        msg: '获取接口URL失败'
       });
     }
   }
@@ -253,6 +252,41 @@ class systemMetaService {
       msg: '获取平均用户数目成功',
       data: res / this.userNumber.length
     })
+  }
+
+  // 获取核心设置
+  async getCoreSetting() {
+    try {
+      let CoreSetting = await systemMeta.findOne(
+        { name: 'core-setting' },
+        'data'
+      )
+      return new SuccessModel({
+        msg: "获取核心设置成功",
+        data: CoreSetting.data
+      });
+    } catch (error) {
+      return new ErrorModel({
+        msg: '获取核心设置失败'
+      });
+    }
+  }
+
+  // 修改核心设置
+  async patchCoreSetting(CoreSetting) {
+    try {
+      await systemMeta.updateOne(
+        { name: 'core-setting' },
+        { $set: { data: CoreSetting } }
+      )
+      return new SuccessModel({
+        msg: "修改核心设置成功"
+      });
+    } catch (error) {
+      return new ErrorModel({
+        msg: '修改核心设置失败'
+      });
+    }
   }
 }
 

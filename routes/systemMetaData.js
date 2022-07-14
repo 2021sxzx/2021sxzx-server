@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer=require('multer');
-const bodyParser = require('body-parser');
-const path = require('path');
-const { route } = require('./systemMetaDataAboutUser');
+const systemMetaController = require('../controller/systemMetaController');
 
 /* 系统基础管理相关的路由处理. */
   
@@ -49,26 +47,9 @@ router.post('/v1/site-settings',function(req,res){
 })
 
 //核心设置
-router.get('/v1/core-settings', function (req, res, next) {
-  res.send({
-    ICP_record_number: '粤ICP备 11001610号-1',
-    network_record_number: '粤公网安备 44010402001594号',
-    url_about_us: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
-    url_contact_detail: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
-    url_privacy_security: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
-    url_website_statement: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
-    url_website_map: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
-    url_help: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
-    url_icp_record: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
-    url_network_record: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
-  })
-})
+router.get('/v1/core-settings', systemMetaController.getCoreSetting)
 
-router.post('/v1/core-settings',function(req,res){
-    console.log('收到核心设置')
-    console.log(req.body)
-    res.send('结束')
-})
+router.patch('/v1/core-settings',systemMetaController.patchCoreSetting)
 
 //日志配置
 router.get('/v1/log-path', function (req, res) {
