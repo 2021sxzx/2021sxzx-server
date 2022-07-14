@@ -38,13 +38,7 @@ router.all('*', function(req, res, next) {
 //拿到网站设置中其他input等表单项
 router.get('/v1/site-settings',function(req,res){
   res.send({
-    WebsiteAbbreviation:"网站简称",
-    WebsiteDomainName:"xxx.domain",
-    CopyrightInformation:"测试是否本地",
-    RecordNumber:"020",
-    ServiceHotline:"171",
-    Address:"广州",
-    Disclaimers:"不关我事，昨天很早就睡了"
+    WebsiteAbbreviation:"网站简称"
   });
 })
 
@@ -53,24 +47,23 @@ router.post('/v1/site-settings',function(req,res){
   res.send('结束')
 })
 
-router.get('/v1/core-settings',function(req,res,next){
-    res.send({
-        MobileDomainName: "404.com",
-        PCDomainName:"999.com"
-    })
+//核心设置
+router.get('/v1/core-settings', function (req, res, next) {
+  res.send({
+    ICP_record_number: '粤ICP备 11001610号-1',
+    network_record_number: '粤公网安备 44010402001594号',
+    url_about_us: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
+    url_contact_detail: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
+    url_privacy_security: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
+    url_website_statement: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
+    url_website_map: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
+    url_help: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
+    url_icp_record: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
+    url_network_record: 'https://www.gdzwfw.gov.cn/portal/index?region=440100',
+  })
 })
+
 router.post('/v1/core-settings',function(req,res){
-    console.log('收到核心设置')
-    console.log(req.body)
-    res.send('结束')
-})
-router.get('/v1/interface-configuration',function(req,res,next){
-    res.send({
-        OfficialWebsite: "wuhu.com",
-        OfficialAccount:"ism.com"
-    })
-})
-router.post('/v1/interface-configuration',function(req,res){
     console.log('收到核心设置')
     console.log(req.body)
     res.send('结束')

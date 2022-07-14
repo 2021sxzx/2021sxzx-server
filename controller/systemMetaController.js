@@ -1,5 +1,6 @@
 const systemMetaService = require('../service/systemMetaService');
 const {ErrorModel} = require('../utils/resultModel');
+const {calculateUV} = require('../utils/caculateUV')
 
 function setStatusCode(res,data) {
   if(data.code === 200) {
@@ -37,6 +38,17 @@ class systemMetaController {
     try {
       const api = req.body;
       const result = await systemMetaService.patchInterface(api);
+      setStatusCode(res, result);
+      res.json(result);
+    } catch (error) {
+      res.json(new Error(error.message));
+    }
+  }
+
+  // 获取接口url
+  async getInterfaceUrl(req,res){
+    try {
+      const result = await systemMetaService.getInterfaceUrl();
       setStatusCode(res, result);
       res.json(result);
     } catch (error) {
