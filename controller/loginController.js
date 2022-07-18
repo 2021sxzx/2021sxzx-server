@@ -1,9 +1,7 @@
 const {
-    authenticate,
-    logout,
-    isLogin
+  authenticate, logout, isLogin
 } = require("../service/loginService")
-const { SuccessModel, ErrorModel } = require('../utils/resultModel');
+const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
 /**
  * 登陆的身份验证
@@ -11,20 +9,17 @@ const { SuccessModel, ErrorModel } = require('../utils/resultModel');
  * @returns {Promise<ErrorModel|SuccessModel>}
  */
 async function postLogin(loginData) {
-
-    try {
-        let data = await authenticate(loginData)
-        if (data.code == 200) {
-            return new SuccessModel(data);
-        } else {
-            return new ErrorModel(data)
-        }
-    } catch (e) {
-        return new ErrorModel({ msg: e.message });
+  try {
+    let data = await authenticate(loginData)
+    if (data.code === 200) {
+      return new SuccessModel(data);
+    } else {
+      return new ErrorModel(data)
     }
-
-};
-
+  } catch (e) {
+    return new ErrorModel({msg: e.message});
+  }
+}
 
 /**
  * 登出
@@ -33,21 +28,19 @@ async function postLogin(loginData) {
  */
 async function postLogout(logoutData) {
 
-    try {
-        let data = await logout(logoutData);
-        return new SuccessModel({ msg: '登出成功', data: data });
-    } catch (e) {
-        return new ErrorModel({ msg: e.message });
-    }
+  try {
+    let data = await logout(logoutData);
+    return new SuccessModel({msg: '登出成功', data: data});
+  } catch (e) {
+    return new ErrorModel({msg: e.message});
+  }
 }
 
-async function JudgeIsLogin (token) {
+async function JudgeIsLogin(token) {
   try {
     const res = await isLogin(token);
-    console.log("res", res);
     return new SuccessModel({
-      msg: "判断结果为data的boolean值",
-      data:  {
+      msg: "判断结果为data的boolean值", data: {
         isLogin: res
       }
     })
@@ -57,7 +50,5 @@ async function JudgeIsLogin (token) {
 }
 
 module.exports = {
-    postLogin,
-    postLogout,
-    JudgeIsLogin
+  postLogin, postLogout, JudgeIsLogin
 }
