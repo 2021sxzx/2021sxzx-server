@@ -1,8 +1,8 @@
 const systemLog = require("../model/systemLog");
 const users = require("../model/users");
 const fs = require('fs')
-const { getUserById } = require('../service/userManagementService');
-const { start } = require("repl");
+const {getUserById} = require('../service/userManagementService');
+const {start} = require("repl");
 //与数据库默认的_id进行匹配
 var ObjectID = require('mongoose').ObjectId;
 
@@ -13,15 +13,15 @@ var ObjectID = require('mongoose').ObjectId;
 function chargeTypeChange(value) {
   // TODO: 后续补全操作映射表
   var chargeTypeGroup = {
-      "GET /api/v1/allSystemLog":"查询所有日志",
-      "GET /api/v1/allSystemLogDetail":"查询详细日志",
-      "POST /api/v1/getUserRank":"获取用户评论等级",
-      "GET /api/v1/getRuleTree/":"获取事项规则树",
-      "GET /api/v1/getItemStatusScheme":"获取事项规则数据集",
-      "POST /api/v1/getItems":"获取事项规则",
-      "POST /api/v1/login":"用户登录",
-      "POST /api/v1/sideBar":"获取侧边栏",
-      "GET /api/v1/getRegionTree/":"获取规则树",
+    "GET /api/v1/allSystemLog": "查询所有日志",
+    "GET /api/v1/allSystemLogDetail": "查询详细日志",
+    "POST /api/v1/getUserRank": "获取用户评论等级",
+    "GET /api/v1/getRuleTree/": "获取事项规则树",
+    "GET /api/v1/getItemStatusScheme": "获取事项规则数据集",
+    "POST /api/v1/getItems": "获取事项规则",
+    "POST /api/v1/login": "用户登录",
+    "POST /api/v1/sideBar": "获取侧边栏",
+    "GET /api/v1/getRegionTree/": "获取规则树",
   };
   return chargeTypeGroup[value];
 }
@@ -36,17 +36,17 @@ function chargeTypeChange(value) {
  * 读取日志内容
  * @returns {Promise<*|*>}
  */
- async function showSystemLog() {
+async function showSystemLog() {
   try {
     var data = fs.readFileSync('log/access.log');
     data = data.toString().split("\n");
     var dataArray = []
     var user = ""//objectkey for循环
 
-    var dataLength=data.length;
-    for (let i = 0; i < dataLength; i++){
+    var dataLength = data.length;
+    for (let i = 0; i < dataLength; i++) {
       // 系统id我们弄为000
-      user = await getUserById(data[i].slice(0,data[i].indexOf(":")-1))
+      user = await getUserById(data[i].slice(0, data[i].indexOf(":") - 1))
       if (!user) {
         continue
       }
@@ -65,14 +65,15 @@ function chargeTypeChange(value) {
     return "showSystemLog:" + e.message;
   }
 }
+
 /**
  * 专门为系统元数据写的返回全部系统日志（不包括操作人）的接口
  * @returns {Promise<*|*>}
  */
- async function getAllSystemLog2() {
+async function getAllSystemLog2() {
   try {
     var data = fs.readFileSync('log/access.log');
-    data=data.toString().split("\n");
+    data = data.toString().split("\n");
     return data;
   } catch (e) {
     return e.message;
@@ -104,7 +105,7 @@ async function getSystemLogDetail() {
  * @param thisWeek
  * @returns {Promise<*>}
  */
-async function searchByCondition({ myselfID, today, thisWeek }) {
+async function searchByCondition({myselfID, today, thisWeek}) {
   try {
     let condition = {};
     condition.pageNum = 0;
@@ -121,7 +122,7 @@ async function searchByCondition({ myselfID, today, thisWeek }) {
     if (today === true) {
       let d = new Date();
       newSystemLogData = systemLogData.filter((currentItem) => {
-        return currentItem.create_time.substring(0, 10) === d.toJSON().substring(0,10);
+        return currentItem.create_time.substring(0, 10) === d.toJSON().substring(0, 10);
       });
     }
     if (thisWeek === true) {
@@ -141,9 +142,9 @@ async function searchByCondition({ myselfID, today, thisWeek }) {
       newSystemLogData = systemLogData.filter((currentItem) => {
         return (
           date1number <=
-            parseInt(
-              currentItem.create_time.substring(0, 10).replace(/-/g, "")
-            ) &&
+          parseInt(
+            currentItem.create_time.substring(0, 10).replace(/-/g, "")
+          ) &&
           parseInt(
             currentItem.create_time.substring(0, 10).replace(/-/g, "")
           ) <= date7number
@@ -182,8 +183,8 @@ async function searchByAdvancedCondition(searchData) {
     const allLog = await showSystemLog();
     const res = allLog.filter(item => {
       return (
-        (searchType == ID && reg.test(item.idc)) || 
-        (searchType == NAME && reg.test(item.user_name)) || 
+        (searchType == ID && reg.test(item.idc)) ||
+        (searchType == NAME && reg.test(item.user_name)) ||
         (searchType == DESCRIPTION && reg.test(item.content))
       ) && (
         (startTime <= item.create_time.split('T')[0]) &&
