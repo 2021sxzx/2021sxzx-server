@@ -87,6 +87,7 @@ class systemMetaService {
       // 在window使用的测试数据
       const SHBAPP_INTERFACE_STATUS = '优';
       const GZSRSJGW_INTERFACE_STATUS = '优';
+      const GZSRSJWX_INTERFACE_STATUS = '优';
       const ZNFWJQRYPT_INTERFACE_STATUS = '优';
       const GDZWFWPT_INTERFACE_STATUS = '优';
       const BDDT_INTERFACE_STATUS = '优';
@@ -94,10 +95,11 @@ class systemMetaService {
       this.interfaceData = {
         SHBAPP: SHBAPP_INTERFACE_STATUS,
         GZSRSJGW: GZSRSJGW_INTERFACE_STATUS,
+        GZSRSJWX: GZSRSJWX_INTERFACE_STATUS,
         ZNFWJQRYPT: ZNFWJQRYPT_INTERFACE_STATUS,
         GDZWFWPT: GDZWFWPT_INTERFACE_STATUS,
         BDDT: BDDT_INTERFACE_STATUS
-        // SHBAPP, GZSRSJGW, ZNFWJQRYPT, GDZWFWPT, BDDT
+        // SHBAPP, GZSRSJGW, GZSRSJWX, ZNFWJQRYPT, GDZWFWPT, BDDT
       };
       return this.interfaceData;
     } catch (error) {
@@ -108,13 +110,14 @@ class systemMetaService {
   }
 
   async init () {
-    const [domain] = await systemMeta.find({});
+    const metas = (await systemMeta.findOne({name:'interface-setting'},'data')).data
     this.api = {
-      SHBAPP: domain.SHBAPP,
-      GZSRSJGW: domain.GZSRSJGW,
-      ZNFWJQRYPT: domain.ZNFWJQRYPT,
-      GDZWFWPT: domain.GDZWFWPT,
-      BDDT: domain.BDDT
+      SHBAPP: metas.api_SHBAPP,
+      GZSRSJGW: metas.api_GZSRSJGW,
+      GZSRSJWX: metas.api_GZSRSJWX,
+      ZNFWJQRYPT: metas.api_ZNFWJQRPT,
+      GDZWFWPT: metas.api_GDZWFWPT,
+      BDDT: metas.api_BDDT,
     };
 
     // 第一次的触发执行
@@ -137,16 +140,19 @@ class systemMetaService {
   // 修改接口并重新ping
   async patchInterface (api) {
     try {
-      await systemMeta.updateOne({ id: 0 }, api);
+      await systemMeta.updateOne(
+        { name: 'interface-setting' },
+        { $set: { data: api } }
+      )
       this.api = api;
       await this.setApiData(this.api);
       return new SuccessModel({
-        msg: "获取接口数据成功",
+        msg: "修改接口成功",
         data: this.interfaceData
       });
     } catch (error) {
       return new ErrorModel({
-        msg: '获取修改接口失败'
+        msg: '修改接口失败'
       });
     }
   }
@@ -155,12 +161,29 @@ class systemMetaService {
     try {
       await this.setApiData(this.api);
       return new SuccessModel({
-        msg: "获取接口数据成功",
+        msg: "获取接口状态成功",
         data: this.interfaceData
       })
     } catch (error) {
       return new ErrorModel({
-        msg: '获取修改接口失败'
+        msg: '获取接口状态失败'
+      });
+    }
+  }
+
+  async getInterfaceUrl() {
+    try {
+      let InterfaceUrl = await systemMeta.findOne(
+        { name: 'interface-setting' },
+        'data'
+      )
+      return new SuccessModel({
+        msg: "获取接口URL成功",
+        data: InterfaceUrl.data
+      });
+    } catch (error) {
+      return new ErrorModel({
+        msg: '获取接口URL失败'
       });
     }
   }
@@ -229,6 +252,41 @@ class systemMetaService {
       msg: '获取平均用户数目成功',
       data: res / this.userNumber.length
     })
+  }
+
+  // 获取核心设置
+  async getCoreSetting() {
+    try {
+      let CoreSetting = await systemMeta.findOne(
+        { name: 'core-setting' },
+        'data'
+      )
+      return new SuccessModel({
+        msg: "获取核心设置成功",
+        data: CoreSetting.data
+      });
+    } catch (error) {
+      return new ErrorModel({
+        msg: '获取核心设置失败'
+      });
+    }
+  }
+
+  // 修改核心设置
+  async patchCoreSetting(CoreSetting) {
+    try {
+      await systemMeta.updateOne(
+        { name: 'core-setting' },
+        { $set: { data: CoreSetting } }
+      )
+      return new SuccessModel({
+        msg: "修改核心设置成功"
+      });
+    } catch (error) {
+      return new ErrorModel({
+        msg: '修改核心设置失败'
+      });
+    }
   }
 }
 
