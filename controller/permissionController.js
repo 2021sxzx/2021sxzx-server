@@ -7,6 +7,8 @@ const {
 } = require('../service/permissionService');
 const { SuccessModel } = require('../utils/resultModel')
 
+// const permissionIsModify = false 
+
 function setStatusCode(res,data) {
   if(data.code === 200) {
     res.statusCode = 200
@@ -77,6 +79,7 @@ class permissionController {
         permission_identifier_array
       } = req.body;
       const result_ = await patchPermission(Number(role_id), ...permission_identifier_array);
+      // console.log("In patchPermissionAndReturn:\n",result_)
       let result = new SuccessModel({
         msg: '修改权限成功',
         data: result_

@@ -44,9 +44,17 @@ function chargeTypeChange(value) {
     var user = ""//objectkey for循环
 
     var dataLength=data.length;
+    // console.log("data in showSystemLog:")
+    // for(let i=0;i<5;i++)
+    //   console.log(data[i])
+    // var set = new Set()
     for (let i = 0; i < dataLength; i++){
       // 系统id我们弄为000
       user = await getUserById(data[i].slice(0,data[i].indexOf(":")-1))
+      // set.add(user.role_name)
+      //进行过滤，只留系统管理员、操作员、机构管理员
+      if(user.role_name!='操作员'&&user.role_name!='系统管理员'&&user.role_name!='机构管理员')
+        continue
       if (!user) {
         continue
       }
@@ -59,7 +67,11 @@ function chargeTypeChange(value) {
         _id: data[i].slice(0, data[i].indexOf(":") - 1)
       });
     }
-    // 做一个筛选
+    // console.log(set)
+    // console.log("dataArray in showSystemLog:")
+    // for(let i=0;i<5;i++)
+    //   console.log(dataArray[i])
+     // 做一个筛选
     return dataArray.filter(item => !!item.content);
   } catch (e) {
     return "showSystemLog:" + e.message;
@@ -169,7 +181,10 @@ async function searchByAdvancedCondition(searchData) {
   if (!searchValue) searchValue = '.';
   if (!searchType) searchType = ID;
   if (!startTime) startTime = '0';
-  if (!endTime) startTime = '3';
+  //bug  原代码：
+  // if (!endTime) startTime = '3';
+  if (!endTime) endTime = '3';
+
   if (startTime > endTime) {
     let temp = null;
     temp = endTime;
@@ -180,6 +195,7 @@ async function searchByAdvancedCondition(searchData) {
   const reg = new RegExp(searchValue, 'i');
   try {
     const allLog = await showSystemLog();
+    // console.log("高级查询filter前的数据:",allLog)
     const res = allLog.filter(item => {
       return (
         (searchType == ID && reg.test(item.idc)) || 

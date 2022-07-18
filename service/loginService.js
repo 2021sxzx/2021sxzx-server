@@ -124,11 +124,14 @@ async function isLogin (token) {
       }, jwt_secret, {
         expiresIn: jwt_expiration
       });
+      // console.log('newToken:',newToken)
       redisClient.set(account, JSON.stringify({
         refresh_token: refresh_token,
         expires: refresh_token_maxage,
         token: newToken
       }), redisClient.print);
+      // console.log("refresh_token:",refresh_token)
+      // console.log("newtoken:",newToken)
       await selectRedisDatabase (0)
       return true;
     } else {

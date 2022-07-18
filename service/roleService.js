@@ -2,7 +2,6 @@ const role = require('../model/role');
 const roleMapPermission = require('../model/roleMapPermission');
 const users = require('../model/users');
 const permission = require('../model/permission');
-
 // 权限列表的缓存
 // 因为权限是不涉及CRUD的，因此我们不需要设置锁变量
 let permissionList = null;
@@ -77,7 +76,6 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
  */
 async function getRole () {
   try {
-    
     const resq = await role.aggregate([
       {
         $lookup: {
@@ -95,6 +93,10 @@ async function getRole () {
         }
       }
     ]);
+    //这个是权限的名称和对应的identitifier 
+    //eg:{    _id: new ObjectId("628da531bb460000a4000f82"),
+    //permission: '机构管理',
+    //permission_identifier: 8}
     if (permissionList == null) {
       const _permissionList = await permission.find({});
       permissionList = _permissionList;
@@ -105,6 +107,7 @@ async function getRole () {
       });
       return item;
     });
+    // console.log("getRole返回值:\n",resq)
     return resq;
   } catch (error) {
     throw new Error(error.message)
@@ -118,10 +121,23 @@ async function getRole () {
 async function getRoleList () {
   try {
     let resq = null;
+    // const permissionFindArrPrv = await roleMapPermission.find({
+    //   role_id: 1657007883579
+    // })
+    // console.log("In getRoleList,Test2's permission:\n",permissionFindArrPrv)
+    // const permissionFindArrPrve = await roleMapPermission.find({
+    //   role_id: 1657090863413
+    // })
+    // console.log("In getRoleList,Test's permission:\n",permissionFindArrPrve)
     if (roleList == null || isNeedUpdateRoleList == true) {
-      console.log(1);
       resq = await role.aggregate([
-        {
+        {//多表查询
+          /*
+          from: 指定要与之连接的同一数据库中的集合
+          localField : 指定从文档[role]输入到查询的字段，与foreignField进行匹配
+          forergnField : 指定from集合中的字段，与localField进行匹配
+          as:指定要添加到输入文档的新数组字段的名称。新的数组字段包含来自from集合的匹配文档。如果指定的名称已经存在于输入文档中，则覆盖现有字段。
+          */
           $lookup: {
             from: 'rolemappermissions',
             localField: 'role_id',
@@ -129,6 +145,7 @@ async function getRoleList () {
             as: "info1"
           }
         }, {
+          //投射，选择想要的字段或对字段进行重命名，为1表示保留哪个字段
           $project: {
             role_name: 1,
             role_id: 1,
@@ -137,10 +154,12 @@ async function getRoleList () {
           }
         }
       ]);
-      console.log(resq);
       roleList = resq;
+      // console.log("resq:",resq[6],req[7])
       isNeedUpdateRoleList = false;
     } else {
+      // console.log("I'm getting last roleList")
+      // console.log("isNeedUpdate is:",isNeedUpdateRoleList)
       resq = roleList;
     }
     if (permissionList == null) {

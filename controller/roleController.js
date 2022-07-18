@@ -69,7 +69,7 @@ async function updateRoleAndReturnList (role_name, role_id, role_describe) {
 async function returnRoleList () {
   try {
     const roleList = await getRoleList();
-  
+    // console.log("In returnRoleList:",roleList)
     return new SuccessModel({
       msg: '返回角色权限列表成功',
       data: roleList

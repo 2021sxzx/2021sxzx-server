@@ -55,6 +55,8 @@ router.patch('/v1/role', async (req, res, next) => {
 router.get('/v1/role', async (req, res, next) => {
   const {role_id} = req.query;
   let data = await returnRoleList(Number(role_id))
+
+  // console.log("In get role:",data)
   setStatusCode(res, data)
   res.json(data)
 });

@@ -43,6 +43,7 @@ router.post('/v1/searchLog',async (req,res,next) => {
  */
  router.post('/v1/advancedSearchLog',async (req,res,next) => {
   let searchData = req.body
+  console.log("高级搜索中的参数：",searchData)
   let data = await getAdvancedSearchSystemLog(searchData)
   setStatusCode(res,data)
   res.json(data);

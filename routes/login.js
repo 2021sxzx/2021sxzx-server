@@ -51,7 +51,9 @@ router.post('/v1/logout', async (req, res) => {
 
 router.get('/v1/isLogin', async (req, res) => {
   const token = req.cookies["auth-token"];
+  // console.log("auth-token:",token)
   const result = await JudgeIsLogin(token);
+  // console.log("return result:",result)
   res.json(result);
 });
 
