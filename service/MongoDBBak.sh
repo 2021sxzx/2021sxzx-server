@@ -1,7 +1,4 @@
 #!/bin/bash
-# 获取 root 权限，send 后输入密码，\r 不能少
-spawn su root
-send '123456\r'
 
 OUT_DIR=/mongodb_bak/mongodb_bak_now  #临时备份目录
 TAR_DIR=/mongodb_bak/mongodb_bak_list #备份存放路径
