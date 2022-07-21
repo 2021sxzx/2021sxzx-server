@@ -61,6 +61,16 @@ npm install
 
 - 编写接口文档（一定要写好写具体，不然会给前端骂，也不要随便改请求地址，具体可以参考已存在的接口文档
 
+## 启动项目
+
+启动命令详见 ./package.json 中的 script 部分。不同环境下连接的服务配置见 ./config/config.js
+
+
+- 本地开发环境，连接本地的数据库和Redis`npm run start:local`
+- 开发环境下启动，连接阿里云上的数据库和Redis`npm run start:dev`
+- 生产环境下启动，连接政务云的数据库和Redis`npm run start:pro`
+
+
 ## 一些推荐的工具
 
 - 开发工具：vscode/webstorm

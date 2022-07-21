@@ -29,7 +29,7 @@ const verify = require('./routes/verify');
 
 const {validate_jwt} = require('./utils/validateJwt');
 
-const {MONGO_CONFIG} = require("./config/db") //数据库的配置信息
+const {MONGO_CONFIG} = require("./config/config") //数据库的配置信息
 const mongoose = require("mongoose")
 const redisClient = require('./config/redis');
 
