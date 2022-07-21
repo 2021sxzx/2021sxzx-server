@@ -7,7 +7,8 @@ const {deleteImage} = require('../service/imageService')
 const systemFailure = require('../model/systemFailure')
 
 function setStatusCode(res, {code}) {
-  if (code === 200) res.statusCode = 200 else res.statusCode = 404
+  if (code === 200) res.statusCode = 200
+  else res.statusCode = 404
 }
 
 /* 系统故障相关的路由处理. */
