@@ -25,9 +25,9 @@ router.get('/v1/failure', async (req, res) => {
 /**
  * 提交一个系统故障
  */
-router.post('/v1/create-system-failure', async ({body: data}, {end}) => {
+router.post('/v1/create-system-failure', async ({body: data}, res) => {
   await createSystemFailureController(data)
-  end('200')
+  res.end('200')
 })
 
 let pictureNameList = []
@@ -45,19 +45,19 @@ const storage = multer.diskStorage({
   }
 })
 const upload = multer({storage})
-router.post('/v1/system-failure-picture-upload', upload.array('file', 6), async ({body}, {end, json}) => {
+router.post('/v1/system-failure-picture-upload', upload.array('file', 6), async ({body}, res) => {
   const data = body.test
   body.test = []
   pictureNameList = []
-  if (data === undefined) json([])
-  end(JSON.stringify(data)) // 怎么清空req.test
+  if (data === undefined) res.json([])
+  res.end(JSON.stringify(data)) // 怎么清空req.test
 })
 /**
  * 删除一个系统故障
  */
-router.post('/v1/delete-system-failure', async ({body: data}, {end}) => {
+router.post('/v1/delete-system-failure', async ({body: data}, res) => {
   deleteImage(data).then()
   systemFailure.deleteOne({'_id': data._id}).then(() => console.log('故障删除成功'))
-  end()
+  res.end()
 })
 module.exports = router
