@@ -5,6 +5,9 @@ const systemMetaController = require('../controller/systemMetaController')
 
 /* 系统基础管理相关的路由处理. */
 
+// 元数据查看
+router.get('/v1/chart-data',systemMetaController.getChartData)
+
 // 核心设置
 router.get('/v1/core-settings', systemMetaController.getCoreSetting)
 router.patch('/v1/core-settings', systemMetaController.patchCoreSetting)

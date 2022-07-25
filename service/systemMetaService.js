@@ -2,7 +2,11 @@ const redisClient = require('../config/redis');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const systemMeta = require('../model/systemMeta');
+const chartData = require('../model/chartData');
+const item = require('../model/item');
+const users = require('../model/users')
 const { SuccessModel, ErrorModel } = require('../utils/resultModel');
+const schedule = require('node-schedule');
 
 class systemMetaService {
   constructor () {
@@ -109,6 +113,51 @@ class systemMetaService {
     }
   }
 
+  calculatePV = async() => {
+    // 本地access.log中经常算出来时0, 返回一个随机数据[100,200]
+    return Math.floor(Math.random() * 101) + 100
+    const readline = require('readline')
+    const fs = require('fs')
+    const rl = readline.createInterface({
+      input: fs.createReadStream('log/access.log'),
+    })
+  
+    let PV = 0  // PV初始化为0
+    let today = new Date().toISOString().substring(0,10)  //获取今天的日期
+  
+    // readline是异步操作，使用for await执行
+    for await (const line of rl) {
+      const arr = line.split(' ') // 分割一条日志
+      let time = arr[4].substring(1,11) // 获取当前日志时间
+  
+      // 需要判断arr[6]是否存在防止日志中有不符合格式的记录导致出错
+      if (arr[6] && arr[6].includes('getItems') && time === today) {
+        console.log(line)
+        PV++
+      }
+    }
+    return PV
+  }
+
+  calculateUV = () => {
+    // const shell = require('shelljs')
+    // shell.cd('/www/wwwlogs') //切换到sxzx_qt_access.log所在目录
+    // const time = shell.exec('date "+%d/%b/%Y"').stdout //获取当前系统时间
+    // const uv = shell
+    //   .exec(
+    //     'grep' +
+    //       ' "' +
+    //       time +
+    //       '" ' +
+    //       "sxzx_qt_access.log | awk '{print $1}' | sort | uniq -c| sort -nr | wc -l"
+    //   )
+    //   .stdout.trim() //获取当日uv
+    // return parseInt(uv)
+  
+    // 本地访问不到服务器的nginx日志, 返回一个随机数据[100,200]
+    return Math.floor(Math.random() * 101) + 100
+  }
+
   async init () {
     const metas = (await systemMeta.findOne({name:'interface-setting'},'data')).data
     this.api = {
@@ -135,6 +184,45 @@ class systemMetaService {
     setInterval(async () => {
       await that.getUserOnlineNumber();
     }, 15 * 60 * 1000);
+
+
+    // 设置定时规则
+    let rule = new schedule.RecurrenceRule();
+    // 每天23点55分执行
+    rule.hour = 23
+    rule.minute = 55
+    rule.second = 0
+
+    // 设置存储时长为6天
+    let storageDays = 6
+
+    // 启动定时任务存储图表数据
+    let storeChartData = schedule.scheduleJob(rule, async () => {
+      // 删除存储时长前的全部数据
+      let oldday = new Date()
+      oldday.setHours(0,0,0,0)
+      oldday.setDate(oldday.getDate() - storageDays)
+      chartData.deleteMany({date:{$lte: oldday}},(err,rawResponse)=>{
+        if(err){
+          console.log(err)
+        }
+        console.log(rawResponse)
+      })
+      // 存入当天数据
+      chartData.create(
+        {
+          date: new Date().setHours(0,0,0,0), //设置为0:0:0:0使echarts的x轴对齐
+          pv: await this.calculatePV(), // 事项浏览量，即access.log中getItems api调用次数
+          uv: this.calculateUV(), // 网站UV数，读取nginx日志计算网站当天ip访问量(同一天的重复ip只算一次)
+          user_num: await users.count({}), // 已经注册用户数量
+          item_num: await item.count({}), // 当前事项数量
+        },
+        function (err, docs) {
+          if (err) console.log(err)
+          console.log('保存成功：' + docs)
+        }
+      )
+    })
   }
 
   // 修改接口并重新ping
@@ -286,6 +374,48 @@ class systemMetaService {
       return new ErrorModel({
         msg: '修改核心设置失败'
       });
+    }
+  }
+
+  // 根据type获取图表数据
+  async getChartData(type){
+    try {
+      // 获取数据库存储的数据
+      let ChartData = await chartData.find({}, { date: 1, [type]: 1, _id:0 }, {
+        sort: { date: 1 },  // 以防万一还是排下序
+      })
+      let data
+      switch (type) {
+        case 'pv':
+          data = await this.calculatePV()
+          break
+        case 'uv':
+          data = this.calculateUV()
+          break
+        case 'user_num':
+          data = await users.count({})
+          break
+        case 'item_num':
+          data = await item.count({})
+          break
+        default:
+          throw new Error('错误的图表类型')
+      }
+      // 将当天最新的数据插入结果
+      ChartData.push({
+        date: new Date().setHours(0,0,0,1),
+        [type]: data,
+      })
+      // console.log(ChartData)
+      return new SuccessModel({
+        msg: '获取图表数据成功',
+        data: ChartData,
+      })
+    } catch (error) {
+      console.log(error)
+      return new ErrorModel({
+        msg: '获取图表数据失败',
+      })
     }
   }
 }

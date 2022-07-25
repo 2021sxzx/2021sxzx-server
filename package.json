@@ -27,6 +27,7 @@
     "nodemon": "^2.0.12",
     "redis": "^4.0.6",
     "request": "^2.88.2",
+    "shelljs": "^0.8.5",
     "systeminformation": "^5.11.9",
     "xss": "^1.0.11"
   }

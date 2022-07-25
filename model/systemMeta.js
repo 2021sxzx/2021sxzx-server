@@ -12,5 +12,5 @@ const systemMetaSchema = new mongoose.Schema({
   }
 })
 
-const systemMeta = mongoose.model('system_metas', systemMetaSchema);
+const systemMeta = mongoose.model('system_meta', systemMetaSchema);
 module.exports = systemMeta;
