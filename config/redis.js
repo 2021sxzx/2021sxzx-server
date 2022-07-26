@@ -1,5 +1,5 @@
 const redis = require("redis");
-const { REDIS_CONFIG } = require("./db"); //redis
+const {REDIS_CONFIG} = require("./config"); //redis
 
 
 const redisClient = redis.createClient({
@@ -8,7 +8,7 @@ const redisClient = redis.createClient({
         host: REDIS_CONFIG.host
     },
     password: REDIS_CONFIG.password
-  });
+});
 
 redisClient.on('connect', () => {
     console.log("redis连接成功");

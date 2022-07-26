@@ -4,6 +4,7 @@ const router = express.Router();
 const path=require('path');
 const fs=require('fs');
 const {getAllImage,getImageHt}=require('../service/imageService')
+const {IMG_PATH} = require("../config/config");
 function setStatusCode(res,data) {
   if(data.code === 200) {
     res.statusCode = 200
@@ -32,7 +33,7 @@ function setStatusCode(res,data) {
 /**
  * 前台所需的图片的信息
  */
- router.get('/v1/logo_image', async (req,res,next) => {
+router.get('/v1/logo_image', async (req,res,next) => {
   const  getSize= async (name)=>{
     const p=path.join(__dirname,'../public/imgs',name)
     var size=10;
@@ -49,45 +50,45 @@ function setStatusCode(res,data) {
     return test.size;
   }
   const data=[
-    {name:'ic_logo',url:'http://8.134.73.52:5001/imgs/ic_logo.png'},
-    {name:'banner_mb',url:'http://8.134.73.52:5001/imgs/banner_mb.png'},
-    {name:'banner_pc',url:'http://8.134.73.52:5001/imgs/banner_pc.jpg'},
-    {name:'ic_delete',url:'http://8.134.73.52:5001/imgs/ic_delete.png'},
-    {name:'ic_dzjg',url:'http://8.134.73.52:5001/imgs/ic_dzjg.png'},
-    {name:'ic_fryw',url:'http://8.134.73.52:5001/imgs/ic_fryw.png'},
-    {name:'ic_gryw',url:'http://8.134.73.52:5001/imgs/ic_gryw.png'},
-    {name:'ic_jycy',url:'http://8.134.73.52:5001/imgs/ic_jycy.png'},
-    {name:'ic_ldbz',url:'http://8.134.73.52:5001/imgs/ic_ldbz.png'},
-    {name:'ic_logo',url:'http://8.134.73.52:5001/imgs/ic_logo.png'},
-    {name:'ic_placeholder',url:'http://8.134.73.52:5001/imgs/ic_placeholder.png'},
-    {name:'ic_qrcode',url:'http://8.134.73.52:5001/imgs/ic_qrcode.png'},
-    {name:'ic_rsrc',url:'http://8.134.73.52:5001/imgs/ic_rsrc.png'},
-    {name:'ic_search',url:'http://8.134.73.52:5001/imgs/ic_search.png'},
-    {name:'ic_shbx',url:'http://8.134.73.52:5001/imgs/ic_shbx.png'},
-    {name:'ic_ygwa',url:'http://8.134.73.52:5001/imgs/ic_ygwa.png'},
-    {name:'ic_zfwzzc',url:'http://8.134.73.52:5001/imgs/ic_zfwzzc.png'},
-    {name:'ic_znkf',url:'http://8.134.73.52:5001/imgs/ic_znkf.png'},
-    {name:'qrcode_app',url:'http://8.134.73.52:5001/imgs/qrcode_app.jpg'},
-    {name:'qrcode_web',url:'http://8.134.73.52:5001/imgs/qrcode_web.png'}
+    {name:'ic_logo',url:IMG_PATH+'ic_logo.png'},
+    {name:'banner_mb',url:IMG_PATH+'banner_mb.png'},
+    {name:'banner_pc',url:IMG_PATH+'banner_pc.jpg'},
+    {name:'ic_delete',url:IMG_PATH+'ic_delete.png'},
+    {name:'ic_dzjg',url:IMG_PATH+'ic_dzjg.png'},
+    {name:'ic_fryw',url:IMG_PATH+'ic_fryw.png'},
+    {name:'ic_gryw',url:IMG_PATH+'ic_gryw.png'},
+    {name:'ic_jycy',url:IMG_PATH+'ic_jycy.png'},
+    {name:'ic_ldbz',url:IMG_PATH+'ic_ldbz.png'},
+    {name:'ic_logo',url:IMG_PATH+'ic_logo.png'},
+    {name:'ic_placeholder',url:IMG_PATH+'ic_placeholder.png'},
+    {name:'ic_qrcode',url:IMG_PATH+'ic_qrcode.png'},
+    {name:'ic_rsrc',url:IMG_PATH+'ic_rsrc.png'},
+    {name:'ic_search',url:IMG_PATH+'ic_search.png'},
+    {name:'ic_shbx',url:IMG_PATH+'ic_shbx.png'},
+    {name:'ic_ygwa',url:IMG_PATH+'ic_ygwa.png'},
+    {name:'ic_zfwzzc',url:IMG_PATH+'ic_zfwzzc.png'},
+    {name:'ic_znkf',url:IMG_PATH+'ic_znkf.png'},
+    {name:'qrcode_app',url:IMG_PATH+'qrcode_app.jpg'},
+    {name:'qrcode_web',url:IMG_PATH+'qrcode_web.png'}
   ]
   // data.forEach(item=>{
   //   item.size=getSize1(item.name)
   // })
   for (let i = 0; i < data.length; i++) {
     if (data[i].name === 'banner_pc'||data[i].name === 'qrcode_app'){
-      await getSize(data[i].name+'.jpg').then(    
+      await getSize(data[i].name+'.jpg').then(
         (res)=>{
           data[i].size=res;
           // console.log('first'+res)
-        }   
+        }
       )
     }
     else{
-      await getSize(data[i].name+'.png').then(    
+      await getSize(data[i].name+'.png').then(
         (res)=>{
           data[i].size=res;
           // console.log('first'+res)
-        }   
+        }
       )
     }
   }
@@ -131,7 +132,6 @@ router.get('/v1/get-picture', (req, res, next) => {
       });
   }
 })
-
 
 
 // 返回前端

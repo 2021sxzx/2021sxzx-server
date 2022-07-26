@@ -1,47 +1,69 @@
-const systemConfiguration = require("../model/systemConfiguration");
-const systemBackup = require("../model/systemBackup");
-const user = require("../model/users");
-const fs = require('fs');
+const systemConfiguration = require('../model/systemConfiguration')
+const systemBackup = require('../model/systemBackup')
+const user = require('../model/users')
+const fs = require('fs')
 const path = require('path')
-const child = require("child_process");
+const child = require('child_process')
+const {MONGO_CONFIG} = require('../config/config')
 
-//系统启动时，就自动备份
-const filePath = path.join(__dirname, "./MongoDBBak.sh");
-const logPath = path.join(__dirname, "../log/access.log");
+const filePath = path.join(__dirname, './MongoDBBak.sh')
+const logPath = path.join(__dirname, '../log/access.log')
+
+let isBackingUp = false
 
 function getDate() {
-  const date = new Date(new Date().getTime() + 8 * 3600 * 1000);
-  return date.toISOString();
+  return new Date(new Date().getTime() + 8 * 3600 * 1000).toISOString()
 }
 
 /**
- * 定时备份方法
+ * 手动/自动备份公共方法
+ * @param {String} mode - 指示手动还是自动备份，手动为 'manual'，自动为 'auto'
+ * @param user_id - 手动备份时使用，指示用户 id
  */
-function autoBackup() {
-  child.exec("sh " + filePath, function (err, stdout) {
-    if (err) {
-      console.log(err);
-      const writeStream2 = fs.createWriteStream(logPath, {flags: "a"});
-      let logString = "定时备份故障[" + getDate() + "]" + err + "\n";
-      writeStream2.write(logString);
-      writeStream2.end();
-      return 0;
-    }
-    const writeStream = fs.createWriteStream(logPath, {flags: "a"});
-    let backup_name = stdout.toString().split("\n");
-    backup_name = backup_name[backup_name.length - 2];
-    let logString = "系统 ::[" + getDate() + "] \"系统自动备份\" \n";
-    createSystemBackup(backup_name, "系统").then();
-    writeStream.write(logString);
-    writeStream.end();
-  });
+function backup(mode, user_id = null) {
+  child.exec(`sh ${filePath} 'root' '123456' ${MONGO_CONFIG.ip} ${MONGO_CONFIG.port} ${MONGO_CONFIG.user} ${MONGO_CONFIG.password} ${MONGO_CONFIG.dbName} 14`,
+    async function (err, stdout, stderr) {
+      // 计算备份名
+      let backup_name = stdout.toString().split('\n')
+      backup_name = backup_name[backup_name.length - 2]
+      // 计算用户名
+      const {user_name} = mode === 'manual' ? await user.findOne({_id: user_id}) : '系统'
+      // 公共方法执行信息
+      const info = {
+        auto: {errorStr: '定时', successStr: `系统 ::[${getDate()}] "系统自动备份"\n`},
+        manual: {errorStr: '手动', successStr: `${backup_name}|||${user_name} ::[${getDate()}] "手动系统备份完成"\n`}
+      }[mode]
+      const writeStream = fs.createWriteStream(logPath, {flags: 'a'})
+      // console.log('==============================')
+      // console.log(err)
+      // console.log('==============================')
+      // console.log(stdout.toString())
+      // console.log('==============================')
+      // console.log(stderr.toString())
+      // console.log('==============================')
+      // 注意，shell脚本中的mongodump命令会向stderr写入内容，【即使备份没有错误】，因此这里不再使用stderr来判断是否出错
+      if (err) {
+        await createSystemBackup('', user_name, 'failed')
+        writeStream.write(`${info.errorStr}备份故障[${getDate()}] err = ${err}。\n`)
+      } else {
+        await createSystemBackup(backup_name, user_name)
+        writeStream.write(info.successStr)
+      }
+      writeStream.end()
+      isBackingUp = false
+    })
 }
 
 // 启动定时器执行自动备份
-let backupCycle;
-getMongoBackupCycle().then(res => {
-  backupCycle = setInterval(autoBackup, res * 86400000);
-})
+let backupCycle
+
+function cycle(res) {
+  backupCycle = setInterval(() => {
+    if (!isBackingUp) backup('auto')
+  }, res * 86400000)
+}
+
+getMongoBackupCycle().then(cycle)
 
 /**
  * 返回系统备份周期
@@ -50,10 +72,10 @@ getMongoBackupCycle().then(res => {
 async function getMongoBackupCycle() {
   /** @property data.configuration */
   try {
-    const data = await systemConfiguration.findOne({'name': 'backup_cycle'});
-    return data.configuration.cycle;
+    const data = await systemConfiguration.findOne({'name': 'backup_cycle'})
+    return data.configuration.cycle
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
@@ -63,18 +85,9 @@ async function getMongoBackupCycle() {
  */
 async function getSystemBackup() {
   try {
-    let data = await systemBackup.find();
-    let test = JSON.parse(JSON.stringify(data));
-    for (let i in test) {
-      try {
-        test[i]['file_size'] = fs.statSync(test[i]['backup_name']).size;
-      } catch (e) {
-        test[i]['file_size'] = e.message;
-      }
-    }
-    return test;
+    return JSON.parse(JSON.stringify(await systemBackup.find()))
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
@@ -82,13 +95,17 @@ async function getSystemBackup() {
  * 创建系统备份
  * @returns {Promise<*|*>}
  */
-async function createSystemBackup(backup_name, user_name) {
+async function createSystemBackup(backup_name, user_name, status = 'ok') {
   try {
     return await systemBackup.create({
-      backup_name: backup_name, user_name: user_name
-    });
+      backup_name,
+      user_name,
+      file_size: status === 'ok' ? fs.statSync(backup_name).size : null,
+      status,
+      backup_date: new Date()
+    })
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
@@ -102,57 +119,34 @@ async function changeBackupCycleService(data) {
       $set: {configuration: {cycle: data.time}}
     })
     // 修改备份后重置定时器
-    clearInterval(backupCycle);
-    getMongoBackupCycle().then(res => {
-      backupCycle = setInterval(autoBackup, res * 86400000);
-    })
-    await systemConfiguration.findOne({'name': 'backup_cycle'});
+    clearInterval(backupCycle)
+    getMongoBackupCycle().then(cycle)
+    await systemConfiguration.findOne({'name': 'backup_cycle'})
     return 'success'
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
 /**
  * 手动系统备份
- * @returns {Promise<*|*>}
+ * @param user_id - 用户id
+ * @return {Promise<boolean|*>} - 是否备份中
  */
 async function handleBackup(user_id) {
   /** @property backup_user.user_name */
   try {
-    const filePath = path.join(__dirname, "./MongoDBBak.sh");
-    const logPath = path.join(__dirname, "../log/access.log");
-
-    function getDate() {
-      const date = new Date(new Date().getTime() + 8 * 3600 * 1000);
-      return date.toISOString();
+    if (isBackingUp) return true
+    else {
+      isBackingUp = true
+      backup('manual', user_id)
+      return false
     }
-
-    // 在 windows 下测试，sh 命令是不可用的
-    child.exec("sh " + filePath, async function (err, stdout) {
-      console.log('执行备份命令脚本的回调函数开始执行'); // todo debug
-      if (err) {
-        console.log(err); // todo debug
-        const writeStream2 = fs.createWriteStream(logPath, {flags: "a"});
-        let logString = "手动备份故障[" + getDate() + "]" + err + "\n";
-        writeStream2.write(logString);
-        writeStream2.end();
-        return 0;
-      }
-      const writeStream1 = fs.createWriteStream(logPath, {flags: "a"});
-      let backup_name = stdout.toString().split("\n");
-      backup_name = backup_name[backup_name.length - 2];
-      const backup_user = await user.findOne({_id: user_id});
-      let logString = backup_name + "|||" + backup_user.user_name + " ::[" + getDate() + "] \"手动系统备份完成\" \n";
-      await createSystemBackup(backup_name, backup_user.user_name);
-      writeStream1.write(logString);
-      writeStream1.end();
-    });
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
 module.exports = {
   getMongoBackupCycle, changeBackupCycleService, handleBackup, getSystemBackup, createSystemBackup
-};
+}

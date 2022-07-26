@@ -18,8 +18,8 @@ async function getMongoBackupController() {
 
 /**
  * 提交一个系统备份记录
- * @param {string} failure_des
  * @returns {Promise<ErrorModel|SuccessModel>}
+ * @param data
  */
 async function createSystemBackupController(data) {
   try {
