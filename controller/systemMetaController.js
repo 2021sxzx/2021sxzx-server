@@ -9,19 +9,6 @@ function setStatusCode(res, data) {
 }
 
 class systemMetaController {
-  // 获取在线人数和当日最大人数
-  async getUserOnlineNumberAndMaxOnlineNumber(req, res) {
-    try {
-      const result =
-        await systemMetaService.getUserOnlineNumberAndMaxOnlineNumber()
-      console.log('getUserOnlineNumberAndMaxOnlineNumber: ',result)
-      setStatusCode(res, result)
-      res.json(result)
-    } catch (error) {
-      res.json(new Error(error.message))
-    }
-  }
-
   // 获取网络状态
   async getNetworkStatus(req, res) {
     try {

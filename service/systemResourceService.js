@@ -10,6 +10,7 @@ var mem = osu.mem;
 "use strict";
 var exec = require("child_process").exec;
 const schedule = require('node-schedule')
+const redisClient = require('../config/redis');
 
 /**
  * 获取中央处理器占用率
@@ -81,12 +82,7 @@ async function viewProcessMessage1(){
    });
    return data;
 }
-
-/**
- * 获取进程
- * @returns {Promise<*|*>}
- */
- async function viewProcessMessage () {//name, cb
+async function viewProcessMessage () {//name, cb
   var a='haha'
   let data = await new Promise(function(resolve, reject) {
 
@@ -109,6 +105,29 @@ async function viewProcessMessage1(){
   return a;
 }
 
+/**
+ * 获取在线用户数目
+ * @returns {Promise<*|*>}
+ */
+async function getUserOnlineNumber() {
+  await selectRedisDatabase(1)
+  try {
+    let UserOnlineNumber = await redisClient.dbSize()
+    await selectRedisDatabase(0)
+    console.log('UserOnlineNumber: ',UserOnlineNumber)
+    return UserOnlineNumber
+  } catch (error) {
+    return e;
+  }
+}
+// 切换db池
+async function selectRedisDatabase(db) {
+  try {
+    await redisClient.select(db)
+  } catch (error) {
+    await selectRedisDatabase(db)
+  }
+}
 
 /**
  * 监听资源
@@ -170,6 +189,6 @@ module.exports = {
   getCpuPercentage,
   getMemory,
   getDisk,
-  viewProcessMessage,
+  getUserOnlineNumber,
   resourceMonitor
 };

@@ -184,11 +184,6 @@ class systemMetaService {
       await that.setApiData(this.api)
     }, 3600)
 
-    // 15分钟做一次用户获取状态
-    setInterval(async () => {
-      await that.getUserOnlineNumber()
-    }, 15 * 60 * 1000)
-
     // 设置定时规则
     let rule = new schedule.RecurrenceRule()
     // 每天23点55分执行
@@ -284,73 +279,6 @@ class systemMetaService {
         msg: '获取接口URL失败',
       })
     }
-  }
-
-  // 切换db池
-  async selectRedisDatabase(db) {
-    try {
-      await redisClient.select(db)
-    } catch (error) {
-      await selectRedisDatabase(db)
-    }
-  }
-
-  // 获取在线用户数目
-  async getUserOnlineNumber() {
-    await this.selectRedisDatabase(1)
-    try {
-      const thisDay = new Date().getDay()
-      if (thisDay !== this.thisTime) {
-        this.userNumber = []
-        this.thisTime = thisDay
-      }
-      const getUserOnlineNum = await redisClient.dbSize()
-      this.userNumber.push(getUserOnlineNum)
-      await this.selectRedisDatabase(0)
-      return getUserOnlineNum
-    } catch (error) {
-      throw new Error(error.message)
-    }
-  }
-
-  // 获取当天最大用户数目
-  async getMaxUserOnlineNumberOnThisDay() {
-    try {
-      await this.getUserOnlineNumber()
-      return this.userNumber.sort((a, b) => b - a)[0]
-        ? this.userNumber.sort((a, b) => b - a)[0]
-        : 0
-    } catch (error) {
-      throw new Error(error.message)
-    }
-  }
-
-  async getUserOnlineNumberAndMaxOnlineNumber() {
-    try {
-      const UserOnlineNumber = await this.getUserOnlineNumber()
-      const MaxUserOnlineNumberOnThisDay =
-        await this.getMaxUserOnlineNumberOnThisDay()
-      return new SuccessModel({
-        msg: '获取在线用户数目成功',
-        data: {
-          userOnline: UserOnlineNumber,
-          userMax: MaxUserOnlineNumberOnThisDay,
-        },
-      })
-    } catch (error) {
-      throw new ErrorModel({
-        msg: '获取在线用户数目失败',
-      })
-    }
-  }
-
-  // 获取当天平均用户数目
-  async getAverageUserOnlineNumberOnThisDay() {
-    const res = this.userNumber.reduce((a, b) => a + b)
-    return new SuccessModel({
-      msg: '获取平均用户数目成功',
-      data: res / this.userNumber.length,
-    })
   }
 
   // 获取核心设置

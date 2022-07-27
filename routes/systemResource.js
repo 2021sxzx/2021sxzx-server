@@ -4,7 +4,7 @@ const {
     getCpuPercentageController,
     getMemoryController,
     getDiskController,
-    viewProcessMessageController
+    getUserOnlineNumberController
   } = require("../controller/systemResourceController")
 
 function setStatusCode(res,data) {
@@ -51,14 +51,15 @@ function setStatusCode(res,data) {
 })
 
 /**
- * 获取进程数
+ * 获取在线用户数量
  */
- router.get('/v1/viewProcessMessage', async (req,res,next) => {
-  let data = await viewProcessMessageController()
+ router.get('/v1/peopleStatus', async (req,res,next) => {
+  let data = await getUserOnlineNumberController()
+  console.log(data)
   // data="type:"+Object.prototype.toString.call(data)
   setStatusCode(res,data)
   // res.send(data)
-  res.json(data.data)
+  res.json(data)
   // res.json(Object.prototype.toString.call(data))
 })
 
