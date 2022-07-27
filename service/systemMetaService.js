@@ -6,20 +6,19 @@ const chartData = require('../model/chartData');
 const item = require('../model/item');
 const users = require('../model/users')
 const { SuccessModel, ErrorModel } = require('../utils/resultModel');
-const schedule = require('node-schedule');
+const schedule = require('node-schedule')
 
 class systemMetaService {
-  constructor () {
-
-    this.thisTime = new Date().getDay();
-    this.userNumber = [];
+  constructor() {
+    this.thisTime = new Date().getDay()
+    this.userNumber = []
 
     this.api = {
       SHBAPP: null,
       GZSRSJGW: null,
       ZNFWJQRYPT: null,
       GDZWFWPT: null,
-      BDDT: null
+      BDDT: null,
     }
 
     this.interfaceData = {
@@ -27,11 +26,11 @@ class systemMetaService {
       GZSRSJGW: null,
       ZNFWJQRYPT: null,
       GDZWFWPT: null,
-      BDDT: null
+      BDDT: null,
     }
   }
 
-  async setApiData (api) {
+  async setApiData(api) {
     try {
       // CentOS的CMD指令集，和window的指令是不兼容的，如果需要在window跑起该代码，需要改为：ping ${this.api.xxx}
       // 思路：获取从cmd的文本，然后切割出数据，最后判断接口网络状态好坏
@@ -89,12 +88,12 @@ class systemMetaService {
       // const BDDT_INTERFACE_STATUS = await judgeConnectingIsSuccessful(APPROXIMATE_BDDT, DETAILED_BDDT);
 
       // 在window使用的测试数据
-      const SHBAPP_INTERFACE_STATUS = '优';
-      const GZSRSJGW_INTERFACE_STATUS = '优';
-      const GZSRSJWX_INTERFACE_STATUS = '优';
-      const ZNFWJQRYPT_INTERFACE_STATUS = '优';
-      const GDZWFWPT_INTERFACE_STATUS = '优';
-      const BDDT_INTERFACE_STATUS = '优';
+      const SHBAPP_INTERFACE_STATUS = '优'
+      const GZSRSJGW_INTERFACE_STATUS = '优'
+      const GZSRSJWX_INTERFACE_STATUS = '优'
+      const ZNFWJQRYPT_INTERFACE_STATUS = '优'
+      const GDZWFWPT_INTERFACE_STATUS = '优'
+      const BDDT_INTERFACE_STATUS = '优'
 
       this.interfaceData = {
         SHBAPP: SHBAPP_INTERFACE_STATUS,
@@ -102,64 +101,70 @@ class systemMetaService {
         GZSRSJWX: GZSRSJWX_INTERFACE_STATUS,
         ZNFWJQRYPT: ZNFWJQRYPT_INTERFACE_STATUS,
         GDZWFWPT: GDZWFWPT_INTERFACE_STATUS,
-        BDDT: BDDT_INTERFACE_STATUS
+        BDDT: BDDT_INTERFACE_STATUS,
         // SHBAPP, GZSRSJGW, GZSRSJWX, ZNFWJQRYPT, GDZWFWPT, BDDT
-      };
-      return this.interfaceData;
+      }
+      return this.interfaceData
     } catch (error) {
       return new ErrorModel({
-        msg: error
-      });
+        msg: error,
+      })
     }
   }
 
-  calculatePV = async() => {
-    // 本地access.log中经常算出来时0, 返回一个随机数据[100,200]
-    return Math.floor(Math.random() * 101) + 100
+  calculatePV = async () => {
     const readline = require('readline')
     const fs = require('fs')
     const rl = readline.createInterface({
       input: fs.createReadStream('log/access.log'),
     })
-  
-    let PV = 0  // PV初始化为0
-    let today = new Date().toISOString().substring(0,10)  //获取今天的日期
-  
+
+    let PV = 0 // PV初始化为0
+    let today = new Date().toISOString().substring(0, 10) //获取今天的日期
+
     // readline是异步操作，使用for await执行
     for await (const line of rl) {
+      // 默认日志格式正确
       const arr = line.split(' ') // 分割一条日志
-      let time = arr[4].substring(1,11) // 获取当前日志时间
-  
-      // 需要判断arr[6]是否存在防止日志中有不符合格式的记录导致出错
-      if (arr[6] && arr[6].includes('getItems') && time === today) {
+      let time = arr[4].substring(1, 11) // 获取当前日志时间
+
+      if (arr[6].includes('getItems') && time === today) {
         console.log(line)
         PV++
       }
     }
+    // 算出来经常是0。。。
     return PV
   }
 
   calculateUV = () => {
-    // const shell = require('shelljs')
-    // shell.cd('/www/wwwlogs') //切换到sxzx_qt_access.log所在目录
-    // const time = shell.exec('date "+%d/%b/%Y"').stdout //获取当前系统时间
-    // const uv = shell
-    //   .exec(
-    //     'grep' +
-    //       ' "' +
-    //       time +
-    //       '" ' +
-    //       "sxzx_qt_access.log | awk '{print $1}' | sort | uniq -c| sort -nr | wc -l"
-    //   )
-    //   .stdout.trim() //获取当日uv
-    // return parseInt(uv)
-  
     // 本地访问不到服务器的nginx日志, 返回一个随机数据[100,200]
     return Math.floor(Math.random() * 101) + 100
+
+    const shell = require('shelljs')
+
+    const file_path = '/www/wwwlogs' // 前台nginx日志所在目录
+    const file_name = 'sxzx_qt_access.log'  //前台nginx日志文件名
+
+    shell.cd(file_path) //切换到前台nginx日志所在目录
+    const time = shell.exec('date "+%d/%b/%Y"').stdout //获取当前系统时间
+    const uv = shell
+      .exec(
+        'grep' +
+          ' "' +
+          time +
+          '" ' +
+          file_name +
+          " | awk '{print $1}' | sort | uniq -c| sort -nr | wc -l"
+      )
+      .stdout.trim() //获取当日uv
+    return parseInt(uv) //转换成数字
   }
 
-  async init () {
-    const metas = (await systemMeta.findOne({name:'interface-setting'},'data')).data
+  async init() {
+    const metas = (
+      await systemMeta.findOne({ name: 'interface-setting' }, 'data')
+    ).data
     this.api = {
       SHBAPP: metas.api_SHBAPP,
       GZSRSJGW: metas.api_GZSRSJGW,
@@ -167,27 +172,25 @@ class systemMetaService {
       ZNFWJQRYPT: metas.api_ZNFWJQRPT,
       GDZWFWPT: metas.api_GDZWFWPT,
       BDDT: metas.api_BDDT,
-    };
+    }
 
     // 第一次的触发执行
-    await this.setApiData(this.api);
-    let that = this;
+    await this.setApiData(this.api)
+    let that = this
 
     // 网络接口问题：每隔12个小时来ping一下
     setInterval(async () => {
       // 注意this的换绑问题，箭头函数本身是没有this的
-      await that.setApiData(this.api);
-    }, 3600);
+      await that.setApiData(this.api)
+    }, 3600)
 
-    
     // 15分钟做一次用户获取状态
     setInterval(async () => {
-      await that.getUserOnlineNumber();
-    }, 15 * 60 * 1000);
-
+      await that.getUserOnlineNumber()
+    }, 15 * 60 * 1000)
 
     // 设置定时规则
-    let rule = new schedule.RecurrenceRule();
+    let rule = new schedule.RecurrenceRule()
     // 每天23点55分执行
     rule.hour = 23
     rule.minute = 55
@@ -198,20 +201,27 @@ class systemMetaService {
 
     // 启动定时任务存储图表数据
     let storeChartData = schedule.scheduleJob(rule, async () => {
+      if (
+        !!(await chartData.findOne({ date: new Date().setHours(0, 0, 0, 0) }))
+      ) {
+        // 当天数据已存在时不重复存储
+        console.log('当天数据已存在')
+        return
+      }
       // 删除存储时长前的全部数据
       let oldday = new Date()
-      oldday.setHours(0,0,0,0)
+      oldday.setHours(0, 0, 0, 0)
       oldday.setDate(oldday.getDate() - storageDays)
-      chartData.deleteMany({date:{$lte: oldday}},(err,rawResponse)=>{
-        if(err){
+      chartData.deleteMany({ date: { $lte: oldday } }, (err, rawResponse) => {
+        if (err) {
           console.log(err)
         }
-        console.log(rawResponse)
+        console.log('删除成功', rawResponse)
       })
       // 存入当天数据
       chartData.create(
         {
-          date: new Date().setHours(0,0,0,0), //设置为0:0:0:0使echarts的x轴对齐
+          date: new Date().setHours(0, 0, 0, 0), //设置为0:0:0:0使echarts的x轴对齐
           pv: await this.calculatePV(), // 事项浏览量，即access.log中getItems api调用次数
           uv: this.calculateUV(), // 网站UV数，读取nginx日志计算网站当天ip访问量(同一天的重复ip只算一次)
           user_num: await users.count({}), // 已经注册用户数量
@@ -226,36 +236,36 @@ class systemMetaService {
   }
 
   // 修改接口并重新ping
-  async patchInterface (api) {
+  async patchInterface(api) {
     try {
       await systemMeta.updateOne(
         { name: 'interface-setting' },
         { $set: { data: api } }
       )
-      this.api = api;
-      await this.setApiData(this.api);
+      this.api = api
+      await this.setApiData(this.api)
       return new SuccessModel({
-        msg: "修改接口成功",
-        data: this.interfaceData
-      });
-    } catch (error) {
-      return new ErrorModel({
-        msg: '修改接口失败'
-      });
-    }
-  }
-  
-  async getInterfaceMessage () {
-    try {
-      await this.setApiData(this.api);
-      return new SuccessModel({
-        msg: "获取接口状态成功",
-        data: this.interfaceData
+        msg: '修改接口成功',
+        data: this.interfaceData,
       })
     } catch (error) {
       return new ErrorModel({
-        msg: '获取接口状态失败'
-      });
+        msg: '修改接口失败',
+      })
+    }
+  }
+
+  async getInterfaceMessage() {
+    try {
+      await this.setApiData(this.api)
+      return new SuccessModel({
+        msg: '获取接口状态成功',
+        data: this.interfaceData,
+      })
+    } catch (error) {
+      return new ErrorModel({
+        msg: '获取接口状态失败',
+      })
     }
   }
 
@@ -266,79 +276,80 @@ class systemMetaService {
         'data'
       )
       return new SuccessModel({
-        msg: "获取接口URL成功",
-        data: InterfaceUrl.data
-      });
+        msg: '获取接口URL成功',
+        data: InterfaceUrl.data,
+      })
     } catch (error) {
       return new ErrorModel({
-        msg: '获取接口URL失败'
-      });
+        msg: '获取接口URL失败',
+      })
     }
   }
 
-
   // 切换db池
-  async selectRedisDatabase (db) {
+  async selectRedisDatabase(db) {
     try {
-      await redisClient.select(db);
+      await redisClient.select(db)
     } catch (error) {
-      await selectRedisDatabase(db);
+      await selectRedisDatabase(db)
     }
   }
 
   // 获取在线用户数目
-  async getUserOnlineNumber () {
-    await this.selectRedisDatabase(1);
+  async getUserOnlineNumber() {
+    await this.selectRedisDatabase(1)
     try {
-      const thisDay = new Date().getDay();
+      const thisDay = new Date().getDay()
       if (thisDay !== this.thisTime) {
-        this.userNumber = [];
-        this.thisTime = thisDay;
+        this.userNumber = []
+        this.thisTime = thisDay
       }
-      const getUserOnlineNum = await redisClient.dbSize();
-      this.userNumber.push(getUserOnlineNum);
-      await this.selectRedisDatabase(0);
+      const getUserOnlineNum = await redisClient.dbSize()
+      this.userNumber.push(getUserOnlineNum)
+      await this.selectRedisDatabase(0)
       return getUserOnlineNum
-      
     } catch (error) {
-      throw new Error(error.message);
+      throw new Error(error.message)
     }
   }
 
   // 获取当天最大用户数目
-  async getMaxUserOnlineNumberOnThisDay () {
+  async getMaxUserOnlineNumberOnThisDay() {
     try {
-      await this.getUserOnlineNumber();
-      return this.userNumber.sort((a, b) => b - a)[0] ? this.userNumber.sort((a, b) => b - a)[0] : 0;
+      await this.getUserOnlineNumber()
+      return this.userNumber.sort((a, b) => b - a)[0]
+        ? this.userNumber.sort((a, b) => b - a)[0]
+        : 0
     } catch (error) {
-      throw new Error(error.message);
+      throw new Error(error.message)
     }
   }
 
-  async getUserOnlineNumberAndMaxOnlineNumber () {
+  async getUserOnlineNumberAndMaxOnlineNumber() {
     try {
-      const UserOnlineNumber = await this.getUserOnlineNumber();
-      const MaxUserOnlineNumberOnThisDay = await this.getMaxUserOnlineNumberOnThisDay();
+      const UserOnlineNumber = await this.getUserOnlineNumber()
+      const MaxUserOnlineNumberOnThisDay =
+        await this.getMaxUserOnlineNumberOnThisDay()
       return new SuccessModel({
         msg: '获取在线用户数目成功',
         data: {
           userOnline: UserOnlineNumber,
-          userMax: MaxUserOnlineNumberOnThisDay
-        }
-      });
+          userMax: MaxUserOnlineNumberOnThisDay,
+        },
+      })
     } catch (error) {
       throw new ErrorModel({
-        msg: '获取在线用户数目失败'
-      });
+        msg: '获取在线用户数目失败',
+      })
     }
   }
 
   // 获取当天平均用户数目
-  async getAverageUserOnlineNumberOnThisDay () {
-    const res = this.userNumber.reduce((a, b) => a + b);
+  async getAverageUserOnlineNumberOnThisDay() {
+    const res = this.userNumber.reduce((a, b) => a + b)
     return new SuccessModel({
       msg: '获取平均用户数目成功',
-      data: res / this.userNumber.length
+      data: res / this.userNumber.length,
     })
   }
 
@@ -350,13 +361,13 @@ class systemMetaService {
         'data'
       )
       return new SuccessModel({
-        msg: "获取核心设置成功",
-        data: CoreSetting.data
-      });
+        msg: '获取核心设置成功',
+        data: CoreSetting.data,
+      })
     } catch (error) {
       return new ErrorModel({
-        msg: '获取核心设置失败'
-      });
+        msg: '获取核心设置失败',
+      })
     }
   }
 
@@ -368,22 +379,26 @@ class systemMetaService {
         { $set: { data: CoreSetting } }
       )
       return new SuccessModel({
-        msg: "修改核心设置成功"
-      });
+        msg: '修改核心设置成功',
+      })
     } catch (error) {
       return new ErrorModel({
-        msg: '修改核心设置失败'
-      });
+        msg: '修改核心设置失败',
+      })
     }
   }
 
   // 根据type获取图表数据
-  async getChartData(type){
+  async getChartData(type) {
     try {
       // 获取数据库存储的数据
-      let ChartData = await chartData.find({}, { date: 1, [type]: 1, _id:0 }, {
-        sort: { date: 1 },  // 以防万一还是排下序
-      })
+      let ChartData = await chartData.find(
+        {},
+        { date: 1, [type]: 1, _id: 0 },
+        {
+          sort: { date: 1 }, // 以防万一还是排下序
+        }
+      )
       let data
       switch (type) {
         case 'pv':
@@ -403,7 +418,7 @@ class systemMetaService {
       }
       // 将当天最新的数据插入结果
       ChartData.push({
-        date: new Date().setHours(0,0,0,1),
+        date: new Date().setHours(0, 0, 0, 1),
         [type]: data,
       })
       // console.log(ChartData)
