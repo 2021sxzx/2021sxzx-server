@@ -15,8 +15,8 @@ if (process.env.NODE_ENV === 'local') {
     // 阿里云
     REDIS_CONFIG = {
         host: '8.134.73.52',
-        port: '7379',
-        password: '@hgc16711',
+        port: '6379',
+        password: 'hgc16711',
     }
     MONGO_CONFIG = {
         url: 'mongodb://root2:Hgc16711@8.134.73.52:27017/sxzx',
