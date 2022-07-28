@@ -1,10 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const {getTel, setTel} = require('../service/systemBasicService')
-router.get('/v1/get-tel', async (req, res) => {
-  res.send(await getTel())
-})
-router.post('/v1/set-tel', async ({body: {data}}, res) => {
-  res.send(await setTel(data))
-})
+const {getTel, setTel, getHotKeys, deleteHotKey, addHotKey} = require('../service/systemBasicService')
+router.get('/v1/get-tel', async (req, res) => res.send(await getTel()))
+router.post('/v1/set-tel', async ({body: {data}}, res) => res.send(await setTel(data)))
+router.get('/v1/get-hot-keys', async (req, res) => res.send(await getHotKeys()))
+router.post('/v1/delete-hot-key', async ({body: {data}}, res) => res.send(await deleteHotKey(data)))
+router.post('/v1/add-hot-key', async ({body: {data}}, res) => res.send(await addHotKey(data)))
 module.exports = router

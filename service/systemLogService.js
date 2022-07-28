@@ -9,6 +9,8 @@ function chargeTypeChange(value) {
   const chargeTypeGroup = {
     'GET /api/v1/show/': '查询日志',
     'POST /api/v1/set-tel': '修改咨询电话',
+    'POST /api/v1/add-hot-key': '增加热词',
+    'POST /api/v1/delete-hot-key': '删除热词',
     'GET /api/v1/handle-backup': '手动备份数据库',
     'POST /api/v1/delete-system-backup': '删除数据库备份',
     'GET /api/v1/mongo-backup': '查询数据库备份',
