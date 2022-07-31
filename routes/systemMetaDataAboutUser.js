@@ -20,6 +20,5 @@ function wrap(handler) {
 router.get('/v1/interface/NetworkStatus', wrap(systemMetaController.getNetworkStatus));
 router.get('/v1/interface', wrap(systemMetaController.getInterfaceUrl));
 router.patch('/v1/interface', wrap(systemMetaController.patchNetworkStatus));
-router.get('/v1/peopleStatus', wrap(systemMetaController.getUserOnlineNumberAndMaxOnlineNumber));
 
 module.exports = router;

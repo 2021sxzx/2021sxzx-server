@@ -1,36 +1,27 @@
-const systemLog = require("../model/systemLog");
-const users = require("../model/users");
 const fs = require('fs')
-const {getUserById} = require('../service/userManagementService');
-const {start} = require("repl");
-//与数据库默认的_id进行匹配
-var ObjectID = require('mongoose').ObjectId;
+const {getUserById} = require('../service/userManagementService')
 
 /**
  * 请求操作映射表
  * @returns {Promise<*|*>}
  */
 function chargeTypeChange(value) {
-  // TODO: 后续补全操作映射表
-  var chargeTypeGroup = {
-    "GET /api/v1/allSystemLog": "查询所有日志",
-    "GET /api/v1/allSystemLogDetail": "查询详细日志",
-    "POST /api/v1/getUserRank": "获取用户评论等级",
-    "GET /api/v1/getRuleTree/": "获取事项规则树",
-    "GET /api/v1/getItemStatusScheme": "获取事项规则数据集",
-    "POST /api/v1/getItems": "获取事项规则",
-    "POST /api/v1/login": "用户登录",
-    "POST /api/v1/sideBar": "获取侧边栏",
-    "GET /api/v1/getRegionTree/": "获取规则树",
-  };
-  return chargeTypeGroup[value];
+  const chargeTypeGroup = {
+    'GET /api/v1/show/': '查询日志',
+    'POST /api/v1/set-tel': '修改咨询电话',
+    'POST /api/v1/add-hot-key': '增加热词',
+    'POST /api/v1/delete-hot-key': '删除热词',
+    'GET /api/v1/handle-backup': '手动备份数据库',
+    'POST /api/v1/delete-system-backup': '删除数据库备份',
+    'GET /api/v1/mongo-backup': '查询数据库备份',
+    'POST /api/v1/change-backup-cycle': '修改数据库自动备份时间',
+    'POST /api/v1/website-settings-upload': '修改网站设置',
+    'PATCH /api/v1/core-settings': '修改网站核心设置',
+    'POST /api/v1/create-system-failure': '添加故障',
+    'POST /api/v1/delete-system-failure': '删除故障'
+  }
+  return chargeTypeGroup[value]
 }
-
-/**
- * 查找操作人id对应的用户名的方法
- * @param id 操作人的id
- * @returns {Promise<*>}
- */
 
 /**
  * 读取日志内容
@@ -38,43 +29,31 @@ function chargeTypeChange(value) {
  */
 async function showSystemLog() {
   try {
-    var data = fs.readFileSync('log/access.log');
-    data = data.toString().split("\n");
-    var dataArray = []
-    var user = ""//objectkey for循环
-
-    var dataLength=data.length;
-    // console.log("data in showSystemLog:")
-    // for(let i=0;i<5;i++)
-    //   console.log(data[i])
-    // var set = new Set()
-    for (let i = 0; i < dataLength; i++){
+    let data = fs.readFileSync('log/access.log')
+    data = data.toString().split('\n')
+    const dataArray = []
+    let user = ''
+    const dataLength = data.length
+    for (let i = 0; i < dataLength; i++) {
       // 系统id我们弄为000
-      user = await getUserById(data[i].slice(0,data[i].indexOf(":")-1))
-      // set.add(user.role_name)
-      //进行过滤，只留系统管理员、操作员、机构管理员
-      if(user.role_name!='操作员'&&user.role_name!='系统管理员'&&user.role_name!='机构管理员')
+      user = await getUserById(data[i].slice(0, data[i].indexOf(':') - 1))
+      // 进行过滤，只留系统管理员
+      if (!user && user.role_name !== '系统管理员')
         continue
-      if (!user) {
-        continue
-      }
       dataArray.push({
         log_id: i,
-        create_time: data[i].substr(data[i].indexOf("[") + 1, 19), //! 做修改，不要将[.]包被进来
-        content: chargeTypeChange(data[i].slice(data[i].indexOf("\"") + 1, data[i].indexOf("H") - 1)),
+        create_time: data[i].slice(data[i].indexOf('[') + 1, data[i].indexOf('[') + 20), //! 做修改，不要将[.]包被进来
+        content: chargeTypeChange(data[i].slice(data[i].indexOf('"') + 1, data[i].indexOf('H') - 1)),
         user_name: user.user_name,
         idc: user.account,
-        _id: data[i].slice(0, data[i].indexOf(":") - 1)
-      });
+        _id: data[i].slice(0, data[i].indexOf(':') - 1)
+      })
+
     }
-    // console.log(set)
-    // console.log("dataArray in showSystemLog:")
-    // for(let i=0;i<5;i++)
-    //   console.log(dataArray[i])
-     // 做一个筛选
-    return dataArray.filter(item => !!item.content);
+    // 做一个筛选
+    return dataArray.filter(item => !!item.content)
   } catch (e) {
-    return "showSystemLog:" + e.message;
+    return 'showSystemLog:' + e.message
   }
 }
 
@@ -84,29 +63,11 @@ async function showSystemLog() {
  */
 async function getAllSystemLog2() {
   try {
-    var data = fs.readFileSync('log/access.log');
-    data = data.toString().split("\n");
-    return data;
+    let data = fs.readFileSync('log/access.log')
+    data = data.toString().split('\n')
+    return data
   } catch (e) {
-    return e.message;
-  }
-}
-
-/**
- * 将系统日志对应的操作人的详细信息全部返回
- * @returns {Promise<*>}
- */
-async function getSystemLogDetail() {
-  try {
-    let systemLogArr = await getAllSystemLog2();
-    for (let i = 0; i < systemLogArr.length; i++) {
-      let item_id = systemLogArr[i].idc;
-      let userName = await getUserName(item_id);
-      systemLogArr[i].user_name = userName.user_name;
-    }
-    return systemLogArr;
-  } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
@@ -119,53 +80,53 @@ async function getSystemLogDetail() {
  */
 async function searchByCondition({myselfID, today, thisWeek}) {
   try {
-    let condition = {};
-    condition.pageNum = 0;
-    let systemLogData = await showSystemLog();
-    let newSystemLogData = [];
+    let condition = {}
+    condition.pageNum = 0
+    let systemLogData = await showSystemLog()
+    let newSystemLogData = []
     if (myselfID === '' && today === false && thisWeek === false) {
       return systemLogData
     }
     if (myselfID) {
       newSystemLogData = systemLogData.filter((currentItem) => {
-        return currentItem._id === myselfID;
-      });
+        return currentItem._id === myselfID
+      })
     }
     if (today === true) {
-      let d = new Date();
+      let d = new Date()
       newSystemLogData = systemLogData.filter((currentItem) => {
-        return currentItem.create_time.substring(0, 10) === d.toJSON().substring(0, 10);
-      });
+        return currentItem.create_time.substring(0, 10) === d.toJSON().substring(0, 10)
+      })
     }
     if (thisWeek === true) {
-      let date1 = new Date();
-      let w = date1.getDay(); //获取一下今天是周几
-      let delta1 = 1 - w; //算算差几天到周一
-      date1.setDate(date1.getDate() + delta1);
-      date1 = date1.toJSON();
-      date1 = date1.substring(0, 10);
-      let date7 = new Date();
-      let delta7 = 7 - w; //算算差几天到周日
-      date7.setDate(date7.getDate() + delta7);
-      date7 = date7.toJSON();
-      date7 = date7.substring(0, 10);
-      let date1number = parseInt(date1.replace(/-/g, ""));
-      let date7number = parseInt(date7.replace(/-/g, ""));
+      let date1 = new Date()
+      let w = date1.getDay() //获取一下今天是周几
+      let delta1 = 1 - w //算算差几天到周一
+      date1.setDate(date1.getDate() + delta1)
+      date1 = date1.toJSON()
+      date1 = date1.substring(0, 10)
+      let date7 = new Date()
+      let delta7 = 7 - w //算算差几天到周日
+      date7.setDate(date7.getDate() + delta7)
+      date7 = date7.toJSON()
+      date7 = date7.substring(0, 10)
+      let date1number = parseInt(date1.replace(/-/g, ''))
+      let date7number = parseInt(date7.replace(/-/g, ''))
       newSystemLogData = systemLogData.filter((currentItem) => {
         return (
           date1number <=
           parseInt(
-            currentItem.create_time.substring(0, 10).replace(/-/g, "")
+            currentItem.create_time.substring(0, 10).replace(/-/g, '')
           ) &&
           parseInt(
-            currentItem.create_time.substring(0, 10).replace(/-/g, "")
+            currentItem.create_time.substring(0, 10).replace(/-/g, '')
           ) <= date7number
-        );
-      });
+        )
+      })
     }
     return newSystemLogData
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
@@ -175,49 +136,47 @@ async function searchByCondition({myselfID, today, thisWeek}) {
  * @returns {Promise<*>}
  */
 async function searchByAdvancedCondition(searchData) {
-  const ID = '账号';
-  const NAME = '操作人';
-  const DESCRIPTION = '操作描述';
-  let {searchValue, searchType, startTime, endTime} = searchData;
-  if (!searchValue) searchValue = '.';
-  if (!searchType) searchType = ID;
-  if (!startTime) startTime = '0';
+  const ID = '账号'
+  const NAME = '操作人'
+  const DESCRIPTION = '操作描述'
+  let {searchValue, searchType, startTime, endTime} = searchData
+  if (!searchValue) searchValue = '.'
+  if (!searchType) searchType = ID
+  if (!startTime) startTime = '0'
   //bug  原代码：
   // if (!endTime) startTime = '3';
-  if (!endTime) endTime = '3';
+  if (!endTime) endTime = '3'
 
   if (startTime > endTime) {
-    let temp = null;
-    temp = endTime;
-    endTime = startTime;
-    startTime = temp;
+    let temp
+    temp = endTime
+    endTime = startTime
+    startTime = temp
   }
 
-  const reg = new RegExp(searchValue, 'i');
+  const reg = new RegExp(searchValue, 'i')
   try {
-    const allLog = await showSystemLog();
+    const allLog = await showSystemLog()
     // console.log("高级查询filter前的数据:",allLog)
-    const res = allLog.filter(item => {
+    return allLog.filter(item => {
       return (
-        (searchType == ID && reg.test(item.idc)) ||
-        (searchType == NAME && reg.test(item.user_name)) ||
-        (searchType == DESCRIPTION && reg.test(item.content))
+        (searchType === ID && reg.test(item.idc)) ||
+        (searchType === NAME && reg.test(item.user_name)) ||
+        (searchType === DESCRIPTION && reg.test(item.content))
       ) && (
         (startTime <= item.create_time.split('T')[0]) &&
         (endTime >= item.create_time.split('T')[0])
       )
     })
-    return res;
   } catch (e) {
-    return e.message;
+    return e.message
   }
 }
 
 
 module.exports = {
-  getSystemLogDetail,
   getAllSystemLog2,
   searchByCondition,
   searchByAdvancedCondition,
   showSystemLog,
-};
+}

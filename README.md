@@ -19,9 +19,11 @@ git checkout dev #注意看git bash命令行上显示的分支是否是dev
 
 - 安装依赖
 
-```js
+```shell
 npm install
 ```
+
+- 在`log`目录下新建一个`access.log`文件
 
 - 目录结构
 

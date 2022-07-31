@@ -34,13 +34,6 @@ function backup(mode, user_id = null) {
         manual: {errorStr: '手动', successStr: `${backup_name}|||${user_name} ::[${getDate()}] "手动系统备份完成"\n`}
       }[mode]
       const writeStream = fs.createWriteStream(logPath, {flags: 'a'})
-      // console.log('==============================')
-      // console.log(err)
-      // console.log('==============================')
-      // console.log(stdout.toString())
-      // console.log('==============================')
-      // console.log(stderr.toString())
-      // console.log('==============================')
       // 注意，shell脚本中的mongodump命令会向stderr写入内容，【即使备份没有错误】，因此这里不再使用stderr来判断是否出错
       if (err) {
         await createSystemBackup('', user_name, 'failed')

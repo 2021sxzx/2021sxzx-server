@@ -1,5 +1,4 @@
 const {
-    getSystemLogDetail,
     getAllSystemLog2,
     searchByCondition,
     searchByAdvancedCondition,
@@ -142,20 +141,6 @@ async function getItemBrowseCount() {
         return new ErrorModel({msg: e.message})
     }
 }
-
-/**
- * 获取系统日志(包括操作人)
- * @returns {Promise<ErrorModel|SuccessModel>}
- */
-async function getAllSystemLogDetail() {
-    try {
-        let data = await getSystemLogDetail();
-        return new SuccessModel({msg: '获取系统日志成功', data: data});
-    } catch (e) {
-        return new ErrorModel({msg: e.message})
-    }
-}
-
 /**
  * 根据条件搜索日志
  * @param searchData
@@ -193,7 +178,6 @@ async function getAdvancedSearchSystemLog(searchData) {
 
 module.exports = {
     getSearchSystemLog,
-    getAllSystemLogDetail,
     showSystemLogController,
     getSystemLog2,
     getItemBrowseCount,

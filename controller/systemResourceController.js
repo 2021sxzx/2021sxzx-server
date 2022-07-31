@@ -2,7 +2,7 @@ const {
     getCpuPercentage,
     getMemory,
     getDisk,
-    viewProcessMessage
+    getUserOnlineNumber
   } = require("../service/systemResourceService")
   const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -47,14 +47,14 @@ const {
     }
 
   /**
-   * 查看磁盘信息
+   * 查看在线用户数目
    * @returns {Promise<ErrorModel|SuccessModel>}
    */
-        async function viewProcessMessageController() {
+        async function getUserOnlineNumberController() {
           try {
-            let data = await viewProcessMessage();
-            console.log('data:',data)
-            return new SuccessModel({msg: '获取进程信息成功', data:data});
+            let data = await getUserOnlineNumber();
+            console.log(data)
+            return new SuccessModel({msg: '获取在线用户数目成功', data:data});
           } catch (e) {
             return new ErrorModel({msg:e.message})
           }
@@ -64,5 +64,5 @@ const {
     getCpuPercentageController,
     getMemoryController,
     getDiskController,
-    viewProcessMessageController
+    getUserOnlineNumberController
   }
