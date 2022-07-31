@@ -9,7 +9,8 @@ const {
   updateUserAndReturnList,
   deleteUserAndReturnList,
   searchUserAndReturnList,
-  setActivationAndReturn
+  setActivationAndReturn,
+  getActivationAndReturn
 } = require('../controller/userManagementController');
 
 
@@ -84,6 +85,15 @@ router.post('/v1/searchUser', async (req, res, next) => {
   setStatusCode(res, data);
   res.json(data)
 })
+
+//
+router.post('/v1/getActivation',async function(req,res,next){
+  const {account} = req.body;
+  const result  = await getActivationAndReturn(account)
+  console.log(result)
+  res.json(result)
+})
+
 
 // 激活状态
 router.post('/v1/setActivation', async function (req, res, next) {

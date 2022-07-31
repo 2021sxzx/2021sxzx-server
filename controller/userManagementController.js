@@ -6,6 +6,7 @@ const {
     updateUser,
     deleteUser,
     searchUser,
+    getActivation,
     setActivation,
     batchImportedUser
 } = require('../service/userManagementService');
@@ -149,6 +150,18 @@ async function searchUserAndReturnList(searchValue, unit_id) {
     }
 }
 
+async function getActivationAndReturn(account){
+    try{
+        let res = await getActivation(account)
+        return new SuccessModel({
+            msg:"成功获取状态",
+            data:res
+        })
+    }catch(e){
+        throw new ErrorModel({msg: e.message})
+    }
+}
+
 async function setActivationAndReturn(account, unit_id) {
     try {
         await setActivation(account);
@@ -170,5 +183,6 @@ module.exports = {
     updateUserAndReturnList,
     deleteUserAndReturnList,
     searchUserAndReturnList,
+    getActivationAndReturn,
     setActivationAndReturn
 }

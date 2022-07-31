@@ -852,7 +852,8 @@ async function getItemGuides({
     try {
         // if (user_id === null) {
         //     throw new Error('需要user_id')
-        // }
+        // } 
+        console.log("getting Items")
         var query = {}
         if (task_status !== null) query.task_status = task_status
         if (task_code !== null) query.task_code = task_code
@@ -1002,6 +1003,7 @@ async function getItemGuides({
     } catch (err) {
         return new ErrorModel({ msg: '查询失败', data: err.message })
     }
+
 }
 
 /**

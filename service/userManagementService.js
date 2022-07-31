@@ -1,7 +1,8 @@
 const users = require('../model/users');
 const unit = require('../model/unit');
 const role = require('../model/role');
-
+const redisClient = require('../config/redis')
+const {statusset} = require('../utils/statusmsg')
 // 用户数据拉取之后放到这里，下次便于取出，无需交互数据库
 let userCache = null;
 // 一个控制是否将数据重新从数据库拉取的变量
@@ -9,6 +10,19 @@ let isNeedUpdateUserCache = false;
 
 let allUnit = null;
 let allRole = null;
+
+/**
+ * 验证用户身份、生成jwt
+ * @returns {Promise<*>}
+ * @param db
+ */
+ async function selectRedisDatabase(db) {
+    try {
+      await redisClient.select(db)
+    } catch (error) {
+      await selectRedisDatabase(db)
+    }
+  }
 
 const inisilize = async () => {
     try {
@@ -160,6 +174,25 @@ async function searchUser(searchValue) {
     }
 }
 
+async function getActivation(account) {
+        // let res = await users.findOne({
+        //     account
+        // }, {
+        //     account: 1,
+        //     activation_status: 1
+        // })
+        try{   
+            await selectRedisDatabase(1)           
+            let res = await redisClient.get(account) 
+            // console.log("Get account's result:",res)
+            await selectRedisDatabase(0)      
+            return res
+    } catch (e) {
+        await selectRedisDatabase(0)   
+        throw e.message
+    }
+}
+
 async function setActivation(account) {
     try {
         isNeedUpdateUserCache = true;
@@ -169,7 +202,27 @@ async function setActivation(account) {
             account: 1,
             activation_status: 1
         })
+        // let tmp  = 1
         let tmp = res.activation_status === 1 ? 0 : 1;
+        if(tmp==0)
+        {
+            try{   
+                await selectRedisDatabase(1)  
+              let loginstate = await redisClient.del(account) 
+               statusset.add(account)
+               await selectRedisDatabase(0)
+            }catch(e)   
+            {
+                await selectRedisDatabase(0)
+                console.log("error:",e)
+            }           
+        }
+        if(tmp==1)
+        {
+            if(statusset.has(account))
+                statusset.delete(account)
+        }
+            // await redisClient.del(account)
         await users.updateOne({
             account
         }, {
@@ -277,6 +330,7 @@ module.exports = {
     updateUser,
     deleteUser,
     searchUser,
+    getActivation,
     setActivation,
     batchImportedUser,
     getUserById

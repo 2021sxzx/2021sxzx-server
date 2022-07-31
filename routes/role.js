@@ -7,6 +7,7 @@ const {
   deleteRoleAndReturnList,
   searchRoleAndReturnList
 } = require("../controller/roleController");
+const permission = require('../model/permission');
 
 function setStatusCode(res, data) {
     if (data.code === 200) {
@@ -70,5 +71,7 @@ router.post('/v1/searchRole', async (req, res, next) => {
   setStatusCode(res, data)
   res.json(data)
 });
+
+
 
 module.exports = router;

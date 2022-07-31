@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-
+const jwt = require('jsonwebtoken')
 const unitRouter = require('./routes/unit');
 const commentRouter = require("./routes/comment")
 const systemLogRouter = require("./routes/systemLog")
@@ -25,14 +25,14 @@ const imageRouter = require('./routes/image');
 const personalRouter = require('./routes/personal');
 const systemMetaAboutUserRouter = require('./routes/systemMetaDataAboutUser');
 const verify = require('./routes/verify');
-
-
-const {validate_jwt} = require('./utils/validateJwt');
+const {getActivation} = require('./service/userManagementService')
+const {statusset} = require('./utils/statusmsg')
+const {jwt_secret,validate_jwt} = require('./utils/validateJwt');
 
 const {MONGO_CONFIG} = require("./config/config") //数据库的配置信息
 const mongoose = require("mongoose")
 const redisClient = require('./config/redis');
-
+const Statusset = new Set();
 // IIFE立即执行redis数据库连接
 (async () => {
     await redisClient.connect()
@@ -44,13 +44,48 @@ const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit: 50000}));
+// //验证是否有登录权限
+// async function verifyStatus(token){
+//     if(token==undefined)
+//         return 
+//     const account = await jwt.verify(token, jwt_secret, null, null).account
+//     console.log(account)
+//     let ans = await getActivation(account)
+//     if(ans==0)
+
+// }
+//使用cookieParser将cookie转换成为对象，以便更好的使用
+app.use(cookieParser());
+
 //跨域（张奕凯）
 app.all('*', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Authorization, Accept, X-Requested-With");
     res.header("Access-Control-Allow-Methods", "POST,GET,TRACE,OPTIONS");
     res.header("X-Powered-By", "3.2.1");
-    if (req.method == "OPTIONS") res.sendStatus(200); else next()
+    if (req.method == "OPTIONS") {
+        res.sendStatus(200);      
+    }
+    //用户状态被切换成未激活，则或将account放进statusset中
+    else 
+    {
+        const token = req.cookies["auth-token"];
+        if(token==undefined)
+        {
+            console.log("I'm in token undefined")
+            next()
+            return
+        }
+        const account = jwt.verify(token, jwt_secret, null, null).account
+        if(statusset.has(account))
+        {
+            //设置个定时器可以保证多个请求同时进来时都不响应
+            setTimeout(()=>statusset.delete(account),500)
+            res.json({loginstate:"loginout"})
+        }
+        else     
+            next()
+    } 
 })
 
 // 动态网页的模板设置
@@ -77,8 +112,8 @@ app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/
 // post请求的参数的获取, express会将解析之后, 转换成对象的post请求参数放到请求对象的body属性中
 app.use(express.json());// 告诉express能够解析 application/json类型的请求参数
 app.use(express.urlencoded({extended: false}));// 告诉express能够解析 表单类型的请求参数 application/x-www-form-urlencoded
-//使用cookieParser将cookie转换成为对象，以便更好的使用
-app.use(cookieParser());
+// //使用cookieParser将cookie转换成为对象，以便更好的使用
+// app.use(cookieParser());
 // 处理静态资源
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -128,3 +163,4 @@ app.use(function (err, req, res, next) {
     res.status(err.status || 500).send('error');
 });
 module.exports = app;
+module.exports.Statusset = Statusset;
