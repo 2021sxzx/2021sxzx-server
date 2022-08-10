@@ -17,6 +17,26 @@ const remoteCheckLogSchema = new mongoose.Schema({
     differences: {
         type: Array,
         default: []
+    },
+    handle_inLocalNinRemote:{
+        type:Array,
+        default:[]
+    },
+    handle_inRemoteNinLocal:{
+        type:Array,
+        default:[]
+    },
+    handle_differences:{
+        type:Array,
+        default:[]
+    },
+    inLocalNinRemoteGuideNames:{
+        type:Array,
+        default:[]
+    },
+    differencesGuideNames:{
+        type:Array,
+        default:[]
     }
 })
 

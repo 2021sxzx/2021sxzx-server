@@ -196,6 +196,15 @@ router.get('/v1/getCheckResult', async (req, res, next) => {
     res.json(data)
 })
 
+router.post('/v1/updateCheckResult',async(req,res,next)=>{
+    const arr = req.body
+    // console.log("updateCheckResult:",arr)
+    // data.code = 200
+    let data = await itemController.updateCheckResult(arr)
+    setStatusCode(res, data)
+    res.json(data)
+})
+
 router.post('/v1/getItemUsers', async (req, res, next) => {
     let data = await itemController.getItemUsers(req.body)
     setStatusCode(res, data)

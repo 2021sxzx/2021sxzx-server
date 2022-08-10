@@ -72,7 +72,7 @@ app.all('*', function (req, res, next) {
         const token = req.cookies["auth-token"];
         if(token==undefined)
         {
-            console.log("I'm in token undefined")
+            // console.log("I'm in token undefined")
             next()
             return
         }
@@ -81,7 +81,8 @@ app.all('*', function (req, res, next) {
         {
             //设置个定时器可以保证多个请求同时进来时都不响应
             setTimeout(()=>statusset.delete(account),500)
-            res.json({loginstate:"loginout"})
+            res.sendStatus(401)
+            // res.json({loginstate:"loginout"})
         }
         else     
             next()
