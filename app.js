@@ -26,10 +26,8 @@ const imageRouter = require('./routes/image')
 const personalRouter = require('./routes/personal')
 const systemMetaAboutUserRouter = require('./routes/systemMetaDataAboutUser')
 const verify = require('./routes/verify')
-const {getActivation} = require('./service/userManagementService')
 const {statusset} = require('./utils/statusmsg')
-const {jwt_secret, validate_jwt} = require('./utils/validateJwt')
-
+const {jwt_secret} = require('./utils/validateJwt')
 const {MONGO_CONFIG} = require("./config/config") //数据库的配置信息
 const mongoose = require("mongoose")
 const redisClient = require('./config/redis')
@@ -66,6 +64,13 @@ app.use(cookieParser())
 app.use(bodyParser.json({limit: '50mb'}))
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit: 50000}))
 
+// post请求的参数的获取, express会将解析之后, 转换成对象的post请求参数放到请求对象的body属性中
+app.use(express.json());// 告诉express能够解析 application/json类型的请求参数
+app.use(express.urlencoded({extended: false}));// 告诉express能够解析 表单类型的请求参数 application/x-www-form-urlencoded
+
+// 处理静态资源
+app.use(express.static(path.join(__dirname, 'public')));
+
 // 为所有响应添加跨域设置
 app.use('*', function (req, res, next) {
     // TODO（钟卓江）: 我认为为了安全性考虑应该限制允许跨域的来源
@@ -77,12 +82,12 @@ app.use('*', function (req, res, next) {
 })
 
 // 前端的预检请求（preflight request），为了获知服务端是否允许该请求
-app.options('*', (req, res, next) => {
+app.options('*', (req, res) => {
     res.sendStatus(200)
 })
 
-// 检查用户是否被切换了激活状态
-app.all('*', (req, res, next) => {
+// 检查用户的 token 是否合法
+app.use('*', (req, res, next) => {
     //用户状态被切换成未激活，则或将 account 放进 statusset 中
     // 获取 token
     const token = req.cookies["auth-token"]
@@ -90,19 +95,18 @@ app.all('*', (req, res, next) => {
     if (token === undefined) {
         console.log("I'm in token undefined")
         next()
+    } else {
+        // 解析用户账号信息
+        const account = jwt.verify(token, jwt_secret, null, null).account
+        // 如果这个账号在 statusset 中出现了，说明这个账号被切换成了未激活状态
+        if (statusset.has(account)) {
+            //设置个定时器可以保证多个请求同时进来时都不响应
+            // TODO(钟卓江)：设置定时器延迟 500ms 再删除其中的 account 这里有风险，万一对方网络延迟大于 500ms 就失效。
+            setTimeout(() => statusset.delete(account), 500)
+            // 设置响应码 401 并发送 JSON 对象
+            res.status(401).json({loginstate: "loginout"})
+        }
     }
-
-    // 解析用户账号信息
-    const account = jwt.verify(token, jwt_secret, null, null).account
-    // 如果这个账号在 statusset 中出现了，说明这个账号被切换成了未激活状态
-    if (statusset.has(account)) {
-        //设置个定时器可以保证多个请求同时进来时都不响应
-        // TODO(钟卓江)：设置定时器延迟 500ms 再删除其中的 account 这里有风险，万一对方网络延迟大于 500ms 就失效。
-        setTimeout(() => statusset.delete(account), 500)
-        // 设置响应码 401 并发送 JSON 对象
-        res.status(401).json({loginstate: "loginout"})
-    }
-
     next()
 })
 
@@ -116,33 +120,26 @@ app.all('*', (req, res, next) => {
 //     if(ans==0)
 // }
 
-
-
-
-
-// 日志的设置使用
-app.use(logger('dev'));
-const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.log'), {flags: 'a'});
+// 配置日志的本地文件路径
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.log'), {flags: 'a'})
 //往日志添加用户信息
 logger.token('id', function getId(req) {
     return req.headers.userid
 });
+// 往日志添加时间
 logger.token('localDate', function getDate() {
-    var date = new Date(new Date().getTime() + 8 * 3600 * 1000);
+    const date = new Date(new Date().getTime() + 8 * 3600 * 1000)
     return date.toISOString()
 });
+// 日志中间件的设置使用
 app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
-    skip: function (req, res) {
-        return req.headers.userid == undefined
-    }, stream: accessLogStream
+    skip: function (req) {
+        return req.headers.userid === undefined
+    },
+    stream: accessLogStream,
 }));
-// post请求的参数的获取, express会将解析之后, 转换成对象的post请求参数放到请求对象的body属性中
-app.use(express.json());// 告诉express能够解析 application/json类型的请求参数
-app.use(express.urlencoded({extended: false}));// 告诉express能够解析 表单类型的请求参数 application/x-www-form-urlencoded
-// //使用cookieParser将cookie转换成为对象，以便更好的使用
-// app.use(cookieParser());
-// 处理静态资源
-app.use(express.static(path.join(__dirname, 'public')));
+
+
 
 /*
 //添加拦截器
@@ -173,11 +170,11 @@ app.use('/api', systemMetaAboutUserRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-    next(createError(404));
-});
+    next(createError(404))
+})
 
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res) {
     // // set locals, only providing error in development
     // res.locals.message = err.message;
     // // 错误根据生产环境进行一个配置
@@ -186,8 +183,9 @@ app.use(function (err, req, res, next) {
     // // render the error page
     // res.status(err.status || 500);
     // res.render('error');
-    console.error(err.message);
-    res.status(err.status || 500).send('error');
-});
-module.exports = app;
-module.exports.Statusset = Statusset;
+    console.error(err.message)
+    res.status(err.status || 500).send('error')
+})
+
+module.exports = app
+module.exports.Statusset = Statusset
