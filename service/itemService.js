@@ -419,8 +419,8 @@ async function getOrganListByRegionCode(region_code) {
  */
 async function listItemBasicByOrg(org_code, page_size, page_num) {
     try {
-        var body = {}
-        var retry = 10
+        let body = {}
+        let retry = 10
         do {
             body = await postRequest(listItemBasicByOrg_Url, {
                 org_code: org_code,
@@ -430,6 +430,7 @@ async function listItemBasicByOrg(org_code, page_size, page_num) {
             })
             retry -= 1
         } while (body === 'RETRY' && retry > 0)
+
         if (body === 'RETRY') {
             console.log('获取' + org_code + '第' + page_num + '页的事项列表失败，重试了' + retry + '次')
             return null
@@ -695,18 +696,19 @@ async function getOrganOfRegions(regionCodes) {
 async function getAllItemBasicByOrg(org_code) {
     try {
         const PAGE_SIZE = 20
-        var body = await listItemBasicByOrg(org_code, PAGE_SIZE, 1)
+        const body = await listItemBasicByOrg(org_code, PAGE_SIZE, 1)
         if (body === null) {
-            reject('获取' + org_code + '的全部事项基本信息失败')
+            // TODO: 缺乏错误处理
+            console.log('获取' + org_code + '的全部事项基本信息失败')
         }
         //通过第一次请求的结果计算一共有多少页
-        var total = body.total
-        var maxPageNum = Math.ceil(total / PAGE_SIZE)
+        const total = body.total
+        const maxPageNum = Math.ceil(total / PAGE_SIZE)
         console.log('org_code: ' + org_code + '\ttotal: ' + total + '\tmaxPageNum: ' + maxPageNum)
-        var value = []
+        let value = []
         //并行
         if (TYPE === 'PARALLEL') {
-            var promiseList = []
+            const promiseList = []
             for (let i = 1; i <= maxPageNum; i++) {
                 promiseList.push(listItemBasicByOrg(org_code, PAGE_SIZE, i))
             }
@@ -721,7 +723,7 @@ async function getAllItemBasicByOrg(org_code) {
             }
         }
         //------
-        var items = []
+        const items = []
         for (let i = 0, len = value.length; i < len; i++) {
             Array.prototype.push.apply(items, value[i].data ? value[i].data : [])
         }
@@ -739,29 +741,24 @@ async function getAllItemBasicByOrg(org_code) {
  */
 async function getAllItemsByOrg(org_code) {
     try {
-        var value = await getAllItemBasicByOrg(org_code)
-        var items = []
-        //并行
-        if (TYPE === 'PARALLEL') {
-            var promiseList = []
+        const value = await getAllItemBasicByOrg(org_code)
+        let items = []
+
+        if (TYPE === 'PARALLEL') { //并行
+            const promiseList = []
             for (let i = 0, len = value.length; i < len; i++) {
                 promiseList.push(getItem(value[i].carry_out_code))
             }
             items = await Promise.all(promiseList)
-        }
-            //------
-        //串行
-        else {
+        } else { //串行
             for (let i = 0, len = value.length; i < len; i++) {
                 let it = await getItem(value[i].carry_out_code)
                 items.push(it)
             }
         }
-        //------
-        var result = []
-        for (let i = 0, len = items.length; i < len; i++) {
-            Array.prototype.push.apply(result, items[i])
-        }
+
+        const result = [...items]
+
         console.log('org_code: ' + org_code + '\titems: ' + result.length)
         return result
     } catch (error) {
@@ -775,15 +772,16 @@ async function getAllItemsByOrg(org_code) {
  * @param {String} org_code 组织机构代码
  */
 async function checkOrganizationItems(org_code) {
+    let remoteItems
     //从省政务获取该区划的全部事项
     try {
-        var remoteItems = await getAllItemsByOrg(org_code)
+        remoteItems = await getAllItemsByOrg(org_code)
     } catch (err) {
         throw new Error(err.message)
     }
     //把事项的实施编码和办理项编码合成task_code
-    var remoteItemCodes = []
-    var dict = {}
+    const remoteItemCodes = []
+    const dict = {}
     for (let i = 0, len = remoteItems.length; i < len; i++) {
         if (remoteItems[i].situation_code === '' || remoteItems[i].situation_code === null) {
             remoteItems[i].task_code = remoteItems[i].carry_out_code
@@ -797,9 +795,9 @@ async function checkOrganizationItems(org_code) {
             dict[remoteItems[i].situation_code] = remoteItems[i]
         }
     }
-    var inLocalNinRemote = []   //数据库有但是省政务没有
-    var inRemoteNinLocal = []   //省政务有但是数据库没有
-    var differences = []        //省政务和数据都有，但是内容不一样
+    let inLocalNinRemote = []   //数据库有但是省政务没有
+    const inRemoteNinLocal = []   //省政务有但是数据库没有
+    const differences = []        //省政务和数据都有，但是内容不一样
     try {
         inLocalNinRemote = await modelTask.find({task_code: {$nin: remoteItemCodes}}, {task_code: 1})
         for (let i = 0, len = inLocalNinRemote.length; i < len; i++) {
