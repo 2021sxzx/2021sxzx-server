@@ -3,9 +3,11 @@ const modelRegion = require('../model/region')
 const modelTask = require('../model/task')
 const modelRemoteCheckLog = require('../model/remoteCheckLog')
 const modelUsers = require('../model/users')
+const modelItem = require('../model/item')
 const modelTaskCode2docId = require('../model/taskCode2docId')
 const request = require('request')
 const schedule = require('node-schedule')
+const { model } = require('mongoose')
 
 //---------------------------------------------------------------------------------
 //以下为初始化所需的全局变量
@@ -1160,6 +1162,7 @@ async function checkAllRegionsItems(regions, time) {
     try {
         if (regions.length <= 0) {
             regions = await getAllChildRegions(GZ_REGIONCODE)
+            // console.log("获得的regions:",regions)
             //检查一下区划信息
             // var inLocalNinRemote = []   //数据库有但是省政务没有
             // var inRemoteNinLocal = []   //省政务有但是数据库没有
@@ -1256,16 +1259,49 @@ async function getCheckResult() {
     if (keys.length > 0) {
         return checkResult
     }
+    // 该语句用于向MongoDB的数组插入数据
+    // var insert = await modelRemoteCheckLog.update({$addToSet:{inLocalNinRemote:"11440115783785421N4442111015019"}})
+    // var checkallregions = await checkAllRegionsItems([],0)
     var logs = await modelRemoteCheckLog.find({})
+    // for(let item of logs[0].inLocalNinRemote)
+    // {
+    //         let res = await modelItem.find({task_code:item})
+    //         if(res.length==0)
+    //             temp.push("已删除")
+    //         else
+    //             temp.push(res[0]["item_name"])
+    // }
     var result = {}
     for (let i = 0, len = logs.length; i < len; i++) {
         result[logs[i].region_code] = {
             inLocalNinRemote: logs[i].inLocalNinRemote,
             inRemoteNinLocal: logs[i].inRemoteNinLocal,
-            differences: logs[i].differences
+            differences: logs[i].differences,
+            handle_inLocalNinRemote: logs[i].handle_inLocalNinRemote,
+            handle_inRemoteNinLocal: logs[i].handle_inRemoteNinLocal,
+            handle_differences: logs[i].handle_differences,
+            inLocalNinRemoteGuideNames:logs[i].inLocalNinRemoteGuideNames,
+            differencesGuideNames:logs[i].differencesGuideNames
         }
     }
     return result
+}
+
+async function updateCheckResult(arr) {
+    var updateone = await modelRemoteCheckLog.updateOne({"region_code":"440100000000"},
+    {
+        "inRemoteNinLocal":arr[0].guides,
+        "handle_inRemoteNinLocal":arr[0].handle,
+        "inRemoteNinLocalGuideNames":arr[0].item_name,
+        "inLocalNinRemote":arr[1].guides,
+        "handle_inLocalNinRemote":arr[1].handle,
+        "inLocalNinRemoteGuideNames":arr[1].item_name,
+        "differences":arr[2].guides,
+        "handle_differences":arr[2].handle,
+        "differencesGuideNames":arr[2].item_name
+    })
+    return updateone
+
 }
 
 //--------------------------------------------------------------------------
@@ -1566,6 +1602,7 @@ module.exports = {
     setCheckJobRule,
     getCheckJobRule,
     getCheckResult,
+    updateCheckResult
     // addQuestion,
     // deleteQuestions
 }

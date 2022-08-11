@@ -2418,14 +2418,19 @@ async function getCheckResult() {
     try {
         var result = await itemService.getCheckResult()
         var array = new Array(3)
-        array[0] = { type: '省政务新增', guides: [] }
-        array[1] = { type: '省政务已删除', guides: [] }
-        array[2] = { type: '内容不一致', guides: [] }
+        array[0] = { type: '省政务新增', guides: [] , handle : [] , item_name:[]}
+        array[1] = { type: '省政务已删除', guides: [] , handle :[], item_name:[]}
+        array[2] = { type: '内容不一致', guides: [] , handle: [], item_name:[] }
         var keys = Object.keys(result)
         for (let i = 0, len = keys.length; i < len; i++) {
             Array.prototype.push.apply(array[0].guides, result[keys[i]].inRemoteNinLocal)
             Array.prototype.push.apply(array[1].guides, result[keys[i]].inLocalNinRemote)
             Array.prototype.push.apply(array[2].guides, result[keys[i]].differences)
+            Array.prototype.push.apply(array[0].handle, result[keys[i]].handle_inRemoteNinLocal)
+            Array.prototype.push.apply(array[1].handle, result[keys[i]].handle_inLocalNinRemote)
+            Array.prototype.push.apply(array[2].handle, result[keys[i]].handle_differences)
+            Array.prototype.push.apply(array[1].item_name, result[keys[i]].inLocalNinRemoteGuideNames)
+            Array.prototype.push.apply(array[2].item_name, result[keys[i]].differencesGuideNames)
         }
         return new SuccessModel({ msg: '获取成功', data: array })
     } catch (err) {
@@ -2433,25 +2438,55 @@ async function getCheckResult() {
     }
 }
 
-// async function getRuleDic({
-//     rule_id = null
-// }) {
-//     var ruleDic = itemService.getRuleDic()
-//     if (rule_id !== null) {
-//         return new SuccessModel({ msg: '获取成功', data: ruleDic[rule_id] })
-//     }
-//     return new SuccessModel({ msg: '获取成功', data: ruleDic })
-// }
+async function updateCheckResult(arr) {
+    try {
+        for(let i=0;i<arr.length;i++)
+        {
+            // //已处理事项的下标
+            let change_index = -1
+            for(let j=0;j<arr[i].handle.length;j++)
+                if(arr[i].handle[j]==0&&j+1<arr[i].handle.length&&arr[i].handle[j+1]==1)
+                    {
+                        change_index=j
+                        break;
+                    }
+            if(change_index!=-1)
+            {
+                let guides = arr[i].guides[change_index]
+                let handle = arr[i].handle[change_index]
+                let item_name = arr[i].item_name[change_index]
+                for(let j = change_index;j<arr[i].handle.length-1;j++)
+                {
+                    let old_handle = arr[i].handle[j]
+                    arr[i].guides[j] = arr[i].guides[j+1]
+                    arr[i].handle[j] = arr[i].handle[j+1]
+                    arr[i].item_name[j] = arr[i].item_name[j+1]
+                    if((old_handle==1&&arr[i].handle[j]==0))
+                    {
+                        arr[i].guides[j] = guides
+                        arr[i].handle[j] = handle
+                        arr[i].item_name[j] = item_name
+                        break
+                    }
+                    else if(j+1 == arr[i].handle.length-1)  //所有事项都未处理，则把该事项放到最后
+                    {
+                        arr[i].guides[j+1] = guides
+                        arr[i].handle[j+1] = handle
+                        arr[i].item_name[j+1] = item_name
+                        break
+                    }
+                    
+                }
+            }     
+        
+        }
+        let res = await itemService.updateCheckResult(arr)
+        return new SuccessModel({ msg: '更新成功', data: arr })
+    } catch (err) {
+        return new ErrorModel({ msg: '更新失败', data: err.message })
+    }
+}
 
-// async function getRegionDic({
-//     region_id = null
-// }) {
-//     var regionDic = itemService.getRegionDic()
-//     if (region_id !== null) {
-//         return new SuccessModel({ msg: '获取成功', data: regionDic[region_id] })
-//     }
-//     return new SuccessModel({ msg: '获取成功', data: regionDic })
-// }
 
 module.exports = {
     getItemStatusScheme,
@@ -2487,6 +2522,7 @@ module.exports = {
     setCheckJobRule,
     getCheckJobRule,
     getCheckResult,
+    updateCheckResult
     // getRuleDic,
     // getRegionDic
 }
