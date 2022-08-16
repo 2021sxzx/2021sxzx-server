@@ -21,6 +21,14 @@ const taskSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    service_agent_name: { // 实施主体名称
+        type: String,
+        required: true,
+    },
+    service_agent_code: { // 实施主体编码
+        type: String,
+        required: true,
+    },
     // accept_time: String,            //受理时限，以&&分隔，第一个数字表示受理时限，第二个数字表示受理时限单位
     wsyy: {                   //已开通的网上办理方式，以&&分隔，数字表示方式，"-"后面是相应的地址
         type: String,
