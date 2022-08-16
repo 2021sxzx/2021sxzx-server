@@ -88,13 +88,12 @@ app.options('*', (req, res) => {
 
 // 检查用户的 token 是否合法
 app.use('*', (req, res, next) => {
-  //用户状态被切换成未激活，则或将 account 放进 statusset 中
+  // 用户状态被切换成未激活，则或将 account 放进 statusset 中
   // 获取 token
   const token = req.cookies['auth-token']
   // 如果没有 token ，说明后台用户未登录或者是前台的请求，next()
   if (token === undefined) {
     console.log('I\'m in token undefined')
-    // next()
   } else {
     // 解析用户账号信息
     const account = jwt.verify(token, jwt_secret, null, null).account
@@ -122,7 +121,7 @@ app.use('*', (req, res, next) => {
 
 // 配置日志的本地文件路径
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.log'), {flags: 'a'})
-//往日志添加用户信息
+// 往日志添加用户信息
 logger.token('id', function getId(req) {
   return req.headers.userid
 })
@@ -138,12 +137,6 @@ app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/
   },
   stream: accessLogStream,
 }))
-
-
-/*
-//添加拦截器
-app.use(validate_jwt);
-*/
 
 // 处理路由
 app.use('/api', verify)
@@ -169,23 +162,15 @@ app.use('/api', systemMetaAboutUserRouter)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  // next(createError(404))
-  next()
+  next(createError(404))
 })
 
 // error handler
 // WARNING by lhy - error handler 必须提供 4 参数方法版本，否则传递的参数为 (req, res, next) 会发生错误
-app.use(function (err, req, res, next) {
-  // // set locals, only providing error in development
-  // res.locals.message = err.message;
-  // // 错误根据生产环境进行一个配置
-  // res.locals.error = req.app.get('env') === 'development' ? err : {};
-  //
-  // // render the error page
-  // res.status(err.status || 500);
-  // res.render('error');
-  console.error(err.message)
-  res.status(err.status || 500).send('error')
+app.use((err, req, res, next) => {
+  console.error(`Error handler in app.js caught error:`)
+  console.error(err)
+  res.sendStatus(err.status || 500)
 })
 
 module.exports = app
