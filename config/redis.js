@@ -10,12 +10,12 @@ const redisClient = redis.createClient({
     password: REDIS_CONFIG.password
 });
 
-redisClient.on('connect', () => {
-    console.log("redis连接成功");
-})
-
-redisClient.on('error', (error) => {
-    console.log('Redis Not Connected!', error);
-})
+// redisClient.on('connect', () => {
+//     console.log("redis连接成功");
+// })
+//
+// redisClient.on('error', (error) => {
+//     console.log('Redis Not Connected!', error);
+// })
 
 module.exports = redisClient;

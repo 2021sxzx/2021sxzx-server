@@ -12437,3 +12437,5 @@
 62c78c13563c5a36c273c336 ::ffff:127.0.0.1 - - [2022-08-16T18:05:44.161Z] "POST /api/v1/getItems HTTP/1.1" 200 6386 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36"
 62c78c13563c5a36c273c336 ::ffff:127.0.0.1 - - [2022-08-16T18:06:28.576Z] "POST /api/v1/getItems HTTP/1.1" 404 61 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36"
 62c78c13563c5a36c273c336 ::ffff:127.0.0.1 - - [2022-08-16T18:06:49.074Z] "POST /api/v1/getItems HTTP/1.1" 404 61 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36"
+
+
