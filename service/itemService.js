@@ -1271,6 +1271,59 @@ async function updateCheckResult(arr) {
 //     }
 // }
 
+// 初始化 task 事项指南表
+async function initializeTaskSchema() {
+    console.log('开始初始化 task 表')
+
+    //先清空 task 表，避免多次执行的时候出问题
+    await modelTask.deleteMany({})
+    console.log('清空 task 表')
+
+    // 获取所有区划
+    const regions = getAllChildRegions(GZ_REGIONCODE)
+    console.log("获得的 regions:", regions)
+
+    // 获取区划下所有组织
+    const organs = getOrganOfRegions(regions)
+    console.log('获取的组织代码 organs', organs)
+
+    // 获取所有组织下的事项指南
+    let remoteItems // 省政务的事项指南
+    for (let organ of organs) {
+        //从省政务获取该区划的全部事项
+        try {
+            remoteItems = await getAllItemsByOrg(organ.org_code)
+            console.log(`从省政务获取该区划 ${organ} 的全部事项成功`, remoteItems)
+        } catch (err) {
+            console.log('从省政务获取事项失败')
+            throw new Error(err.message)
+        }
+
+        // 把事项的实施编码和办理项编码合成 task_code
+        for (let remoteItem of remoteItems) {
+            if (remoteItem.situation_code === '' || remoteItem.situation_code === null) {
+                remoteItem.task_code = remoteItem.carry_out_code
+                remoteItem.task_name = remoteItem.name
+            } else {
+                remoteItem.task_code = remoteItem.situation_code
+                remoteItem.task_name = remoteItem.situation_name
+            }
+        }
+
+        console.log('合成了 task_code 后的 remoteItems', remoteItems)
+
+        // 保存获取到的所有事项指南，写入到数据库
+        try {
+            const result = await modelRule.create(remoteItems)
+            console.log('成功写入 task 表', result)
+        } catch (e) {
+            console.log('写入 task 表失败', e)
+        }
+    }
+
+    console.log('task 表初始化完成')
+}
+
 //--------------------------------------------------------------------------
 //以下为定时器的代码
 // 定期检查区划事项的定时器对象
@@ -1343,6 +1396,10 @@ initializeMemory()
 
 //初始化定时器
 initializeCheckJob()
+
+// 初始化 task 表
+initializeTaskSchema()
+
 
 module.exports = {
     addUpdateTask,
