@@ -35,7 +35,9 @@ router.get('/v1/getRegionTree', async (req, res, next) => {
 })
 
 router.post('/v1/getItems', async (req, res, next) => {
+    console.log(req.body)
     let data = await itemController.getItems(req.body)
+    // console.log(data.data)
     setStatusCode(res, data)
     res.json(data)
 })
@@ -217,16 +219,6 @@ router.post('/v1/getUserNameById', async (req, res, next) => {
     res.json(data)
 })
 
-// router.post('/v1/getRuleDic', async (req, res, next) => {
-//     let data = await itemController.getRuleDic(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
 
-// router.post('/v1/getRegionDic', async (req, res, next) => {
-//     let data = await itemController.getRegionDic(req.body)
-//     setStatusCode(res, data)
-//     res.json(data)
-// })
 
 module.exports = router

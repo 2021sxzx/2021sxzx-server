@@ -22,6 +22,15 @@ const itemSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    service_agent_code:{      //实施主体编码
+        type: String,
+        required:true,
+    },
+    service_agent_name:{      //实施主体名称
+        type: String,
+        // required:true,
+        default:"广东省人力资源和社会保障厅"
+    },
     rule_id: {  //规则id
         type: String,
         required: true
