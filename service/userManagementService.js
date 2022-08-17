@@ -16,13 +16,13 @@ let allRole = null;
  * @returns {Promise<*>}
  * @param db
  */
- async function selectRedisDatabase(db) {
+async function selectRedisDatabase(db) {
     try {
-      await redisClient.select(db)
+        await redisClient.select(db)
     } catch (error) {
-      await selectRedisDatabase(db)
+        await selectRedisDatabase(db)
     }
-  }
+}
 
 const inisilize = async () => {
     try {
@@ -50,11 +50,10 @@ async function addUser(userInfo) {
             return;
         }
         isNeedUpdateUserCache = true;
-        const resq = await users.create({
+        return await users.create({
             ...userInfo,
             activation_status: 1,
         });
-        return resq;
     } catch (e) {
         throw e.message
     }
@@ -114,11 +113,12 @@ async function getUserList() {
 
 /**
  * 更新用户数据，也包含更新角色
- * @param user_name
- * @param password
- * @param role_name
- * @param account
- * @param new_account
+ * @param user_name {string}
+ * @param password {string}
+ * @param role_id {string}
+ * @param account {string}
+ * @param new_account {string}
+ * @param unit_id {string}
  * @return {Promise<>}
  */
 async function updateUser(user_name, password, role_id, account, new_account, unit_id) {
@@ -175,20 +175,20 @@ async function searchUser(searchValue) {
 }
 
 async function getActivation(account) {
-        // let res = await users.findOne({
-        //     account
-        // }, {
-        //     account: 1,
-        //     activation_status: 1
-        // })
-        try{   
-            await selectRedisDatabase(1)           
-            let res = await redisClient.get(account) 
-            // console.log("Get account's result:",res)
-            await selectRedisDatabase(0)      
-            return res
+    // let res = await users.findOne({
+    //     account
+    // }, {
+    //     account: 1,
+    //     activation_status: 1
+    // })
+    try {
+        await selectRedisDatabase(1)
+        let res = await redisClient.get(account)
+        // console.log("Get account's result:",res)
+        await selectRedisDatabase(0)
+        return res
     } catch (e) {
-        await selectRedisDatabase(0)   
+        await selectRedisDatabase(0)
         throw e.message
     }
 }
@@ -204,25 +204,22 @@ async function setActivation(account) {
         })
         // let tmp  = 1
         let tmp = res.activation_status === 1 ? 0 : 1;
-        if(tmp==0)
-        {
-            try{   
-                await selectRedisDatabase(1)  
-              let loginstate = await redisClient.del(account) 
-               statusset.add(account)
-               await selectRedisDatabase(0)
-            }catch(e)   
-            {
+        if (tmp === 0) {
+            try {
+                await selectRedisDatabase(1)
+                await redisClient.del(account)
+                statusset.add(account)
                 await selectRedisDatabase(0)
-                console.log("error:",e)
-            }           
+            } catch (e) {
+                await selectRedisDatabase(0)
+                console.log("error:", e)
+            }
         }
-        if(tmp==1)
-        {
-            if(statusset.has(account))
+        if (tmp === 1) {
+            if (statusset.has(account))
                 statusset.delete(account)
         }
-            // await redisClient.del(account)
+        // await redisClient.del(account)
         await users.updateOne({
             account
         }, {
@@ -244,7 +241,7 @@ async function findRoleNameAndReturnId(role_name, allRole) {
     console.log(allRole);
     // by lhy 旧代码用 allUnit 坑人？
     for (let item of allRole) {
-        if (item.role_name == role_name) {
+        if (item.role_name === role_name) {
             return item.role_id;
         }
     }
@@ -253,7 +250,7 @@ async function findRoleNameAndReturnId(role_name, allRole) {
 
 async function findUnitNameAndReturnId(unit_name, allUnit) {
     for (let item of allUnit) {
-        if (item.unit_name == unit_name) {
+        if (item.unit_name === unit_name) {
             return item.unit_id;
         }
     }
@@ -315,7 +312,7 @@ async function getUserById(id) {
         await getUserList();
     }
     const res = await userCache.filter(item => {
-        return item._id == id;
+        return item._id === id;
     });
 
     return res.length > 0 ? res[0] : {
