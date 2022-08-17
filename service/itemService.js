@@ -376,6 +376,8 @@ async function getChildRegionList(region_code) {
         if (body === 'RETRY') {
             console.log('获取' + region_code + '的下级区划信息失败，重试了' + retry + '次')
             return null
+        } else {
+            console.log('获取' + region_code + '的下级区划信息成功')
         }
         return body
     } catch (error) {
@@ -391,8 +393,8 @@ async function getChildRegionList(region_code) {
  */
 async function getOrganListByRegionCode(region_code) {
     try {
-        var body = {}
-        var retry = 10
+        let body = {}
+        let retry = 10
         do {
             body = await postRequest(getOrganListByRegionCode_Url, {
                 region_code: region_code
@@ -402,6 +404,8 @@ async function getOrganListByRegionCode(region_code) {
         if (body === 'RETRY') {
             console.log('获取' + region_code + '的组织机构信息失败，重试了' + retry + '次')
             return null
+        } else {
+            console.log('获取' + region_code + '的组织机构信息成功')
         }
         return body
     } catch (error) {
@@ -593,28 +597,30 @@ async function getItem(carry_out_code) {
  */
 async function getAllChildRegions(region_code) {
     try {
-        var regions = []
+        const regions = []
         regions.push(region_code)
-        var arr = []
+        const arr = []
         arr.push(region_code)
         while (arr.length > 0) {
-            var result = []
+            let result = []
             //并行
             if (TYPE === 'PARALLEL') {
-                console.log('获取' + arr + '的下级区划')
-                var promiseList = []
+                // console.log('获取' + arr + '的下级区划')
+                const promiseList = []
                 for (let i = 0, len = arr.length; i < len; i++) {
                     let region = arr.shift()
                     promiseList.push(getChildRegionList(region))
                 }
+
                 result = await Promise.all(promiseList)
-                console.log('获取成功')
+                console.log(`获取下级区划成功`)
             }
                 //------
             //串行
             else {
                 for (let i = 0, len = arr.length; i < len; i++) {
                     let region = arr.shift()
+
                     let r = await getChildRegionList(region)
                     console.log('已获取' + region + '的下级区划')
                     result.push(r)
@@ -622,13 +628,15 @@ async function getAllChildRegions(region_code) {
             }
             //------
             for (let i = 0, len = result.length; i < len; i++) {
-                var childRegions = result[i].data ? result[i].data : []
+                const childRegions = result[i].data ? result[i].data : []
                 for (let j = 0; j < childRegions.length; j++) {
                     regions.push(childRegions[j].CODE)
                     arr.push(childRegions[j].CODE)
                 }
             }
+
         }
+        console.log('regions', regions)
         return regions
     } catch (error) {
         console.log('获取' + region_code + '及其全部下级区划失败')
@@ -651,6 +659,7 @@ async function getOrganOfRegions(regionCodes) {
                 promiseList.push(getOrganListByRegionCode(regionCodes[i]))
             }
             value = await Promise.all(promiseList)
+            console.log('getOrganListByRegionCode 成功')
         } else { //串行
             for (let i = 0, len = regionCodes.length; i < len; i++) {
                 let v = await getOrganListByRegionCode(regionCodes[i])
@@ -697,6 +706,7 @@ async function getAllItemBasicByOrg(org_code) {
     try {
         const PAGE_SIZE = 20
         const body = await listItemBasicByOrg(org_code, PAGE_SIZE, 1)
+        console.log('body', body)
         if (body === null) {
             // TODO: 缺乏错误处理
             console.log('获取' + org_code + '的全部事项基本信息失败')
@@ -713,8 +723,9 @@ async function getAllItemBasicByOrg(org_code) {
                 promiseList.push(listItemBasicByOrg(org_code, PAGE_SIZE, i))
             }
             value = await Promise.all(promiseList)
+            console.log('listItemBasicByOrg value', value)
         }
-            //------
+        //------
         //串行
         else {
             for (let i = 1; i <= maxPageNum; i++) {
@@ -724,8 +735,8 @@ async function getAllItemBasicByOrg(org_code) {
         }
         //------
         const items = []
-        for (let i = 0, len = value.length; i < len; i++) {
-            Array.prototype.push.apply(items, value[i].data ? value[i].data : [])
+        for (let i in value) {
+            items.push(value[i].data ? value[i].data : [])
         }
         return items
     } catch (error) {
@@ -742,14 +753,17 @@ async function getAllItemBasicByOrg(org_code) {
 async function getAllItemsByOrg(org_code) {
     try {
         const value = await getAllItemBasicByOrg(org_code)
+        console.log('getAllItemBasicByOrg 成功， value = ', value)
         let items = []
 
         if (TYPE === 'PARALLEL') { //并行
             const promiseList = []
             for (let i = 0, len = value.length; i < len; i++) {
+                console.log(i)
                 promiseList.push(getItem(value[i].carry_out_code))
             }
             items = await Promise.all(promiseList)
+            console.log('我是 item：',items)
         } else { //串行
             for (let i = 0, len = value.length; i < len; i++) {
                 let it = await getItem(value[i].carry_out_code)
@@ -896,7 +910,7 @@ async function checkAllRegionsItems(regions, time) {
     //如果传入空数组就是检查全部区划，否则只检查regions数组内的区划
 
     if (regions.length <= 0) {
-        regions = getAllChildRegions(GZ_REGIONCODE)
+        regions = await getAllChildRegions(GZ_REGIONCODE)
         // console.log("获得的regions:",regions)
         //检查一下区划信息
         // var inLocalNinRemote = []   //数据库有但是省政务没有
@@ -1276,23 +1290,40 @@ async function initializeTaskSchema() {
     console.log('开始初始化 task 表')
 
     //先清空 task 表，避免多次执行的时候出问题
-    await modelTask.deleteMany({})
-    console.log('清空 task 表')
+    try {
+        await modelTask.deleteMany({})
+        console.log('清空 task 表')
+    } catch (e) {
+        console.log('清空 task 表失败', e)
+    }
 
     // 获取所有区划
-    const regions = getAllChildRegions(GZ_REGIONCODE)
-    console.log("获得的 regions:", regions)
+    let regions
+    try {
+        regions = await getAllChildRegions(GZ_REGIONCODE)
+        console.log("获得的 regions:")
+        console.dir(regions)
+    } catch (e) {
+        console.log('获取区划失败', e)
+    }
 
+    let organs
     // 获取区划下所有组织
-    const organs = getOrganOfRegions(regions)
-    console.log('获取的组织代码 organs', organs)
+    try {
+        organs = await getOrganOfRegions(regions)
+        console.log('获取的组织代码 organs', organs)
+    } catch (e) {
+        console.log('获取组织代码失败', e)
+    }
+
 
     // 获取所有组织下的事项指南
     let remoteItems // 省政务的事项指南
-    for (let organ of organs) {
+    for (let i in organs) {
+        const organ = organs[i]
         //从省政务获取该区划的全部事项
         try {
-            remoteItems = await getAllItemsByOrg(organ.org_code)
+            remoteItems = await getAllItemsByOrg(organ.org_code[0])
             console.log(`从省政务获取该区划 ${organ} 的全部事项成功`, remoteItems)
         } catch (err) {
             console.log('从省政务获取事项失败')
