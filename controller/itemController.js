@@ -15,6 +15,7 @@ const { dirname } = require('path')
 const modelRoleMapPermission = require('../model/roleMapPermission')
 const modelStatusType = require('../model/statusType')
 const unitService = require('../service/unitService')
+const {ObjectId} = require('mongodb')
 
 /**
  * 获取事项状态表
@@ -210,6 +211,8 @@ async function getItems({
     release_end_time = null,
     item_name = null,
     task_code = null,
+    //new add
+    service_agent_name = null,//实体机构名
     item_status = null,
     rule_id = null,
     region_code = null,
@@ -220,6 +223,7 @@ async function getItems({
     page_num = null
 }) {
     try {
+
         // if (user_id === null) {
         //     throw new Error('需要user_id')
         // }
@@ -228,7 +232,35 @@ async function getItems({
         if (task_code !== null) query.task_code = { $in: task_code }
         if (item_status !== null) query.item_status = { $in: item_status }
         if (rule_id !== null) query.rule_id = { $in: rule_id }
+        if (service_agent_name !== null)
+        {
+            query.service_agent_name = { $in: service_agent_name }
+            // try{
+            //    let insert_res= await modelItem.insertMany( [{
+            //     item_name: '人力资源服务许可审批测试',
+            //     create_time: 1650445338085,
+            //     release_time: 9999999999999,
+            //     item_status: 0,
+            //     task_code: '11440118007520260Q4440111103091',
+            //     rule_id: '91',
+            //     region_id: ObjectId("623ac89c3c38c1fd538198b2"),
+            //     audit_advises: [],
+            //     service_agent_code:"11440000553612461J",
+            //     service_agent_name:"广东省人力资源和社会保障厅",
+            //     creator_id: ObjectId("62386b2b1e90ec7f7e958138")
+            //   }])
+            // console.log(insert_res) 
+            // }catch(e)
+            // {
+            //     console.log(e)
+            // }
+            // let data = await modelItem.find({"service_agent_name":{$regex:service_agent_name}})
+            // console.log(data)
+        }
+        //  query.service_agent_name = { $in: service_agent_name }
         query['$and'] = []
+
+
         //----------------------------------------------------
         //只显示用户所属部门及其下属部门的事项
         if (user_id !== null) {
@@ -273,6 +305,12 @@ async function getItems({
             }
             query['$and'].push({ creator_id: { $in: users } })
         }
+        // if(service_agent_name !== null)
+        // {
+        //     let task_code = await modelTask.find({service_agent_name:{service_agent_name}},{task_code:1})
+        //     console.log(task_code)
+        // }
+
         if (query['$and'].length <= 0) {
             delete query['$and']
         }
@@ -345,6 +383,7 @@ async function getItems({
                     }
                 }
             ])
+            
             //计算规则路径和区划路径
             var ruleDic = itemService.getRuleDic()
             var regionDic = itemService.getRegionDic()
@@ -842,6 +881,7 @@ async function getItemGuides({
     task_status = null,
     task_code = null,
     task_name = null,
+    service_agent_name = null,//实体主体名称
     creator_name = null,
     department_name = null,
     start_time = null,
@@ -850,14 +890,11 @@ async function getItemGuides({
     page_num = null
 }) {
     try {
-        // if (user_id === null) {
-        //     throw new Error('需要user_id')
-        // } 
-        console.log("getting Items")
         var query = {}
         if (task_status !== null) query.task_status = task_status
         if (task_code !== null) query.task_code = task_code
         if (task_name !== null) query.task_name = { $regex: task_name }
+        if (service_agent_name !== null) query.service_agent_name = { $regex: service_agent_name}
         query['$and'] = []
         //----------------------------------------------------
         //只显示用户所属部门及其下属部门的事项
