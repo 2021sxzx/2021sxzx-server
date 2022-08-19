@@ -1453,7 +1453,7 @@ initializeMemory()
 initializeCheckJob()
 
 // 初始化 task 表
-// initializeTaskSchema()
+initializeTaskSchema()
 
 
 module.exports = {
