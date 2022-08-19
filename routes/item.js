@@ -35,7 +35,6 @@ router.get('/v1/getRegionTree', async (req, res, next) => {
 })
 
 router.post('/v1/getItems', async (req, res, next) => {
-    console.log(req.body)
     let data = await itemController.getItems(req.body)
     // console.log(data.data)
     setStatusCode(res, data)

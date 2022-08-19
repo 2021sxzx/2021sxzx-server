@@ -223,10 +223,6 @@ async function getItems({
     page_num = null
 }) {
     try {
-
-        // if (user_id === null) {
-        //     throw new Error('需要user_id')
-        // }
         var query = {}
         if (item_name !== null) query.item_name = { $regex: item_name }
         if (task_code !== null) query.task_code = { $in: task_code }
@@ -234,30 +230,8 @@ async function getItems({
         if (rule_id !== null) query.rule_id = { $in: rule_id }
         if (service_agent_name !== null)
         {
-            query.service_agent_name = { $in: service_agent_name }
-            // try{
-            //    let insert_res= await modelItem.insertMany( [{
-            //     item_name: '人力资源服务许可审批测试',
-            //     create_time: 1650445338085,
-            //     release_time: 9999999999999,
-            //     item_status: 0,
-            //     task_code: '11440118007520260Q4440111103091',
-            //     rule_id: '91',
-            //     region_id: ObjectId("623ac89c3c38c1fd538198b2"),
-            //     audit_advises: [],
-            //     service_agent_code:"11440000553612461J",
-            //     service_agent_name:"广东省人力资源和社会保障厅",
-            //     creator_id: ObjectId("62386b2b1e90ec7f7e958138")
-            //   }])
-            // console.log(insert_res) 
-            // }catch(e)
-            // {
-            //     console.log(e)
-            // }
-            // let data = await modelItem.find({"service_agent_name":{$regex:service_agent_name}})
-            // console.log(data)
+            query.service_agent_name = { $regex: service_agent_name }
         }
-        //  query.service_agent_name = { $in: service_agent_name }
         query['$and'] = []
 
 
@@ -305,12 +279,6 @@ async function getItems({
             }
             query['$and'].push({ creator_id: { $in: users } })
         }
-        // if(service_agent_name !== null)
-        // {
-        //     let task_code = await modelTask.find({service_agent_name:{service_agent_name}},{task_code:1})
-        //     console.log(task_code)
-        // }
-
         if (query['$and'].length <= 0) {
             delete query['$and']
         }
@@ -984,7 +952,7 @@ async function getItemGuides({
                                     }
                                 }
                             },
-                            { $project: { task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1 } }
+                            { $project: { task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1 ,service_agent_name:1} }
                         ]
                     }
                 }
@@ -1034,7 +1002,7 @@ async function getItemGuides({
                     }
                 }
             },
-            { $project: { task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1 } }
+            { $project: { task_status: 1, task_code: 1, task_name: 1, create_time: 1, creator: 1,service_agent_name:1 } }
         ])
         return new SuccessModel({ msg: '查询成功', data: result })
     } catch (err) {
@@ -1239,6 +1207,7 @@ async function updateItemGuide({
     new_task_code = null,
     task_name = null,
     wsyy = null,
+    service_agent_name =  null,
     service_object_type = null,
     conditions = null,
     legal_basis = null,
@@ -1338,6 +1307,7 @@ async function updateItemGuide({
         if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
+        if (service_agent_name !== null) newData.service_agent_name = service_agent_name
         // if (qr_code !== null) {
         //     var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
         //     if (!fs.existsSync(filePath)) {
@@ -1639,6 +1609,7 @@ async function createItems({
             }
             //检查task_code的合法性
             let task = await modelTask.findOne({ task_code: task_code }, { _id: 0, __v: 0 })
+            console.log("From Task sheet:",task)
             if (task === null) {
                 throw new Error('task_code不存在: ' + task_code)
             }
@@ -1655,10 +1626,11 @@ async function createItems({
             if (region._id != region_id) {
                 throw new Error('region_code和region_id不匹配: ' + region_code + '\t' + region_id)
             }
-            console.log(task)
             newData.push({
                 item_name: task.task_name,
                 task_code: task_code,
+                service_agent_name: task.service_agent_name,
+                service_agent_code: task.service_agent_code,
                 rule_id: rule_id,
                 // region_code: region_code,
                 region_id: region_id,
@@ -1682,7 +1654,7 @@ async function createItems({
         //批量创建
         var result = await modelItem.create(newData)
         //批量更新
-        await modelTask.bulkWrite(bulkOps)
+        var ans = await modelTask.bulkWrite(bulkOps)
         //返回结果
         return new SuccessModel({ msg: '创建事项成功', data: result })
     } catch (err) {
