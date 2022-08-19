@@ -1,11 +1,11 @@
-const redisClient = require('../config/redis');
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
-const systemMeta = require('../model/systemMeta');
-const chartData = require('../model/chartData');
-const item = require('../model/item');
+const redisClient = require('../config/redis')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
+const systemMeta = require('../model/systemMeta')
+const chartData = require('../model/chartData')
+const item = require('../model/item')
 const users = require('../model/users')
-const { SuccessModel, ErrorModel } = require('../utils/resultModel');
+const {SuccessModel, ErrorModel} = require('../utils/resultModel')
 const schedule = require('node-schedule')
 
 class systemMetaService {
@@ -124,13 +124,14 @@ class systemMetaService {
 
     // readline是异步操作，使用for await执行
     for await (const line of rl) {
-      // 默认日志格式正确
-      const arr = line.split(' ') // 分割一条日志
-      let time = arr[4].substring(1, 11) // 获取当前日志时间
-
-      if (arr[6].includes('getItems') && time === today) {
-        console.log(line)
-        PV++
+      if (line !== '') {
+        // 默认日志格式正确
+        const arr = line.split(' ') // 分割一条日志
+        let time = arr[4].substring(1, 11) // 获取当前日志时间
+        if (arr[6].includes('getItems') && time === today) {
+          console.log(line)
+          PV++
+        }
       }
     }
     // 算出来经常是0。。。
@@ -151,11 +152,11 @@ class systemMetaService {
     const uv = shell
       .exec(
         'grep' +
-          ' "' +
-          time +
-          '" ' +
-          file_name +
-          " | awk '{print $1}' | sort | uniq -c| sort -nr | wc -l"
+        ' "' +
+        time +
+        '" ' +
+        file_name +
+        ' | awk \'{print $1}\' | sort | uniq -c| sort -nr | wc -l'
       )
       .stdout.trim() //获取当日uv
     return parseInt(uv) //转换成数字
@@ -163,7 +164,7 @@ class systemMetaService {
 
   async init() {
     const metas = (
-      await systemMeta.findOne({ name: 'interface-setting' }, 'data')
+      await systemMeta.findOne({name: 'interface-setting'}, 'data')
     ).data
     this.api = {
       SHBAPP: metas.api_SHBAPP,
@@ -197,7 +198,7 @@ class systemMetaService {
     // 启动定时任务存储图表数据
     let storeChartData = schedule.scheduleJob(rule, async () => {
       if (
-        !!(await chartData.findOne({ date: new Date().setHours(0, 0, 0, 0) }))
+        !!(await chartData.findOne({date: new Date().setHours(0, 0, 0, 0)}))
       ) {
         // 当天数据已存在时不重复存储
         console.log('当天数据已存在')
@@ -207,7 +208,7 @@ class systemMetaService {
       let oldday = new Date()
       oldday.setHours(0, 0, 0, 0)
       oldday.setDate(oldday.getDate() - storageDays)
-      chartData.deleteMany({ date: { $lte: oldday } }, (err, rawResponse) => {
+      chartData.deleteMany({date: {$lte: oldday}}, (err, rawResponse) => {
         if (err) {
           console.log(err)
         }
@@ -234,8 +235,8 @@ class systemMetaService {
   async patchInterface(api) {
     try {
       await systemMeta.updateOne(
-        { name: 'interface-setting' },
-        { $set: { data: api } }
+        {name: 'interface-setting'},
+        {$set: {data: api}}
       )
       this.api = api
       await this.setApiData(this.api)
@@ -267,7 +268,7 @@ class systemMetaService {
   async getInterfaceUrl() {
     try {
       let InterfaceUrl = await systemMeta.findOne(
-        { name: 'interface-setting' },
+        {name: 'interface-setting'},
         'data'
       )
       return new SuccessModel({
@@ -285,7 +286,7 @@ class systemMetaService {
   async getCoreSetting() {
     try {
       let CoreSetting = await systemMeta.findOne(
-        { name: 'core-setting' },
+        {name: 'core-setting'},
         'data'
       )
       return new SuccessModel({
@@ -303,8 +304,8 @@ class systemMetaService {
   async patchCoreSetting(CoreSetting) {
     try {
       await systemMeta.updateOne(
-        { name: 'core-setting' },
-        { $set: { data: CoreSetting } }
+        {name: 'core-setting'},
+        {$set: {data: CoreSetting}}
       )
       return new SuccessModel({
         msg: '修改核心设置成功',
@@ -322,9 +323,9 @@ class systemMetaService {
       // 获取数据库存储的数据
       let ChartData = await chartData.find(
         {},
-        { date: 1, [type]: 1, _id: 0 },
+        {date: 1, [type]: 1, _id: 0},
         {
-          sort: { date: 1 }, // 以防万一还是排下序
+          sort: {date: 1}, // 以防万一还是排下序
         }
       )
       let data
@@ -367,7 +368,7 @@ const _systemMetaService = new systemMetaService();
 
 // IIFE，让初始化能够提前执行
 (async () => {
-  await _systemMetaService.init();
+  await _systemMetaService.init()
 })()
 
-module.exports = _systemMetaService;
+module.exports = _systemMetaService
