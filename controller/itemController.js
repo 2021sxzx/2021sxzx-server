@@ -1047,6 +1047,8 @@ async function getItemGuides({
  * 创建事项指南
  * @param {String} task_code 事项指南编码
  * @param {String} task_name 事项指南名称
+ * @param {String} service_agent_name 实施主体名称
+ * @param {String} service_agent_code 实施主体编码
  * @param {String} wsyy 已开通的网上办理方式
  * @param {Array<Number>} service_object_type 服务对象类型
  * @param {String} conditions 办理条件
@@ -1070,6 +1072,8 @@ async function createItemGuide({
     user_id = null,
     task_code = null,
     task_name = null,
+    service_agent_name=null,
+    service_agent_code=null,
     wsyy = null,
     service_object_type = null,
     conditions = null,
@@ -1134,6 +1138,8 @@ async function createItemGuide({
                 throw new Error('事项指南编码已存在')
             }
             newData.task_code = task_code
+            //实施主体编码选取事项编码的前18位
+            newData.service_agent_code = task_code.slice(0,18)
         }
         if (task_name !== null) newData.task_name = task_name
         if (wsyy !== null) newData.wsyy = wsyy
@@ -1161,20 +1167,9 @@ async function createItemGuide({
         if (mobile_applt_website !== null) newData.mobile_applt_website = mobile_applt_website
         if (submit_documents !== null) newData.submit_documents = submit_documents
         if (zxpt !== null) newData.zxpt = zxpt
-        // if (qr_code !== null) {
-        //     var filePath = path.join(__dirname, '../public/imgs/itemGuideQRCode')
-        //     if (!fs.existsSync(filePath)) {
-        //         fs.mkdirSync(filePath)
-        //     }
-        //     let fileName = task_code + '_' + Date.now().toString() + '.png'
-        //     filePath = path.join(filePath, fileName)
-        //     var base64Data = qr_code.replace(/^data:image\/\w+;base64,/, '')
-        //     var dataBuffer = Buffer.from(base64Data, 'base64')
-        //     fs.writeFileSync(filePath, dataBuffer)
-        //     newData.qr_code = path.join('/imgs/itemGuideQRCode', fileName)
-        //     // newData.qr_code = qr_code
-        // }
         if (zzzd !== null) newData.zzzd = zzzd
+        if (service_agent_name !== null) newData.service_agent_name = service_agent_name
+        if (service_agent_code !== null) newData.service_agent_code = service_agent_code
         // console.log(newData)
         var result = await modelTask.create(newData)
         return new SuccessModel({ msg: '创建成功', data: result })
