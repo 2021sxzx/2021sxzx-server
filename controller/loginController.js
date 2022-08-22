@@ -1,5 +1,5 @@
 const {
-  authenticate, logout, isLogin
+  authenticatebypwd, authenticatebyvc , logout, isLogin
 } = require("../service/loginService")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -10,7 +10,12 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
  */
 async function postLogin(loginData) {
   try {
-    let data = await authenticate(loginData)
+    let data
+    console.log(loginData)
+    if(loginData.state == 1 )
+      data = await authenticatebyvc(loginData)
+    else
+      data = await authenticatebypwd(loginData)
     if (data.code === 200) {
       return new SuccessModel(data);
     } else {
