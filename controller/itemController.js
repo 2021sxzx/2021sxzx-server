@@ -1106,8 +1106,6 @@ async function createItemGuide({
                 throw new Error('事项指南编码已存在')
             }
             newData.task_code = task_code
-            //实施主体编码选取事项编码的前18位
-            newData.service_agent_code = task_code.slice(0,18)
         }
         if (task_name !== null) newData.task_name = task_name
         if (wsyy !== null) newData.wsyy = wsyy
