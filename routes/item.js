@@ -139,7 +139,7 @@ router.post('/v1/getItemGuide', async (req, res, next) => {
 
 router.post('/v1/getItemGuides', async (req, res, next) => {
     let data = await itemController.getItemGuides(req.body)
-    setStatusCode(res, data)
+    setStatusCode(res, data) 
     res.json(data)
 })
 
