@@ -8,7 +8,7 @@ const logger = require('morgan')
 const jwt = require('jsonwebtoken')
 const {statusset} = require('./utils/statusmsg')
 const {jwt_secret} = require('./utils/validateJwt')
-const { routesStore, loadRoutes } = require('./routes/index')
+const {routesStore, loadRoutes} = require('./routes/index')
 const {MONGO_CONFIG} = require('./config/config') //数据库的配置信息
 const mongoose = require('mongoose')
 const redisClient = require('./config/redis')
@@ -108,8 +108,7 @@ logger.token('id', function getId(req) {
 })
 // 往日志添加时间
 logger.token('localDate', function getDate() {
-  const date = new Date(new Date().getTime() + 8 * 3600 * 1000)
-  return date.toISOString()
+  return new Date().toLocaleString()
 })
 // 日志中间件的设置使用
 app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
