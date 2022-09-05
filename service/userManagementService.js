@@ -316,7 +316,7 @@ async function getUserById(id) {
     await getUserList()
   }
   const res = await userCache.filter(item => {
-    return item._id === id
+    return item._id.toString() === id
   })
 
   return res.length > 0 ? res[0] : {
