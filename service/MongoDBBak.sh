@@ -45,6 +45,7 @@ readonly TAR_BAK="mongodb_bak_$DATE.tar.gz"
 # 创建临时缓存目录，取名叫 $DATE。-p：如果目录不存在就自动创建对应目录。一次可以创建多个目录。-v 如果创建了新目录就显示信息。
 # 双引号以防止通配符和分词，see: https://github.com/koalaman/shellcheck/wiki/SC2086
 mkdir -p -v "${OUT_DIR:?}"/"${DATE:?}"
+mkdir -p "${TAR_DIR:?}"
 
 # 备份数据库到 $DATE 目录
 mongodump -h "${DB_IP:?}":"${DB_PORT:?}" -u "${DB_USER:?}" -p "${DB_PASS:?}" -d "${MONGO_DATABASE:?}" -o "${OUT_DIR:?}"/"${DATE:?}"
