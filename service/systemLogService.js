@@ -39,7 +39,7 @@ async function showSystemLog() {
   try {
     let data = fs.readFileSync('log/access.log')
     data = data.toString().split('\n')
-    const dataArray = []
+    let dataArray = []
     let user = ''
     const dataLength = data.length
     for (let i = 0; i < dataLength; i++) {
@@ -52,7 +52,6 @@ async function showSystemLog() {
       const content = chargeTypeChange(data[i].slice(data[i].indexOf('"') + 1, data[i].indexOf('HTTP') - 1))
       if (content !== '用户登录' || data[i].search('/login HTTP/1.1" 200') !== -1)
         dataArray.push({
-          log_id: i,
           create_time: data[i].slice(data[i].indexOf('[') + 1, data[i].indexOf(']')),
           content,
           user_name: user.user_name,
@@ -62,7 +61,10 @@ async function showSystemLog() {
         })
     }
     // 做一个筛选
-    return dataArray.filter(item => !!item.content)
+    dataArray = dataArray.filter(item => item.content)
+    // 建立编号
+    for (let i = 0; i < dataArray.length; ++i) dataArray[i].log_id = i + 1
+    return dataArray
   } catch (e) {
     return 'showSystemLog:' + e.message
   }
@@ -193,7 +195,6 @@ setInterval(() => getMemory().then(({usedMemPercentage}) => {
     memoryAlert = true
     // 注意，由于日志解析代码过于耦合，除非你知道如何修改，否则不要随便乱动！
     fs.writeFileSync('log/access.log', `  [${new Date().toLocaleString()}]:"MemoryAlert HTTP\n`, {flag: 'a'})
-    console.log('memory alert') //todo
   }
 }), 1000)
 
