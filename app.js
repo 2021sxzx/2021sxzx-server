@@ -93,7 +93,8 @@ app.use('*', (req, res, next) => {
   const token = req.cookies['auth-token']
   // 如果没有 token ，说明后台用户未登录或者是前台的请求，next()
   if (token === undefined) {
-    console.log('I\'m in token undefined')
+    // TODO
+    // console.log('I\'m in token undefined')
   } else {
     // 解析用户账号信息
     const account = jwt.verify(token, jwt_secret, null, null).account
