@@ -120,20 +120,12 @@ class systemMetaService {
         })
 
         let PV = 0 // PV初始化为0
-        let today = new Date().toISOString().substring(0, 10) //获取今天的日期
+        let today = new Date().toLocaleDateString() // 获取今天的日期，注意格式要与日志文件对应
 
         // readline是异步操作，使用for await执行
-        for await (const line of rl) {
-            if (line !== '') {
-                // 默认日志格式正确
-                const arr = line.split(' ') // 分割一条日志
-                let time = arr[4].substring(1, 11) // 获取当前日志时间
-                if (arr[6].includes('getItems') && time === today) {
-                    console.log(line)
-                    PV++
-                }
-            }
-        }
+        // PV 增加的逻辑是日志中访问了 getItems 接口，并且日期是今天。注意 includes 方法中的匹配字符串，前面增加 /，后面增加空格，保证不受前后缀影响
+        // 从日志中分隔日期的代码耦合度较大，无奈，注意当日志格式发生变化时需要做相应更改
+        for await (const line of rl) PV += line.includes('/getItems ') && line.split('[')[1].split(' ')[0] === today
         // 算出来经常是0。。。
         return PV
     }

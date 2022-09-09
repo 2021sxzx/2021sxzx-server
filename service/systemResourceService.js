@@ -35,12 +35,11 @@ async function getCpuPercentage() {
  */
 async function getMemory() {
   try {
-    let memory = await new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       mem.info().then((info) => {
         resolve(info);
       });
     });
-    return memory;
   } catch (e) {
     return e;
   }
