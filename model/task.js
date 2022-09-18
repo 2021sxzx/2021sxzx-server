@@ -46,7 +46,7 @@ const taskSchema = new mongoose.Schema({
         type: [{
             name: {
                 type: String,
-                required: true,
+                // required: true,  //不是必须的
             }
         }],
         default: [],
