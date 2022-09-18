@@ -1,5 +1,5 @@
 const {
-  authenticatebypwd, authenticatebyvc , logout, isLogin
+    authenticatebypwd, authenticatebyvc, logout, isLogin
 } = require("../service/loginService")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -9,21 +9,18 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
  * @returns {Promise<ErrorModel|SuccessModel>}
  */
 async function postLogin(loginData) {
-  try {
-    let data
-    console.log(loginData)
-    if(loginData.state == 1 )
-      data = await authenticatebyvc(loginData)
-    else
-      data = await authenticatebypwd(loginData)
-    if (data.code === 200) {
-      return new SuccessModel(data);
-    } else {
-      return new ErrorModel(data)
+    try {
+        let data
+        if (loginData.state === 1)
+            // 短信验证登录
+            data = await authenticatebyvc(loginData)
+        else
+            // 账号密码登录
+            data = await authenticatebypwd(loginData)
+        return data
+    } catch (e) {
+        return new ErrorModel({msg: e.message});
     }
-  } catch (e) {
-    return new ErrorModel({msg: e.message});
-  }
 }
 
 /**
@@ -33,27 +30,27 @@ async function postLogin(loginData) {
  */
 async function postLogout(logoutData) {
 
-  try {
-    let data = await logout(logoutData);
-    return new SuccessModel({msg: '登出成功', data: data});
-  } catch (e) {
-    return new ErrorModel({msg: e.message});
-  }
+    try {
+        let data = await logout(logoutData);
+        return new SuccessModel({msg: '登出成功', data: data});
+    } catch (e) {
+        return new ErrorModel({msg: e.message});
+    }
 }
 
 async function JudgeIsLogin(token) {
-  try {
-    const res = await isLogin(token);
-    return new SuccessModel({
-      msg: "判断结果为data的boolean值", data: {
-        isLogin: res
-      }
-    })
-  } catch (err) {
-    return err
-  }
+    try {
+        const res = await isLogin(token);
+        return new SuccessModel({
+            msg: "判断结果为data的boolean值", data: {
+                isLogin: res
+            }
+        })
+    } catch (err) {
+        return err
+    }
 }
 
 module.exports = {
-  postLogin, postLogout, JudgeIsLogin
+    postLogin, postLogout, JudgeIsLogin
 }

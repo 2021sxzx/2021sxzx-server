@@ -6,28 +6,9 @@ const path = require('path')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
 const jwt = require('jsonwebtoken')
-const unitRouter = require('./routes/unit')
-const commentRouter = require('./routes/comment')
-const systemLogRouter = require('./routes/systemLog')
-const taskRouter = require('./routes/taskRoutes')
-const itemRouter = require('./routes/item')
-const systemResourceRouter = require('./routes/systemResource')
-const loginRouter = require('./routes/login')
-const userManagementRouter = require('./routes/userManagement')
-const roleRouter = require('./routes/role')
-const sideBarRouter = require('./routes/sideBar')
-const permissionRouter = require('./routes/permission')
-const systemFailureRouter = require('./routes/systemFailure')
-const systemMetaDataRouter = require('./routes/systemMetaData.js')
-const systemBasicRouter = require('./routes/systemBasic.js')
-const systemBackupRouter = require('./routes/systemBackup')
-const userDepartmentRouter = require('./routes/userDepartment')
-const imageRouter = require('./routes/image')
-const personalRouter = require('./routes/personal')
-const systemMetaAboutUserRouter = require('./routes/systemMetaDataAboutUser')
-const verify = require('./routes/verify')
 const {statusset} = require('./utils/statusmsg')
 const {jwt_secret} = require('./utils/validateJwt')
+const {routesStore, loadRoutes} = require('./routes/index')
 const {MONGO_CONFIG} = require('./config/config') //数据库的配置信息
 const mongoose = require('mongoose')
 const redisClient = require('./config/redis')
@@ -93,7 +74,8 @@ app.use('*', (req, res, next) => {
   const token = req.cookies['auth-token']
   // 如果没有 token ，说明后台用户未登录或者是前台的请求，next()
   if (token === undefined) {
-    console.log('I\'m in token undefined')
+    // TODO
+    // console.log('I\'m in token undefined')
   } else {
     // 解析用户账号信息
     const account = jwt.verify(token, jwt_secret, null, null).account
@@ -127,8 +109,7 @@ logger.token('id', function getId(req) {
 })
 // 往日志添加时间
 logger.token('localDate', function getDate() {
-  const date = new Date(new Date().getTime() + 8 * 3600 * 1000)
-  return date.toISOString()
+  return new Date().toLocaleString()
 })
 // 日志中间件的设置使用
 app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
@@ -139,26 +120,7 @@ app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/
 }))
 
 // 处理路由
-app.use('/api', verify)
-app.use('/api', unitRouter)
-app.use('/api', commentRouter)
-app.use('/api', taskRouter)
-app.use('/api', systemLogRouter)
-app.use('/api', itemRouter)
-app.use('/api', systemResourceRouter)
-app.use('/api', loginRouter)
-app.use('/api', userManagementRouter)
-app.use('/api', sideBarRouter)
-app.use('/api', roleRouter)
-app.use('/api', permissionRouter)
-app.use('/api', systemFailureRouter)
-app.use('/api', systemBasicRouter)
-app.use('/api', systemMetaDataRouter)
-app.use('/api', systemBackupRouter)
-app.use('/api', imageRouter)
-app.use('/api', userDepartmentRouter)
-app.use('/api', personalRouter)
-app.use('/api', systemMetaAboutUserRouter)
+loadRoutes(routesStore, '/api', app)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

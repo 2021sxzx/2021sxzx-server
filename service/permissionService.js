@@ -4,13 +4,13 @@ const permission = require('../model/permission')
 // 缓存权限列表，缓存变量
 let permissionList = null;
 
-async function iniPermission () {
-  try {
-    permissionList = await getPermissionList();
-    console.log('拉取权限列表成功');
-  } catch (e) {
-    await iniPermission();
-  }
+async function iniPermission() {
+    try {
+        permissionList = await getPermissionList();
+        console.log('拉取权限列表成功');
+    } catch (e) {
+        await iniPermission();
+    }
 }
 
 iniPermission();
@@ -21,80 +21,80 @@ iniPermission();
  * @param permission_identifier_array
  * @return {Promise<*>}
  */
- async function addPermission (role_id, ...permission_identifier_array) {
-  try {
-    let addedArr = await Promise.all(
-      permission_identifier_array.map(async (item) => {
-        const res = await roleMapPermission.create({
-          role_id,
-          permission_identifier: item
-        })
-        return res
-      })
-    )
-    return addedArr
+async function addPermission(role_id, ...permission_identifier_array) {
+    try {
+        let addedArr = await Promise.all(
+            permission_identifier_array.map(async (item) => {
+                const res = await roleMapPermission.create({
+                    role_id,
+                    permission_identifier: item
+                })
+                return res
+            })
+        )
+        return addedArr
 
-  } catch (error) {
-    throw new Error(e.message)
-  }
+    } catch (error) {
+        throw new Error(e.message)
+    }
 }
 
 /**
  * 删除角色所有权限
  */
-async function deletePermission (role_id) {
-  try {
-    let needDeleteData = await roleMapPermission.deleteMany({
-      role_id
-    })
-    return needDeleteData
-  } catch (error) {
-    throw new Error(e.message)
-  }
+async function deletePermission(role_id) {
+    try {
+        let needDeleteData = await roleMapPermission.deleteMany({
+            role_id
+        })
+        return needDeleteData
+    } catch (error) {
+        throw new Error(e.message)
+    }
 }
 
 // 查找角色权限
-async function searchPermission (role_id) {
-  try {
-    let resArr = await roleMapPermission.find({
-      role_id: role_id
-    })
-    return resArr;
-  } catch {
-    throw new Error(e.message);
-  }
+async function searchPermission(role_id) {
+    try {
+        let resArr = await roleMapPermission.find({
+            role_id: role_id
+        })
+        return resArr;
+    } catch {
+        throw new Error(e.message);
+    }
 }
 
 // 修改角色权限
-async function patchPermission (role_id, ...permission_identifier_array) {
-  try {
-    await deletePermission(role_id);
-    const res = await addPermission(role_id, ...permission_identifier_array);
-    return res;
-  } catch {
-    throw new Error(e.message)
-  }
+async function patchPermission(role_id, ...permission_identifier_array) {
+    try {
+        await deletePermission(role_id);
+        const res = await addPermission(role_id, ...permission_identifier_array);
+        return res;
+    } catch {
+        throw new Error(e.message)
+    }
 }
 
 /**
  * 列出权限列表
  * @return {Promise<Array[]>}
- */ 
-async function getPermissionList () {
-  try {
-    if (permissionList == null) {
-      permissionList = await permission.find({})
+ */
+async function getPermissionList() {
+    try {
+        if (permissionList == null) {
+            permissionList = await permission.find({})
+        }
+        return permissionList;
+    } catch (e) {
+        throw new Error(e.message)
     }
-    return permissionList;
-  } catch (e) {
-    throw new Error(e.message)
-  }
 }
 
 module.exports = {
-  addPermission,
-  deletePermission,
-  searchPermission,
-  patchPermission,
-  getPermissionList
+    addPermission,
+    deletePermission,
+    searchPermission,
+    patchPermission,
+    getPermissionList
 }

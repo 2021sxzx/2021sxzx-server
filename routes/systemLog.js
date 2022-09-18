@@ -60,5 +60,9 @@ router.get('/v1/itemBrowseCount', async (req, res, next) => {
   res.json(data.data)
 })
 
+router.get('/v1/deleteAllLog', async (req, res) => {
+  require('fs').writeFileSync('log/access.log', '')
+  res.sendStatus(200)
+})
 
 module.exports = router
