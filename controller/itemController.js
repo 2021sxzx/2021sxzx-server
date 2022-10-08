@@ -2092,6 +2092,62 @@ async function getRules({
 }
 
 /**
+ * 推荐事项指南分类
+ * @param {Array<String>} parentId 父规则id
+ * @param {String} task_name 事项指南名称
+ * @returns
+ */
+async function getRecommend({
+                                parentId = null,
+                                task_name = null
+                            }) {
+    try {
+        var rule_list = await modelRule.aggregate([
+            {
+                $match: {}
+            },
+        ]);
+        
+        var target_rule_id = -1
+        for (let i = 0; i < rule_list.length; i++) {
+            if(rule_list[i].rule_name == task_name) {
+                target_rule_id = i
+                break
+            }
+        }
+
+        // console.log(target_rule_id)
+        if(target_rule_id == -1) return { msg: "查询成功", data: {} };
+        
+
+        var res = await getRules({
+            parentId: parentId
+        })
+        
+        if(res.msg == '查询失败') return {msg: '查询失败', data: '查询子规则失败'}
+        else {
+            var ans = -1;
+            while(target_rule_id != "" && ans == -1) {
+                console.log(target_rule_id)
+                for (let i = 0; i < res.data.length; i++) {
+                    if(parseInt(res.data[i].rule_id) == target_rule_id) {
+                        ans = target_rule_id;
+                        break
+                    }
+                }
+                target_rule_id = parseInt(rule_list[target_rule_id].parentId);
+            }
+        }
+        
+        if(ans == -1) return {msg: '查询成功', data: {}}
+        else return {msg: '查询成功', data: rule_list[ans]}
+    } catch (err) {
+        return new ErrorModel({msg: '查询失败', data: err.message})
+    } 
+
+}
+
+/**
  * 创建区划
  * @param {String} region_code 区划编码
  * @param {String} region_name 区划名称
@@ -2617,6 +2673,7 @@ module.exports = {
     updateItems,
     changeItemStatus,
     getRules,
+    getRecommend,
     createRules,
     deleteRules,
     updateRules,
