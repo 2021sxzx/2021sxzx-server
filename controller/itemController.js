@@ -1959,10 +1959,22 @@ async function getRules({
         for (let i = 0; i < res.length; i++) {
             let rulePath = ''
             let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null
+            
             while (node !== null) {
                 rulePath = node.rule_name + '/' + rulePath
                 node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
             }
+
+            var _query = {};
+            _query.rule_id = res[i].rule_id
+            var _res = await modelItem.aggregate([
+                {
+                    $match: { "rule_id": res[i].rule_id },
+                }
+            ]);
+
+            res[i].isLeaf = (res[i].children == 0)
+            res[i].hasBindItem = _res.length > 0
             res[i].rule_path = rulePath
         }
         return new SuccessModel({ msg: '查询成功', data: res })
