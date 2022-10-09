@@ -2102,6 +2102,7 @@ async function getRecommend({
                                 task_name = null
                             }) {
     try {
+        task_name = task_name[0]
         var rule_list = await modelRule.aggregate([
             {
                 $match: {}
