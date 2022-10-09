@@ -73,7 +73,7 @@ router.post('/v1/getRules', async (req, res, next) => {
 
 router.post("/v1/getRecommend", async (req, res, next) => {
     let data = await itemController.getRecommend(req.body);
-    setStatusCode(res, data);
+    res.status(data.code).json(data);
     res.json(data);
 });
 

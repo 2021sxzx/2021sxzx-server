@@ -2118,14 +2118,14 @@ async function getRecommend({
         }
 
         // console.log(target_rule_id)
-        if(target_rule_id == -1) return { msg: "查询成功", data: {} };
+        if(target_rule_id == -1) return { msg: "查询成功", data: {}, code: 200 };
         
 
         var res = await getRules({
             parentId: parentId
         })
         
-        if(res.msg == '查询失败') return {msg: '查询失败', data: '查询子规则失败'}
+        if(res.msg == '查询失败') return {msg: '查询失败', data: '服务器繁忙，请重新尝试', code: 400}
         else {
             var ans = -1;
             while(target_rule_id != "" && ans == -1) {
@@ -2140,10 +2140,10 @@ async function getRecommend({
             }
         }
         
-        if(ans == -1) return {msg: '查询成功', data: {}}
-        else return {msg: '查询成功', data: rule_list[ans]}
+        if(ans == -1) return {msg: '查询成功', data: {}, code: 200}
+        else return {msg: '查询成功', data: rule_list[ans], code: 200}
     } catch (err) {
-        return new ErrorModel({msg: '查询失败', data: err.message})
+        return new ErrorModel({msg: '查询失败', data: err.message, code: 400})
     } 
 
 }
