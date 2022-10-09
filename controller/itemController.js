@@ -2155,7 +2155,7 @@ async function getRecommend({
         }
 
         if(ans == "") return {msg: '查询成功', data: [], code: 200}
-        else return {msg: '查询成功', data: [rule_list[ans]], code: 200}
+        else return { msg: "查询成功", data: [rule_map_by_rule_id[ans]], code: 200 };
     } catch (err) {
         return new ErrorModel({msg: '查询失败', data: err.message, code: 500})
     }
