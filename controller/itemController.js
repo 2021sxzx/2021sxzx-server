@@ -1640,6 +1640,10 @@ async function createItems({
             if (region._id != region_id) {
                 throw new Error('region_code和region_id不匹配: ' + region_code + '\t' + region_id)
             }
+
+            var is_exist = (await modelItem.find({rule_id: rule_id, region_id: region_id})).length > 0
+            if (is_exist) return new ErrorModel({ msg: "创建事项失败", data: "该规则已经创建" });
+
             newData.push({
                 item_name: task.task_name,
                 task_code: task_code,
