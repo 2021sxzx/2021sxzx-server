@@ -1642,7 +1642,7 @@ async function createItems({
             }
 
             var is_exist = (await modelItem.find({rule_id: rule_id, region_id: region_id})).length > 0
-            if (is_exist) return new ErrorModel({ msg: "创建事项失败", data: "该规则已经创建" });
+            if (is_exist) return { msg: "创建事项失败", data: "该规则已经创建", code: 400 };
 
             newData.push({
                 item_name: task.task_name,

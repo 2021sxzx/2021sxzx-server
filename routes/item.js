@@ -43,7 +43,7 @@ router.post('/v1/getItems', async (req, res, next) => {
 
 router.post('/v1/createItems', async (req, res, next) => {
     let data = await itemController.createItems(req.body)
-    setStatusCode(res, data)
+    res.statusCode = data.code;
     res.json(data)
 })
 
