@@ -2102,7 +2102,6 @@ async function getRecommend({
                                 task_name = null
                             }) {
     try {
-        task_name = task_name[0]
         var rule_list = await modelRule.aggregate([
             {
                 $match: {}
@@ -2122,10 +2121,10 @@ async function getRecommend({
         
 
         var res = await getRules({
-            parentId: parentId
+            parentId: [parentId]
         })
         
-        if(res.msg == '查询失败') return {msg: '查询失败', data: '服务器繁忙，请重新尝试', code: 400}
+        if(res.msg == '查询失败') return {msg: '查询失败', data: '服务器繁忙，请重新尝试', code: 500}
         else {
             var ans = -1;
             while(target_rule_id != "" && ans == -1) {
@@ -2143,7 +2142,7 @@ async function getRecommend({
         if(ans == -1) return {msg: '查询成功', data: {}, code: 200}
         else return {msg: '查询成功', data: rule_list[ans], code: 200}
     } catch (err) {
-        return new ErrorModel({msg: '查询失败', data: err.message, code: 400})
+        return new ErrorModel({msg: '查询失败', data: err.message, code: 500})
     } 
 
 }
