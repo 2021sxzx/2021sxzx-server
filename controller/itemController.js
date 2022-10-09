@@ -2071,7 +2071,7 @@ async function getRules({
         for (let i = 0; i < res.length; i++) {
             let rulePath = ''
             let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null
-            
+
             while (node !== null) {
                 rulePath = node.rule_name + '/' + rulePath
                 node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
@@ -2111,43 +2111,54 @@ async function getRecommend({
                 $match: {}
             },
         ]);
-        
-        var target_rule_id = -1
+
+        var rule_map_by_rule_id = {}
+        var rule_map_by_rule_name = {}
+        for (let i = 0; i < rule_list.length; i++) {
+            rule_map_by_rule_id[rule_list[i].rule_id] = rule_list[i];
+            rule_map_by_rule_name[rule_list[i].rule_name] = rule_list[i];
+        }
+
+        var target_rule_id = ""; // 叶节点规则的rule_id
         for (let i = 0; i < rule_list.length; i++) {
             if(rule_list[i].rule_name == task_name) {
-                target_rule_id = i
+                target_rule_id = rule_list[i].rule_id;
                 break
             }
         }
 
         // console.log(target_rule_id)
-        if(target_rule_id == -1) return { msg: "查询成功", data: {}, code: 200 };
-        
+        // 如果没有匹配到叶节点规则，那么直接返回空
+        if(target_rule_id == "") return { msg: "查询成功", data: [], code: 200 };
+
 
         var res = await getRules({
             parentId: [parentId]
         })
-        
+        // 查询客户当前所在的规则
         if(res.msg == '查询失败') return {msg: '查询失败', data: '服务器繁忙，请重新尝试', code: 500}
         else {
-            var ans = -1;
-            while(target_rule_id != "" && ans == -1) {
-                console.log(target_rule_id)
+            var ans = "";
+            while(target_rule_id != "" && ans == "") {
+                console.log(target_rule_id, rule_list[target_rule_id].parentId)
+                // console.dir(rule_list[target_rule_id])
+                // break;
                 for (let i = 0; i < res.data.length; i++) {
-                    if(parseInt(res.data[i].rule_id) == target_rule_id) {
+                    if (res.data[i].rule_id == target_rule_id) {
                         ans = target_rule_id;
                         break
                     }
                 }
-                target_rule_id = parseInt(rule_list[target_rule_id].parentId);
+
+                target_rule_id = rule_map_by_rule_id[target_rule_id].parentId;
             }
         }
-        
-        if(ans == -1) return {msg: '查询成功', data: {}, code: 200}
-        else return {msg: '查询成功', data: rule_list[ans], code: 200}
+
+        if(ans == "") return {msg: '查询成功', data: [], code: 200}
+        else return {msg: '查询成功', data: [rule_list[ans]], code: 200}
     } catch (err) {
         return new ErrorModel({msg: '查询失败', data: err.message, code: 500})
-    } 
+    }
 
 }
 
