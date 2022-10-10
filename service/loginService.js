@@ -42,6 +42,31 @@ async function authenticatebypwd(loginData) {
         if (password !== res.password) return {msg: '密码错误，请重试.', code: 403}
         if (res.activation_status !== 1) return {msg: '该号码未被激活，请重试.', code: 403}
 
+        // 检查最后修改密码的时间，如果时间不存在，就将本次登录的时间设置为最后修改密码的时间。
+        // 如果时间存在，就判断该事件到本次登录的时间是否超过3个月。
+        // 如果超过 3 个月就拒绝登录，提示用户使用短信登录后进入个人中心修改密码后再使用密码登录功能
+        if (res._doc.password_modify_date) {
+            // 如果最后修改密码的时间存在，检查距离上次修改密码的时间是否超过3个月
+            // 当前时间
+            const nowDate = new Date()
+            // 距离上次修改密码的时间差
+            const diff = Math.floor((nowDate - res._doc.password_modify_date)/(24*3600*1000))
+            // 如果时间差大于 90 天就拒绝登录，否则就让正常登录
+            if (diff > 90) {
+                return {
+                    msg: '该账号已经超过90天未修改密码，请先修改密码后再使用账号密码登录。' +
+                        '如果要修改密码，请先使用手机验证码登录，然后进入个人中心修改密码。',
+                    code: 403
+                }
+            }
+        } else {
+            // 如果最后想修改密码的时间不存在，就把本次登录是时间作为最后修改密码的时间。
+            await User.updateOne(
+                {account: account},
+                {password_modify_date: new Date()},
+            )
+        }
+
         // 通过错误检查
         let refresh_token = generate_refresh_token(64)
         let refresh_token_max_age = new Date(new Date().valueOf() + jwt_refresh_expiration)

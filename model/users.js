@@ -40,6 +40,10 @@ const usersSchema = new mongoose.Schema({
         type: Number,
         default: 1
     },
+    // 最近一次修改密码的时间，如果没有这个字段，就记录第一次登录的时间。
+    password_modify_date:{
+        type:Date,
+    }
 });
 
 const users = mongoose.model('users', usersSchema);
