@@ -339,7 +339,7 @@ class unitService {
     })
 
     const result = res.map(item => {
-      return item.unit_id;
+      return item;
     })
 
     return result;

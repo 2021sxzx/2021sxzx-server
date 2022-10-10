@@ -248,11 +248,18 @@ async function getItems({
                 throw new Error('user_id不合法')
             }
             let units = await unitService._allChildUnitArr(user.unit_id)
-            let users = await modelUsers.find({unit_id: {$in: units}})
-            for (let i = 0, len = users.length; i < len; i++) {
-                users.push(users.shift()._id)
-            }
-            query['$and'].push({creator_id: {$in: users}})
+            var unit_name_list = units.map((item) => {
+                return item.unit_name;
+            });
+            console.dir(unit_name_list);
+            query["$and"].push({ service_agent_name: { $in: unit_name_list } });
+            
+            // let users = await modelUsers.find({unit_id: {$in: units}})
+            // for (let i = 0, len = users.length; i < len; i++) {
+            //     users.push(users.shift()._id)
+            // }
+
+            // query['$and'].push({creator_id: {$in: users}})
         }
         //------------------------------------------------------
         if (region_code !== null) {
@@ -871,17 +878,25 @@ async function getItemGuides({
         query['$and'] = []
         //----------------------------------------------------
         //只显示用户所属部门及其下属部门的事项
+        // console.log("user_id" + user_id)
         if (user_id !== null) {
             let user = await modelUsers.findOne({_id: user_id})
             if (user === null) {
                 throw new Error('user_id不合法')
             }
             let units = await unitService._allChildUnitArr(user.unit_id)
-            let users = await modelUsers.find({unit_id: {$in: units}})
-            for (let i = 0, len = users.length; i < len; i++) {
-                users.push(users.shift()._id)
-            }
-            query['$and'].push({creator_id: {$in: users}})
+            var unit_name_list = units.map((item) => {
+                return item.unit_name;
+            });
+            console.dir(unit_name_list)
+            query['$and'].push({service_agent_name: {$in: unit_name_list}})
+
+            // let users = await modelUsers.find({unit_id: {$in: units}})
+            // console.log("users: " + users)
+            // for (let i = 0, len = users.length; i < len; i++) {
+            //     users.push(users.shift()._id)
+            // }
+            // query['$and'].push({creator_id: {$in: users}})
         }
         //------------------------------------------------------
         if (creator_name !== null) {
