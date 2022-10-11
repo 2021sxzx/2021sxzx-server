@@ -25,7 +25,14 @@ router.post('/v2/modifyPwd', async (req, res) => {
     const password = req.body.pwd
 
     // 如果密码改变了，就更新最后修改密码的时间戳。
-    await shouldUpdatePasswordModifyDate(account, password)
+    let isPasswordChange = await shouldUpdatePasswordModifyDate(account, password)
+
+    // 如果密码和上一个一样，提示修改失败
+    if (isPasswordChange === false) {
+        res.status(403).json({
+            msg: '由于安全性要求，新密码不能与旧密码相同，请重新修改。'
+        })
+    }
 
     modelUsers.updateOne({
         account: account
@@ -33,10 +40,11 @@ router.post('/v2/modifyPwd', async (req, res) => {
         password: password
     }, function (err, res) {
         if (err) {
-            console.log('更新失败：', err);
-        } else {
-            // console.log("更新密码成功:", res);
+            res.status(500).json({
+                msg: '更新用户信息失败',
+            })
         }
+
     })
 
     res.end()

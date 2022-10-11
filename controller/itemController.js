@@ -251,9 +251,9 @@ async function getItems({
             var unit_name_list = units.map((item) => {
                 return item.unit_name;
             });
-            console.dir(unit_name_list);
-            query["$and"].push({ service_agent_name: { $in: unit_name_list } });
-            
+
+            query["$and"].push({service_agent_name: {$in: unit_name_list}});
+
             // let users = await modelUsers.find({unit_id: {$in: units}})
             // for (let i = 0, len = users.length; i < len; i++) {
             //     users.push(users.shift()._id)
@@ -888,7 +888,7 @@ async function getItemGuides({
             var unit_name_list = units.map((item) => {
                 return item.unit_name;
             });
-            console.dir(unit_name_list)
+
             query['$and'].push({service_agent_name: {$in: unit_name_list}})
 
             // let users = await modelUsers.find({unit_id: {$in: units}})
@@ -1657,7 +1657,7 @@ async function createItems({
             }
 
             var is_exist = (await modelItem.find({rule_id: rule_id, region_id: region_id})).length > 0
-            if (is_exist) return { msg: "创建事项失败", data: "该规则已经创建，请选择或创建新的事项规则", code: 400 };
+            if (is_exist) return {msg: "创建事项失败", data: "该规则已经创建，请选择或创建新的事项规则", code: 400};
 
             newData.push({
                 item_name: task.task_name,
@@ -2096,7 +2096,7 @@ async function getRules({
             _query.rule_id = res[i].rule_id
             var _res = await modelItem.aggregate([
                 {
-                    $match: { "rule_id": res[i].rule_id },
+                    $match: {"rule_id": res[i].rule_id},
                 }
             ]);
 
@@ -2136,7 +2136,7 @@ async function getRecommend({
 
         var target_rule_id = ""; // 叶节点规则的rule_id
         for (let i = 0; i < rule_list.length; i++) {
-            if(rule_list[i].rule_name == task_name) {
+            if (rule_list[i].rule_name == task_name) {
                 target_rule_id = rule_list[i].rule_id;
                 break
             }
@@ -2144,17 +2144,17 @@ async function getRecommend({
 
         // console.log(target_rule_id)
         // 如果没有匹配到叶节点规则，那么直接返回空
-        if(target_rule_id == "") return { msg: "查询成功", data: [], code: 200 };
+        if (target_rule_id == "") return {msg: "查询成功", data: [], code: 200};
 
 
         var res = await getRules({
             parentId: [parentId]
         })
         // 查询客户当前所在的规则
-        if(res.msg == '查询失败') return {msg: '查询失败', data: '服务器繁忙，请重新尝试', code: 500}
+        if (res.msg == '查询失败') return {msg: '查询失败', data: '服务器繁忙，请重新尝试', code: 500}
         else {
             var ans = "";
-            while(target_rule_id != "" && ans == "") {
+            while (target_rule_id != "" && ans == "") {
                 console.log(target_rule_id, rule_list[target_rule_id].parentId)
                 // console.dir(rule_list[target_rule_id])
                 // break;
@@ -2169,8 +2169,8 @@ async function getRecommend({
             }
         }
 
-        if(ans == "") return {msg: '查询成功', data: [], code: 200}
-        else return { msg: "查询成功", data: [rule_map_by_rule_id[ans]], code: 200 };
+        if (ans == "") return {msg: '查询成功', data: [], code: 200}
+        else return {msg: "查询成功", data: [rule_map_by_rule_id[ans]], code: 200};
     } catch (err) {
         return new ErrorModel({msg: '查询失败', data: err.message, code: 500})
     }

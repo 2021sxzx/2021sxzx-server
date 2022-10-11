@@ -127,7 +127,7 @@ async function updateUser(user_name, password, role_id, account, new_account, un
     try {
         isNeedUpdateUserCache = true
 
-        await shouldUpdatePasswordModifyDate(account,password)
+        await shouldUpdatePasswordModifyDate(account, password)
 
         return await users.updateOne({
             account: account
@@ -147,7 +147,7 @@ async function updateUser(user_name, password, role_id, account, new_account, un
  * 如果用户修改了密码，就记录用户修改密码时候的时间戳作为最后修改密码的时间
  * @param account
  * @param password
- * @return {Promise<void>}
+ * @return {Promise<boolean>}
  */
 async function shouldUpdatePasswordModifyDate(account, password) {
     let oldUser = await users.findOne({
@@ -160,7 +160,9 @@ async function shouldUpdatePasswordModifyDate(account, password) {
         }, {
             password_modify_date: new Date()
         })
+        return true
     }
+    return false
 }
 
 /**
