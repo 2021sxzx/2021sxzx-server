@@ -2121,37 +2121,53 @@ async function getRecommend({
                                 task_name = null
                             }) {
     try {
+        console.log("开始推荐相关规则节点")
         var rule_list = await modelRule.aggregate([
             {
                 $match: {}
             },
         ]);
-
         var rule_map_by_rule_id = {}
         var rule_map_by_rule_name = {}
         for (let i = 0; i < rule_list.length; i++) {
             rule_map_by_rule_id[rule_list[i].rule_id] = rule_list[i];
             rule_map_by_rule_name[rule_list[i].rule_name] = rule_list[i];
         }
-
+  
         var target_rule_id = ""; // 叶节点规则的rule_id
         for (let i = 0; i < rule_list.length; i++) {
             if (rule_list[i].rule_name == task_name) {
                 target_rule_id = rule_list[i].rule_id;
                 break
             }
+        } 
+
+        console.log('target_rule_id',target_rule_id)
+
+        // 如果没有匹配到叶节点规则，那么直接返回空
+        if (target_rule_id == "") {
+            console.log("未匹配到相关叶节点")    
+            return {msg: "查询成功", data: [], code: 200};
+        } else {
+            console.log("匹配到了相关叶节点规则")
         }
 
-        // console.log(target_rule_id)
-        // 如果没有匹配到叶节点规则，那么直接返回空
-        if (target_rule_id == "") return {msg: "查询成功", data: [], code: 200};
+        // if (parentId !== null) console.log(parentId)
+        // else console.log("十个孔氏")
+        console.log('type', typeof parentId)
 
-
-        var res = await getRules({
+        console.log(parentId)
+        console.log("adasdas")
+        const res = await getRules({
             parentId: [parentId]
-        })
+        });
+
+        console.log('res',res)
+
+
         // 查询客户当前所在的规则
         if (res.msg == '查询失败') return {msg: '查询失败', data: '服务器繁忙，请重新尝试', code: 500}
+        else if(res.data.length === 0) return { msg: "查询成功", data: [], code: 200 };
         else {
             var ans = "";
             while (target_rule_id != "" && ans == "") {
