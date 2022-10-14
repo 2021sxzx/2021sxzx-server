@@ -268,7 +268,6 @@ async function setActivation(account) {
 }
 
 async function findRoleNameAndReturnId(role_name, allRole) {
-    // by lhy 旧代码用 allUnit 坑人？
     for (let item of allRole) {
         if (item.role_name === role_name) {
             return item.role_id
@@ -337,16 +336,20 @@ async function batchImportedUser(imported_array) {
 }
 
 async function getUserById(id) {
-    if (!userCache) {
-        await getUserList()
-    }
-    const res = await userCache.filter(item => {
-        return item._id.toString() === id
-    })
+    try {
+        if (!userCache) {
+            await getUserList()
+        }
+        const res = await userCache.filter(item => {
+            return item._id.toString() === id
+        })
 
-    return res.length > 0 ? res[0] : {
-        user_name: '系统',
-        account: '系统无id'
+        return res.length > 0 ? res[0] : {
+            user_name: '系统',
+            account: '系统无id'
+        }
+        return e.message
+    } catch (e) {
     }
 }
 

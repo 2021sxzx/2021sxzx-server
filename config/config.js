@@ -32,7 +32,7 @@ if (process.env.NODE_ENV === 'local') {
     REDIS_CONFIG = {
         host: '10.196.133.5',
         port: '6379',
-        password: '@hgc16711',
+        password: 'hgc16711',
     }
     MONGO_CONFIG = {
         url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/sxzx',
