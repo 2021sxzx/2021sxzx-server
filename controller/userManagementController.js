@@ -26,6 +26,7 @@ const asyncFilter = async (array, AsyncCallback) => {
 async function newUserList(res, unit_id) {
   try {
     const result = await asyncFilter(res, async item => {
+
       const isCanSee = await unitService.calculateWhoIsParent(unit_id, item.unit_id)
       return isCanSee
     })
@@ -78,6 +79,7 @@ async function addUserBatchingAndReturnList(imported_array, unit_id) {
 async function returnUserList(unit_id) {
   try {
     const result = await getUserList()
+    // console.log("result", result)
     const res = await newUserList(result, unit_id)
     return new SuccessModel({
       msg: '获取列表成功',

@@ -247,11 +247,12 @@ async function getItems({
             if (user === null) {
                 throw new Error('user_id不合法')
             }
+            console.log("user.unit_id", user.unit_id, typeof(user.unit_id))
             let units = await unitService._allChildUnitArr(user.unit_id)
             var unit_name_list = units.map((item) => {
                 return item.unit_name;
             });
-
+            console.log("顺利执行完成")
             query["$and"].push({service_agent_name: {$in: unit_name_list}});
 
             // let users = await modelUsers.find({unit_id: {$in: units}})
