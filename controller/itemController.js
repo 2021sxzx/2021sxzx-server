@@ -82,7 +82,6 @@ async function getItemUsers(
         ])
         return new SuccessModel({msg: '获取成功', data: users})
     } catch (err) {
-        console.log(err)
         return new ErrorModel({msg: '获取失败', data: err.message})
     }
 }
@@ -101,7 +100,6 @@ async function getUserNameById(
         var userName = await modelUsers.findOne({_id: user_id}, {_id: 0, user_name: 1})
         return new SuccessModel({msg: '获取成功', data: userName})
     } catch (err) {
-        console.log(err)
         return new ErrorModel({msg: '获取失败', data: err.message})
     }
 }
@@ -152,7 +150,6 @@ async function getUserRank(
 
         return new SuccessModel({msg: '获取成功', data: result})
     } catch (err) {
-        console.log(err)
         return new ErrorModel({msg: '获取失败', data: err.message})
     }
 }
@@ -878,7 +875,6 @@ async function getItemGuides({
         query['$and'] = []
         //----------------------------------------------------
         //只显示用户所属部门及其下属部门的事项
-        // console.log("user_id" + user_id)
         if (user_id !== null) {
             let user = await modelUsers.findOne({_id: user_id})
             if (user === null) {
@@ -890,13 +886,6 @@ async function getItemGuides({
             });
 
             query['$and'].push({service_agent_name: {$in: unit_name_list}})
-
-            // let users = await modelUsers.find({unit_id: {$in: units}})
-            // console.log("users: " + users)
-            // for (let i = 0, len = users.length; i < len; i++) {
-            //     users.push(users.shift()._id)
-            // }
-            // query['$and'].push({creator_id: {$in: users}})
         }
         //------------------------------------------------------
         if (creator_name !== null) {
@@ -1165,11 +1154,9 @@ async function createItemGuide({
         if (zzzd !== null) newData.zzzd = zzzd
         if (service_agent_name !== null) newData.service_agent_name = service_agent_name
         if (service_agent_code !== null) newData.service_agent_code = service_agent_code
-        // console.log(newData)
         var result = await modelTask.create(newData)
         return new SuccessModel({msg: '创建成功', data: result})
     } catch (err) {
-        console.log(err)
         return new ErrorModel({msg: '创建失败', data: err.message})
     }
 }
@@ -1353,7 +1340,6 @@ async function updateItemGuide({
         await modelItem.bulkWrite(bulkOps)
         return new SuccessModel({msg: '更新成功', data: result})
     } catch (err) {
-        // console.log(err.message)
         return new ErrorModel({msg: '更新失败', data: err.message})
     }
 }
@@ -1638,7 +1624,7 @@ async function createItems({
             }
             //检查task_code的合法性
             let task = await modelTask.findOne({task_code: task_code}, {_id: 0, __v: 0})
-            console.log("From Task sheet:", task)
+
             if (task === null) {
                 throw new Error('task_code不存在: ' + task_code)
             }
@@ -1887,7 +1873,6 @@ async function getChildRegionsByRuleAndRegion(
         }
         return new SuccessModel({msg: '查询成功', data: result})
     } catch (err) {
-        console.log(err)
         return new ErrorModel({msg: '查询失败', data: err.message})
     }
 }
@@ -2142,7 +2127,6 @@ async function getRecommend({
             }
         }
 
-        // console.log(target_rule_id)
         // 如果没有匹配到叶节点规则，那么直接返回空
         if (target_rule_id == "") return {msg: "查询成功", data: [], code: 200};
 
@@ -2155,9 +2139,6 @@ async function getRecommend({
         else {
             var ans = "";
             while (target_rule_id != "" && ans == "") {
-                console.log(target_rule_id, rule_list[target_rule_id].parentId)
-                // console.dir(rule_list[target_rule_id])
-                // break;
                 for (let i = 0; i < res.data.length; i++) {
                     if (res.data[i].rule_id == target_rule_id) {
                         ans = target_rule_id;
@@ -2466,30 +2447,7 @@ async function changeItemStatus({
                                     update: {release_time: Date.now()}
                                 }
                             })
-                            //对接一下机器人平台，新增词条
-                            // try {
-                            //     var region = await modelRegion.findOne({ _id: item.region_id })
-                            //     if (region === null) {
-                            //         throw new Error('区划不存在')
-                            //     }
-                            //     itemService.addQuestion(item.task_code, region.region_code)
-                            // } catch (err) {
-                            //     console.log('对接机器人平台出错')
-                            //     console.log(err.message)
-                            // }
                         }
-                        //转到其他状态
-                        // else {
-                        //     //如果是审核通过状态转到其他状态，即撤销已发布的事项，就对接一下机器人平台，删除对应的词条
-                        //     if (itemStatus[k].eng_name === 'Recall') {
-                        //         try {
-                        //             itemService.deleteQuestions([item.task_code])
-                        //         } catch (err) {
-                        //             console.log('对接机器人平台出错')
-                        //             console.log(err.message)
-                        //         }
-                        //     }
-                        // }
                         break
                     }
                 }
@@ -2500,7 +2458,6 @@ async function changeItemStatus({
         var result = await modelItem.bulkWrite(bulkOps)
         return new SuccessModel({msg: '更新成功', data: result})
     } catch (err) {
-        console.log(err.message)
         return new ErrorModel({msg: '更新失败', data: err.message})
     }
 }
