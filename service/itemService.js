@@ -1454,7 +1454,7 @@ initializeCheckJob()
 
 // 初始化 task 表
 // initializeTaskSchema()
-
+// getChildRegionList("440100000000");
 
 module.exports = {
     addUpdateTask,

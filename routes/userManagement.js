@@ -33,7 +33,9 @@ router.all('*', function(req, res, next) {
 
 // 获取用户
 router.get('/v1/user', async (req, res, next) => {
-  const unit_id = Number(req.cookies.unit_id)
+  // console.log(typeof(req.cookies.unit_id), req.cookies.unit_id)
+  const unit_id = req.cookies.unit_id
+  console.log(unit_id)
   const data = await returnUserList(unit_id);
   setStatusCode(res, data)
   res.json(data)
@@ -41,14 +43,15 @@ router.get('/v1/user', async (req, res, next) => {
 
 // 添加用户
 router.post('/v1/user', async (req, res, next) => {
-  const unit_id = Number(req.cookies.unit_id)
+  const unit_id = req.cookies.unit_id
+
   if (validatePwd(req.body.password)) {
     const data = await addUserAndReturnList({
       user_name: req.body.user_name,
       account: req.body.account,
       password: req.body.password,
       role_id: req.body.role_id,
-      unit_id: Number(req.body.unit_id)
+      unit_id: String(req.body.unit_id)
     }, unit_id);
     setStatusCode(res, data);
     res.json(data)
@@ -64,8 +67,8 @@ router.post('/v1/user', async (req, res, next) => {
 // 修改用户
 router.patch('/v1/user', async (req, res, next) => {
   const { user_name, password, role_id, account, new_account, unit_id } = req.body
-  const my_unit_id = Number(req.cookies.unit_id)
-  const data = await updateUserAndReturnList(user_name, password, role_id, account, new_account, unit_id, my_unit_id);
+  const my_unit_id = req.cookies.unit_id
+  const data = await updateUserAndReturnList(user_name, password, role_id, account, new_account, String(unit_id), my_unit_id);
   setStatusCode(res, data)
   res.json(data)
 })
@@ -81,7 +84,7 @@ router.delete('/v1/user', async (req, res, next) => {
 // 搜索用户
 router.post('/v1/searchUser', async (req, res, next) => {
   const { searchValue } = req.body;
-  const data = await searchUserAndReturnList(searchValue, Number(req.cookies.unit_id));
+  const data = await searchUserAndReturnList(searchValue, req.cookies.unit_id);
   setStatusCode(res, data);
   res.json(data)
 })
@@ -98,14 +101,14 @@ router.post('/v1/getActivation',async function(req,res,next){
 // 激活状态
 router.post('/v1/setActivation', async function (req, res, next) {
   const {account} = req.body;
-  const unit_id = Number(req.cookies.unit_id)
+  const unit_id = req.cookies.unit_id
   const result = await setActivationAndReturn(account, unit_id);
   res.json(result);
 });
 
 router.post('/v1/batchImportUser', async (req, res, next) => {
   const { imported_array } = req.body;
-  const unit_id = Number(req.cookies.unit_id);
+  const unit_id = req.cookies.unit_id;
   const data = await addUserBatchingAndReturnList(imported_array, unit_id);
   setStatusCode(res, data);
   res.status(200).json(data);

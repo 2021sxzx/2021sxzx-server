@@ -9,12 +9,12 @@ const unitSchema = new mongoose.Schema({
   },
   // 做一个拷贝，unit_id为_id就可
   unit_id: {
-    type: Number,
+    type: String,
     default: '',
     require: true
   },
   parent_unit: {
-    type: Number,
+    type: String,
     default: '',
     require: true
   }
@@ -22,6 +22,6 @@ const unitSchema = new mongoose.Schema({
 
 // unitSchema.plugin(autoinc.plugin, {model: 'unit'})
 
-const unit = mongoose.model('unit', unitSchema);
+const unit = mongoose.model('units', unitSchema);
 
 module.exports = unit;

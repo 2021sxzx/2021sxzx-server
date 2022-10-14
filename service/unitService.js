@@ -105,17 +105,14 @@ class unitService {
             ],
             "pureData": [
               {
-                $match: {
-                  unit_id: {
-                    $gte: 0
-                  }
-                }
+                $match: {}
               }
             ]
           }
         }
       ]);
       this.allUnit = resq[0].pureData;
+      // console.log("allUnit", this.allUnit)
       return resq[0].aggregateData;
     } catch (error) {
       return new ErrorModel({
@@ -302,20 +299,36 @@ class unitService {
     }
     const allUnit = this.allUnit;
     let root2 = allUnit.filter(item => { return item.unit_id == unit_id2 });
+    // console.log(typeof(unit_id1), unit_id1)
+    // console.log("root2", root2, unit_id2, typeof(unit_id2))
     if (root2.length == 0) {
       return false;
     }
     let parent_unit = null;
+    // console.log(root2)
+
+
     while (1) {
+      // console.log(root2[0])
+      // console.log(root2[0].parent_unit, typeof(root2[0].parent_unit));
+      // console.log(root2[0].parent_unit == "0")
+      // if (typeof root2[0].parent_unit != typeof("153"))
+      //   console.log("asd", root2[0])
+      // console.log(root2[0]);
       parent_unit = root2[0].parent_unit;
-      if (parent_unit == 0) {
+      if (parent_unit == "0") {
         return false;
-      }
+      } 
       if (parent_unit == unit_id1) {
         return true;
       }
       root2 = allUnit.filter(item => { return item.unit_id == parent_unit });
+      // if(root2.length == 0) {
+      //   console.log(parent_unit)
+      // }
     }
+
+    console.log("ERROR")
     return false;
   }
 
@@ -333,6 +346,7 @@ class unitService {
       return res;
     }
 
+    // console.log()
     const res = await asyncFilter(this.allUnit, async (item) => {
       const result = await this.calculateWhoIsParent(unit_id, item.unit_id);
       return result;

@@ -33,7 +33,7 @@ const usersSchema = new mongoose.Schema({
     },
     // 单位id
     unit_id: {
-        type: Number,
+        type: String,
         require: true
     },
     department_id: {
