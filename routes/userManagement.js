@@ -34,9 +34,10 @@ router.all('*', function(req, res, next) {
 // 获取用户
 router.get('/v1/user', async (req, res, next) => {
   // console.log(typeof(req.cookies.unit_id), req.cookies.unit_id)
-  const unit_id = req.cookies.unit_id
+  const my_unit_id = req.cookies.unit_id
+  const unit_id = req.body
   console.log(unit_id)
-  const data = await returnUserList(unit_id);
+  const data = await returnUserList(my_unit_id);
   setStatusCode(res, data)
   res.json(data)
 });

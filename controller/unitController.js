@@ -1,5 +1,5 @@
 const unitService = require('../service/unitService');
-
+const { returnUserList } = require("../controller/userManagementController");
 function setStatusCode(res,data) {
   if(data.code === 200) {
     res.statusCode = 200
@@ -49,8 +49,9 @@ class unitController {
   }
 
   async getUserById (req, res) {
-    const { unit_id } = req.body;
-    const result = await unitService.getUserById(unit_id);
+    const unit_id = req.body.unit_id;
+    console.log(unit_id)
+    const result = await returnUserList(unit_id);
     setStatusCode(res, result);
     res.json(result);
   }
