@@ -106,30 +106,54 @@ router.get('/v1/logo_image', async (req,res,next) => {
   }
 })
 
+function isFileExisted(path_way) {
+  return new Promise((resolve, reject) => {
+    fs.access(path_way, (err) => {
+      if (err) {
+        reject(false);//"不存在"
+      } else {
+        resolve(true);//"存在"
+      }
+    })
+  })
+};
 
 // 返回前端
-router.get('/v1/get-picture', (req, res, next) => {
+router.get('/v1/get-picture', async (req, res, next) => {
   // const filePath = path.resolve(__dirname, `../public/images/${req.query.gh}.jpg`);
   // const filePath = path.resolve(__dirname, `../upload/14549661650598157606.jpg`);
-  const filePath = req.query.url;
-  console.log(req.query.url)
-  console.log('------url--------')
-  // console.log(filePath)
-  // res.end(req.query);
-  // res.end(filePath);
-  // 给客户端返回一个文件流 type类型
-  res.set( 'content-type', {"png": "image/png","jpg": "image/jpeg"} );//设置返回类型
-  var stream = fs.createReadStream( filePath );
-  var responseData = [];//存储文件流
-  if (stream) {//判断状态
-      stream.on( 'data', function( chunk ) {
-        responseData.push( chunk );
-      });
-      stream.on( 'end', function() {
-         var finalData = Buffer.concat( responseData );
-         res.write( finalData );
-         res.end();
-      });
+  try {
+      const filePath = req.query.url;
+      console.log(req.query.url);
+      console.log("------url--------");
+      // console.log(filePath)
+      // res.end(req.query);
+      // res.end(filePath);
+      // 给客户端返回一个文件流 type类型
+      res.set("content-type", { png: "image/png", jpg: "image/jpeg" }); //设置返回类型
+      const isExist = await isFileExisted(filePath)
+      if (isExist) {
+          console.log(req.query.url, "文件存在");
+          var stream = fs.createReadStream(filePath);
+          var responseData = []; //存储文件流
+          if (stream) {
+              //判断状态
+              stream.on("data", function (chunk) {
+                  responseData.push(chunk);
+              });
+              stream.on("end", function () {
+                  var finalData = Buffer.concat(responseData);
+                  res.write(finalData);
+                  res.end();
+              });
+          }
+      } else {
+          console.log(req.query.url, "文件不存在");
+          res.end()
+      }
+  } catch (err) {
+    res.end();
+      return { msg: "获取图片失败", data: err.message, code: 404 };
   }
 })
 
