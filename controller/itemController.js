@@ -2128,6 +2128,7 @@ async function getRecommend({
                 $match: {}
             },
         ]);
+        
         var rule_map_by_rule_id = {}
         var rule_map_by_rule_name = {}
         for (let i = 0; i < rule_list.length; i++) {
@@ -2143,7 +2144,11 @@ async function getRecommend({
             }
         } 
 
-        console.log('target_rule_id',target_rule_id)
+        console.log('target_rule_id', target_rule_id)
+        console.log(
+            "target_rule_id content",
+            rule_map_by_rule_id[target_rule_id]
+        );
 
         // 如果没有匹配到叶节点规则，那么直接返回空
         if (target_rule_id == "") {
@@ -2155,10 +2160,9 @@ async function getRecommend({
 
         // if (parentId !== null) console.log(parentId)
         // else console.log("十个孔氏")
-        console.log('type', typeof parentId)
-
-        console.log(parentId)
-        console.log("adasdas")
+        console.log('parentId type', typeof parentId)
+        console.log('parentTId', parentId)
+    
         const res = await getRules({
             parentId: [parentId]
         });
@@ -2172,7 +2176,10 @@ async function getRecommend({
         else {
             var ans = "";
             while (target_rule_id != "" && ans == "") {
-                console.log(target_rule_id, rule_list[target_rule_id].parentId)
+                console.log(
+                    target_rule_id,
+                    rule_map_by_rule_id[target_rule_id].parentId
+                );
                 // console.dir(rule_list[target_rule_id])
                 // break;
                 for (let i = 0; i < res.data.length; i++) {
