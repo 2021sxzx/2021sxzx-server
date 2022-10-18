@@ -49,7 +49,6 @@ readonly TAR_BAK="mongodb_bak_${DATE}.tar.gz"
 # mkdir -p -v "${OUT_DIR}"/"${DATE}"
 # mkdir -p "${TAR_DIR}"
 # 备份数据库到 $DATE 目录
-# mongodump -h 8.134.73.52 -u root2 -p Hgc16711 -d sxzx -o "${OUT_DIR}"/"${DATE}"
 mongodump -h "${DB_IP}" -u "${DB_USER}" -p "${DB_PASS}" -d "${MONGO_DATABASE}" -o "${OUT_DIR}"/"${DATE}"
 # 压缩为.tar.gz格式，保存到 $TAR_DIR 目录下
 tar -zcvPf ${TAR_DIR}/${TAR_BAK} ${OUT_DIR}/${DATE}
