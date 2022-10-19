@@ -24,7 +24,7 @@ const {ObjectId} = require('mongodb')
  */
 async function getItemAmount() {
     try {
-        var result = await modelItemStatus.count({})
+        var result = await modelItem.count({})
         console.log(result)
         return new SuccessModel({msg: '获取成功', data: result})
     } catch (err) {
