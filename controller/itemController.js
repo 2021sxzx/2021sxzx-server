@@ -17,6 +17,21 @@ const modelStatusType = require('../model/statusType')
 const unitService = require('../service/unitService')
 const {ObjectId} = require('mongodb')
 
+
+/**
+ * 获取事项状态表
+ * @returns
+ */
+async function getItemAmount() {
+    try {
+        var result = await modelItemStatus.count({})
+        console.log(result)
+        return new SuccessModel({msg: '获取成功', data: result})
+    } catch (err) {
+        return new ErrorModel({msg: '获取失败', data: err.message})
+    }
+}
+
 /**
  * 获取事项状态表
  * @returns
@@ -2715,6 +2730,7 @@ async function updateCheckResult(arr) {
 
 
 module.exports = {
+    getItemAmount,
     getItemStatusScheme,
     getItemUsers,
     getUserNameById,

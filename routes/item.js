@@ -10,6 +10,12 @@ function setStatusCode(res, data) {
     }
 }
 
+router.get("/v1/getItemAmount", async (req, res, next) => {
+    let data = await itemController.getItemAmount();
+    setStatusCode(res, data);
+    res.json(data);
+});
+
 router.get('/v1/getItemStatusScheme', async (req, res, next) => {
     let data = await itemController.getItemStatusScheme()
     setStatusCode(res, data)

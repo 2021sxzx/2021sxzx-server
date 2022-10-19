@@ -24,7 +24,7 @@ function backup(mode, user_id = null) {
   try {
     console.log(mode, "backup");
     command = `sh ${filePath} root 123456 ${MONGO_CONFIG.ip} ${MONGO_CONFIG.port} ${MONGO_CONFIG.user} ${MONGO_CONFIG.password} ${MONGO_CONFIG.dbName} 365`;
-    console.log(command);
+    // console.log(command);
     
     
             
@@ -90,9 +90,9 @@ function backup(mode, user_id = null) {
             writeStream.end();
             isBackingUp = false;
 
-            console.log('stderr',stderr)
+            // console.log('stderr',stderr)
         })
-        console.log("Hello World")
+        // console.log("Hello World")
     } catch(err) {
       console.log(err)
     }
