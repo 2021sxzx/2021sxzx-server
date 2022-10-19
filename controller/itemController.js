@@ -1,21 +1,33 @@
 const {ErrorModel, SuccessModel} = require('../utils/resultModel')
-const path = require('path')
-const fs = require('fs')
+require('path')
+require('fs')
 const modelItem = require('../model/item')
 const modelRule = require('../model/rule')
 const modelRegion = require('../model/region')
 const modelTask = require('../model/task')
-const modelUserRank = require('../model/userRank')
+require('../model/userRank');
 const modelUsers = require('../model/users')
 const modelItemStatus = require('../model/itemStatus')
 const modelStatusMapPermissions = require('../model/statusMapPermissions')
 const modelUnit = require('../model/unit')
 const itemService = require('../service/itemService')
-const {dirname} = require('path')
 const modelRoleMapPermission = require('../model/roleMapPermission')
 const modelStatusType = require('../model/statusType')
 const unitService = require('../service/unitService')
-const {ObjectId} = require('mongodb')
+
+/**
+ * 获取事项状态表
+ * @returns
+ */
+async function getItemAmount() {
+    try {
+        var result = await modelItem.count({})
+        console.log(result)
+        return new SuccessModel({msg: '获取成功', data: result})
+    } catch (err) {
+        return new ErrorModel({msg: '获取失败', data: err.message})
+    }
+}
 
 /**
  * 获取事项状态表
@@ -190,12 +202,14 @@ async function getRegionTree() {
 
 /**
  * 获取事项
+ * @param user_id
  * @param {Number} create_start_time 事项创建时间的起始时间
  * @param {Number} create_end_time 事项创建时间的终止时间
  * @param {Number} release_start_time 事项发布时间的起始时间
  * @param {Number} release_end_time 事项发布时间的终止时间
  * @param {String} item_name 事项名称
  * @param {Array<String>} task_code 事项指南实施编码
+ * @param service_agent_name
  * @param {Array<Number>} item_status 事项状态
  * @param {Array<String>} rule_id 规则id
  * @param {Array<String>} region_code 区划编码
@@ -225,6 +239,10 @@ async function getItems({
                             page_size = null,
                             page_num = null
                         }) {
+    let items
+    let ruleDic
+    let regionDic
+
     try {
         var query = {}
         if (item_name !== null) query.item_name = {$regex: item_name}
@@ -244,7 +262,7 @@ async function getItems({
             if (user === null) {
                 throw new Error('user_id不合法')
             }
-            console.log("user.unit_id", user.unit_id, typeof(user.unit_id))
+            console.log("user.unit_id", user.unit_id, typeof (user.unit_id))
             let units = await unitService._allChildUnitArr(user.unit_id)
             var unit_name_list = units.map((item) => {
                 return item.unit_name;
@@ -303,7 +321,7 @@ async function getItems({
         }
         //分页返回查询结果
         if (page_size !== null && page_num !== null) {
-            var items = await modelItem.aggregate([
+            items = await modelItem.aggregate([
                 {$match: query},
                 {
                     $facet: {
@@ -363,12 +381,12 @@ async function getItems({
             ])
 
             //计算规则路径和区划路径
-            var ruleDic = itemService.getRuleDic()
-            var regionDic = itemService.getRegionDic()
+            ruleDic = itemService.getRuleDic();
+            regionDic = itemService.getRegionDic();
             if (ruleDic === null || regionDic === null) {
                 throw new Error('请刷新重试')
             }
-            var data = items[0].data
+            const data = items[0].data;
             for (let i = 0; i < data.length; i++) {
                 let rulePath = ''
                 let node = ruleDic[data[i].rule_id] ? ruleDic[data[i].rule_id] : null
@@ -394,7 +412,7 @@ async function getItems({
             return new SuccessModel({msg: '查询成功', data: dict})
         }
         //直接返回查询结果
-        var items = await modelItem.aggregate([
+        items = await modelItem.aggregate([
             {$match: query},
             {
                 $lookup: {
@@ -442,10 +460,10 @@ async function getItems({
                 }
             },
             {$project: {__v: 0, user: 0, unit: 0, creator_id: 0, region_info: 0}}
-        ])
+        ]);
         //计算规则路径和区划路径
-        var ruleDic = itemService.getRuleDic()
-        var regionDic = itemService.getRegionDic()
+        ruleDic = itemService.getRuleDic();
+        regionDic = itemService.getRegionDic();
         if (ruleDic === null || regionDic === null) {
             throw new Error('请刷新重试')
         }
@@ -473,6 +491,7 @@ async function getItems({
 
 /**
  * 创建规则
+ * @param user_id
  * @param {Array<Object>} rules 待创建的规则
  * @returns
  */
@@ -504,7 +523,7 @@ async function createRules({
         //删除桩
         await modelRule.deleteOne({rule_id: stake.rule_id})
         //dict的key是temp_id，value是规则节点
-        var dict = new Array()
+        var dict = []
         //给传入的规则节点创建rule_id
         for (let i = 0; i < rules.length; i++) {
             rules[i].rule_id = maxRuleId.toString()
@@ -518,7 +537,7 @@ async function createRules({
             }
         }
         //创建规则
-        var arr = new Array()
+        var arr = []
         var bulkOps = []
         for (let i = 0; i < rules.length; i++) {
             arr.push({
@@ -843,9 +862,11 @@ async function getItemGuide({
 
 /**
  * 获取事项指南，只返回task_code、task_name和task_status
+ * @param user_id
  * @param {Number} task_status 事项指南状态（0或者1）
  * @param {String} task_code 事项指南编码
  * @param {String} task_name 事项指南名称（用于模糊匹配）
+ * @param service_agent_name
  * @param {String} creator_name 创建人名字
  * @param {String} department_name 部门名称
  * @param {Number} start_time 创建时间的起始时间
@@ -911,12 +932,13 @@ async function getItemGuides({
         if (query['$and'].length <= 0) {
             delete query['$and']
         }
-        var start = (start_time !== null) ? start_time : 0
-        var end = (end_time !== null) ? end_time : 9999999999999
+        const start = (start_time !== null) ? start_time : 0
+        const end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = {$gte: start, $lte: end}
         if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
             throw new Error('page_size和page_num需要一起传')
         }
+
         //分页返回查询结果
         if (page_size !== null && page_num !== null) {
             var tasks = await modelTask.aggregate([
@@ -976,7 +998,7 @@ async function getItemGuides({
                     }
                 }
             ])
-            var result = {}
+            const result = {}
             result.data = tasks[0].data
             result.total = tasks[0].count.length ? tasks[0].count[0].total : 0
             result.page_size = page_size
@@ -984,7 +1006,7 @@ async function getItemGuides({
             return new SuccessModel({msg: '查询成功', data: result})
         }
         //直接返回查询结果
-        var result = await modelTask.aggregate([
+        const result = await modelTask.aggregate([
             {$match: query},
             {
                 $lookup: {
@@ -1243,14 +1265,14 @@ async function updateItemGuide({
     try {
         if (task_code === null) {
             throw new Error('更新事项指南信息需要传入task_code')
-        }
-        if (task_code !== null) {
+        } else {
             let task = await modelTask.exists({task_code: task_code})
             if (task === false) {
                 throw new Error('事项指南编码不存在')
             }
         }
-        var newData = {
+
+        const newData = {
             // task_code: null,
             // task_name: null,
             // wsyy: null,
@@ -1271,7 +1293,7 @@ async function updateItemGuide({
             // qr_code: null,
             // zzzd: null
         }
-        var bulkOps = []
+        const bulkOps = []
         if (new_task_code !== null) {
             let task = await modelTask.exists({
                 task_code: {$in: new_task_code, $ne: task_code}
@@ -1337,7 +1359,7 @@ async function updateItemGuide({
         //     // newData.qr_code = qr_code
         // }
         if (zzzd !== null) newData.zzzd = zzzd
-        var result = await modelTask.updateOne({task_code: task_code}, newData)
+        const result = await modelTask.updateOne({task_code: task_code}, newData);
         await modelItem.bulkWrite(bulkOps)
         return new SuccessModel({msg: '更新成功', data: result})
     } catch (err) {
@@ -1409,6 +1431,8 @@ async function getRegions({
                               page_size = null,
                               page_num = null
                           }) {
+    let regionDic;
+    let regions;
     try {
         var query = {}
         if (region_code !== null) query.region_code = {$in: region_code}
@@ -1454,7 +1478,7 @@ async function getRegions({
         }
         //分页返回查询结果
         if (page_size !== null && page_num !== null) {
-            var regions = await modelRegion.aggregate([
+            regions = await modelRegion.aggregate([
                 {$match: query},
                 {
                     $facet: {
@@ -1501,13 +1525,13 @@ async function getRegions({
                         ]
                     }
                 }
-            ])
+            ]);
             //计算区划路径
-            var regionDic = itemService.getRegionDic()
+            regionDic = itemService.getRegionDic();
             if (regionDic === null) {
                 throw new Error('请刷新重试')
             }
-            var data = regions[0].data
+            const data = regions[0].data;
             for (let i = 0; i < data.length; i++) {
                 let regionPath = ''
                 let node = regionDic[data[i]._id] ? regionDic[data[i]._id] : null
@@ -1525,7 +1549,7 @@ async function getRegions({
             return new SuccessModel({msg: '查询成功', data: dict})
         }
         //直接返回查询结果
-        var regions = await modelRegion.aggregate([
+        regions = await modelRegion.aggregate([
             {$match: query},
             {
                 $lookup: {
@@ -1563,9 +1587,9 @@ async function getRegions({
                 }
             },
             {$project: {__v: 0, user: 0, unit: 0, creator_id: 0}}
-        ])
+        ]);
         //计算区划路径
-        var regionDic = itemService.getRegionDic()
+        regionDic = itemService.getRegionDic();
         if (regionDic === null) {
             throw new Error('请刷新重试')
         }
@@ -1586,6 +1610,7 @@ async function getRegions({
 
 /**
  * 创建事项
+ * @param user_id
  * @param {Array<Object>} items 待创建的事项（传三个字段，事项指南编码、规则id和区划编码）
  * @returns
  */
@@ -1639,7 +1664,7 @@ async function createItems({
             if (region === null) {
                 throw new Error('region_code不存在: ' + region_code)
             }
-            if (region._id != region_id) {
+            if (region._id !== region_id) {
                 throw new Error('region_code和region_id不匹配: ' + region_code + '\t' + region_id)
             }
 
@@ -1672,9 +1697,9 @@ async function createItems({
             }
         }
         //批量创建
-        var result = await modelItem.create(newData)
+        const result = await modelItem.create(newData);
         //批量更新
-        var ans = await modelTask.bulkWrite(bulkOps)
+        await modelTask.bulkWrite(bulkOps);
         //返回结果
         return new SuccessModel({msg: '创建事项成功', data: result})
     } catch (err) {
@@ -1723,7 +1748,7 @@ async function deleteItems({
 
 /**
  * 更新事项
- * @param {Array<Object} items 待更新的事项
+ * @param {Array<Object>} items 待更新的事项
  * @returns
  */
 async function updateItems({
@@ -2113,26 +2138,31 @@ async function getRecommend({
                 $match: {}
             },
         ]);
+
         var rule_map_by_rule_id = {}
         var rule_map_by_rule_name = {}
         for (let i = 0; i < rule_list.length; i++) {
             rule_map_by_rule_id[rule_list[i].rule_id] = rule_list[i];
             rule_map_by_rule_name[rule_list[i].rule_name] = rule_list[i];
         }
-  
+
         var target_rule_id = ""; // 叶节点规则的rule_id
         for (let i = 0; i < rule_list.length; i++) {
             if (rule_list[i].rule_name == task_name) {
                 target_rule_id = rule_list[i].rule_id;
                 break
             }
-        } 
+        }
 
-        console.log('target_rule_id',target_rule_id)
+        console.log('target_rule_id', target_rule_id)
+        console.log(
+            "target_rule_id content",
+            rule_map_by_rule_id[target_rule_id]
+        );
 
         // 如果没有匹配到叶节点规则，那么直接返回空
         if (target_rule_id == "") {
-            console.log("未匹配到相关叶节点")    
+            console.log("未匹配到相关叶节点")
             return {msg: "查询成功", data: [], code: 200};
         } else {
             console.log("匹配到了相关叶节点规则")
@@ -2140,23 +2170,28 @@ async function getRecommend({
 
         // if (parentId !== null) console.log(parentId)
         // else console.log("十个孔氏")
-        console.log('type', typeof parentId)
+        console.log('parentId type', typeof parentId)
+        console.log('parentTId', parentId)
 
-        console.log(parentId)
-        console.log("adasdas")
         const res = await getRules({
             parentId: [parentId]
         });
 
-        console.log('res',res)
+        console.log('res', res)
 
 
         // 查询客户当前所在的规则
         if (res.msg == '查询失败') return {msg: '查询失败', data: '服务器繁忙，请重新尝试', code: 500}
-        else if(res.data.length === 0) return { msg: "查询成功", data: [], code: 200 };
+        else if (res.data.length === 0) return {msg: "查询成功", data: [], code: 200};
         else {
             var ans = "";
             while (target_rule_id != "" && ans == "") {
+                console.log(
+                    target_rule_id,
+                    rule_map_by_rule_id[target_rule_id].parentId
+                );
+                // console.dir(rule_list[target_rule_id])
+                // break;
                 for (let i = 0; i < res.data.length; i++) {
                     if (res.data[i].rule_id == target_rule_id) {
                         ans = target_rule_id;
@@ -2657,7 +2692,7 @@ async function updateCheckResult(arr) {
             }
 
         }
-        let res = await itemService.updateCheckResult(arr)
+        await itemService.updateCheckResult(arr);
         return new SuccessModel({msg: '更新成功', data: arr})
     } catch (err) {
         return new ErrorModel({msg: '更新失败', data: err.message})
@@ -2666,6 +2701,7 @@ async function updateCheckResult(arr) {
 
 
 module.exports = {
+    getItemAmount,
     getItemStatusScheme,
     getItemUsers,
     getUserNameById,

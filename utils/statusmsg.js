@@ -1,3 +1,3 @@
-const statusset = new Set()
+const statusSet = new Set()
 
-module.exports = {statusset}
+module.exports = {statusSet}

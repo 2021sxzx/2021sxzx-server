@@ -10,6 +10,12 @@ function setStatusCode(res, data) {
     }
 }
 
+router.get("/v1/getItemAmount", async (req, res, next) => {
+    let data = await itemController.getItemAmount();
+    setStatusCode(res, data);
+    res.json(data);
+});
+
 router.get('/v1/getItemStatusScheme', async (req, res, next) => {
     let data = await itemController.getItemStatusScheme()
     setStatusCode(res, data)
@@ -145,7 +151,7 @@ router.post('/v1/getItemGuide', async (req, res, next) => {
 
 router.post('/v1/getItemGuides', async (req, res, next) => {
     let data = await itemController.getItemGuides(req.body)
-    setStatusCode(res, data) 
+    setStatusCode(res, data)
     res.json(data)
 })
 
@@ -203,7 +209,7 @@ router.get('/v1/getCheckResult', async (req, res, next) => {
     res.json(data)
 })
 
-router.post('/v1/updateCheckResult',async(req,res,next)=>{
+router.post('/v1/updateCheckResult', async (req, res, next) => {
     const arr = req.body
     // console.log("updateCheckResult:",arr)
     // data.code = 200
@@ -223,7 +229,6 @@ router.post('/v1/getUserNameById', async (req, res, next) => {
     setStatusCode(res, data)
     res.json(data)
 })
-
 
 
 module.exports = router
