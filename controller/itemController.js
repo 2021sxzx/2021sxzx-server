@@ -24,7 +24,7 @@ const {ObjectId} = require('mongodb')
  */
 async function getItemAmount() {
     try {
-        var result = await modelItem.count({})
+        var result = await modelItem.count({"item_status": 3})
         console.log(result)
         return new SuccessModel({msg: '获取成功', data: result})
     } catch (err) {
@@ -1918,48 +1918,55 @@ async function getChildRegionsByRuleAndRegion(
 async function doesRegionItemExist(ruleId, regionIds, serviceObject) {
     return new Promise(((resolve, reject) => {
         // 1. 找出指定的 item
-        modelItem.findOne({
-            rule_id: ruleId,
-            // region_id: regionId,
-            region_id: {$in: regionIds}
-        })
+        modelItem
+            .findOne({
+                rule_id: ruleId,
+                item_status: 3,
+                region_id: { $in: regionIds },
+            })
             // 2. 根据 item 中的 task_code 来查找 task 表中对应的 task
-            .select('task_code')
+            .select("task_code")
             .exec(function (err, task_code) {
                 // 错误处理
                 if (err) {
-                    reject(err)
+                    reject(err);
                 }
 
                 if (task_code) {
                     // 如果找到了对应的 task_code
                     // 3. 查询 task 中的服务对象属性 service_object_type
-                    modelTask.findOne({
-                        task_code: task_code._doc.task_code
-                    })
-                        .select('service_object_type')
+                    modelTask
+                        .findOne({
+                            task_code: task_code._doc.task_code,
+                        })
+                        .select("service_object_type")
                         .exec(function (err, service_object_type) {
                             // 错误处理
                             if (err) {
-                                reject(err)
+                                reject(err);
                             }
 
                             if (service_object_type) {
                                 // 如果找到对应的 service_object_type
                                 // 4. 使用正则来判断 service_object_type 是否满足条件
-                                resolve(serviceObjectTypeMapping(serviceObject)
-                                    .test(service_object_type._doc.service_object_type))
+                                resolve(
+                                    serviceObjectTypeMapping(
+                                        serviceObject
+                                    ).test(
+                                        service_object_type._doc
+                                            .service_object_type
+                                    )
+                                );
                             } else {
                                 // 满足条件的 service_object_type 不存在，false
-                                resolve(false)
+                                resolve(false);
                             }
-                        })
-
+                        });
                 } else {
                     // 满足条件的 task_code 不存在，返回 false
-                    resolve(false)
+                    resolve(false);
                 }
-            })
+            });
     }))
 }
 
