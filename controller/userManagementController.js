@@ -25,12 +25,9 @@ const asyncFilter = async (array, AsyncCallback) => {
 // 全新的用户列表，用于访问控制渲染使用，只需要传入用户列表参数和unit_id即可
 async function newUserList(res, unit_id) {
   try {
-    const result = await asyncFilter(res, async item => {
-
-      const isCanSee = await unitService.calculateWhoIsParent(unit_id, item.unit_id)
-      return isCanSee
+    return await asyncFilter(res, async item => {
+      return await unitService.calculateWhoIsParent(unit_id, item.unit_id)
     })
-    return result
   } catch (error) {
     return new ErrorModel({msg: e.message})
   }
@@ -39,6 +36,7 @@ async function newUserList(res, unit_id) {
 /**
  * 用来添加一个用户，然后返回添加后的用户列表
  * @param userInfo  用户信息对象，有[user_name][account][password][role_name]
+ * @param unit_id
  * @return {Promise<SuccessModel | ErrorModel>}
  */
 async function addUserAndReturnList(userInfo, unit_id) {
@@ -94,8 +92,11 @@ async function returnUserList(unit_id) {
  * 用于返回一个用户经过更新之后的全体用户列表
  * @param user_name 用户名
  * @param password  密码
- * @param role_name 角色名
+ * @param role_id
  * @param account   用户账户
+ * @param new_account
+ * @param unit_id
+ * @param my_unit_id
  * @return {Promise<SuccessModel | ErrorModel>}
  */
 async function updateUserAndReturnList(user_name, password, role_id, account, new_account, unit_id, my_unit_id) {
@@ -115,6 +116,7 @@ async function updateUserAndReturnList(user_name, password, role_id, account, ne
 /**
  *  用于返回一个用户经过被删除之后的全体用户列表
  *  @param account  用户账户
+ *  @param unit_id
  *  @return {Promise<SuccessModel | ErrorModel>}
  */
 async function deleteUserAndReturnList(account, unit_id) {
@@ -136,14 +138,14 @@ async function deleteUserAndReturnList(account, unit_id) {
 
 /**
  * @param searchValue
+ * @param unit_id
  */
 async function searchUserAndReturnList(searchValue, unit_id) {
   try {
     let res = await searchUser(searchValue)
 
     const result = await asyncFilter(res, async item => {
-      const isCanSee = await unitService.calculateWhoIsParent(unit_id, item.unit_id)
-      return isCanSee
+      return await unitService.calculateWhoIsParent(unit_id, item.unit_id)
     })
 
     return new SuccessModel({

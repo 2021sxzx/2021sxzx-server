@@ -2,9 +2,8 @@ const users = require('../model/users')
 const unit = require('../model/unit')
 const role = require('../model/role')
 const redisClient = require('../config/redis')
-const {statusset} = require('../utils/statusmsg')
+const {statusSet} = require('../utils/statusmsg')
 const item = require('../model/item')
-const {ErrorModel} = require('../utils/resultModel')
 // 用户数据拉取之后放到这里，下次便于取出，无需交互数据库
 let userCache = null
 // 一个控制是否将数据重新从数据库拉取的变量
@@ -238,7 +237,7 @@ async function setActivation(account) {
             try {
                 await selectRedisDatabase(1)
                 await redisClient.del(account)
-                statusset.add(account)
+                statusSet.add(account)
                 await selectRedisDatabase(0)
             } catch (e) {
                 await selectRedisDatabase(0)
@@ -246,8 +245,8 @@ async function setActivation(account) {
             }
         }
         if (tmp === 1) {
-            if (statusset.has(account))
-                statusset.delete(account)
+            if (statusSet.has(account))
+                statusSet.delete(account)
         }
         // await redisClient.del(account)
         await users.updateOne({
@@ -348,8 +347,8 @@ async function getUserById(id) {
             user_name: '系统',
             account: '系统无id'
         }
-        return e.message
     } catch (e) {
+        return e.message
     }
 }
 

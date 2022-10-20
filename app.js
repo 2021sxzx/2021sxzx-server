@@ -6,7 +6,7 @@ const path = require('path')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
 const jwt = require('jsonwebtoken')
-const {statusset} = require('./utils/statusmsg')
+const {statusSet} = require('./utils/statusmsg')
 const {jwt_secret} = require('./utils/validateJwt')
 const {routesStore, loadRoutes} = require('./routes/index')
 const {MONGO_CONFIG} = require('./config/config') //数据库的配置信息
@@ -69,7 +69,7 @@ app.options('*', (req, res) => {
 
 // 检查用户的 token 是否合法
 app.use('*', (req, res, next) => {
-  // 用户状态被切换成未激活，则或将 account 放进 statusset 中
+  // 用户状态被切换成未激活，则或将 account 放进 statusSet 中
   // 获取 token
   const token = req.cookies['auth-token']
   // 如果没有 token ，说明后台用户未登录或者是前台的请求，next()
@@ -79,11 +79,11 @@ app.use('*', (req, res, next) => {
   } else {
     // 解析用户账号信息
     const account = jwt.verify(token, jwt_secret, null, null).account
-    // 如果这个账号在 statusset 中出现了，说明这个账号被切换成了未激活状态
-    if (statusset.has(account)) {
+    // 如果这个账号在 statusSet 中出现了，说明这个账号被切换成了未激活状态
+    if (statusSet.has(account)) {
       //设置个定时器可以保证多个请求同时进来时都不响应
       // TODO(钟卓江)：设置定时器延迟 500ms 再删除其中的 account 这里有风险，万一对方网络延迟大于 500ms 就失效。
-      setTimeout(() => statusset.delete(account), 500)
+      setTimeout(() => statusSet.delete(account), 500)
       // 设置响应码 401 并发送 JSON 对象
       res.status(401).json({loginstate: 'loginout'})
     }
