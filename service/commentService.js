@@ -131,6 +131,8 @@ async function getCommentParam({ type, typeData }) {
       else category = "task_code";
       console.log(category);
     }
+
+    console.log(Reg)
     const arr = [
       type
         ? {
@@ -144,7 +146,7 @@ async function getCommentParam({ type, typeData }) {
                 {
                   task_code: { $regex: Reg },
                 },
-                { task_code: { $regex: Reg } },
+                { task_name: { $regex: Reg } },
               ],
             },
           },
@@ -162,9 +164,9 @@ async function getCommentParam({ type, typeData }) {
         },
       },
     ];
-    console.log(arr);
+    console.log("arr", arr);
     let res = await comment.aggregate(arr);
-
+    console.log("res", res)
     let res2 = [];
     let avgScore = 0;
     res.map((item) => {
