@@ -2250,12 +2250,20 @@ async function createRegion({
             throw new Error('用户没有所属部门')
         }
         //检查region_level和parentId的合法性
-        var parent = await modelRegion.findOne({_id: parentId}, {__v: 0})
+        const parent = await modelRegion.findOne({_id: parentId}, {__v: 0})
         if (parent === null) {
             throw new Error('parentId不存在: ' + parentId)
         }
-        if (parent.region_level + 1 !== region_level) {
-            throw new Error('region_level错误，上级区划的region_level是' + parent.region_level)
+        // console.log('parent', parent)
+        // console.log('parent entries', Object.entries(parent))
+        // console.log(parent._doc.region_level, typeof parent._doc.region_level);
+        // console.log(region_level, typeof (region_level));
+
+        if (parent._doc.region_level + 1 !== region_level) {
+            throw new Error(
+                "region_level错误，上级区划的region_level是" +
+                    parent.region_level
+            );
         }
         //创建区划
         var result = await modelRegion.create({
