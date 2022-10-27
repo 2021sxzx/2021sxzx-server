@@ -50,7 +50,7 @@ async function authenticatebypwd(loginData) {
             // 当前时间
             const nowDate = new Date()
             // 距离上次修改密码的时间差
-            const diff = Math.floor((nowDate - res._doc.password_modify_date)/(24*3600*1000))
+            const diff = Math.floor((nowDate - res._doc.password_modify_date) / (24 * 3600 * 1000))
             // 如果时间差大于 90 天就拒绝登录，否则就让正常登录
             if (diff > 90) {
                 return {
@@ -165,6 +165,7 @@ async function logout(logoutData) {
 async function isLogin(token) {
     await selectRedisDatabase(1)
     const account = await jwt.verify(token, jwt_secret, null, null).account
+
     // 判断当前时间是否小于数据库中的过期时间
     if (new Date() < new Date(JSON.parse(await redisClient.get(account)).expires)) {
         // 未过期，将 redis 刷新一下
@@ -185,5 +186,8 @@ async function isLogin(token) {
 }
 
 module.exports = {
-    authenticatebypwd, authenticatebyvc, logout, isLogin
+    authenticatebypwd,
+    authenticatebyvc,
+    logout,
+    isLogin
 }
