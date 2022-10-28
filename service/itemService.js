@@ -4,6 +4,7 @@ const modelTask = require('../model/task')
 const modelRemoteCheckLog = require('../model/remoteCheckLog')
 const request = require('request')
 const schedule = require('node-schedule')
+const { ErrorModel } = require('../utils/resultModel')
 
 //---------------------------------------------------------------------------------
 //以下为初始化所需的全局变量
@@ -696,7 +697,11 @@ async function getOrganOfRegions(regionCodes) {
         return result
     } catch (error) {
         console.log('获取全部区划的人社局组织机构代码失败')
-        throw new Error(error.message)
+        return {
+            msg: "获取全部区划的人社局组织机构代码失",
+            data: error.message,
+            code: 400
+        };
     }
 }
 

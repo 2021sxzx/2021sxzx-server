@@ -335,7 +335,9 @@ class systemMetaService {
                     data = await item.count({})
                     break
                 default:
-                    throw new Error('错误的图表类型')
+                    return new ErrorModel({
+                        msg: "type错误，获取图表数据失败",
+                    });
             }
             // 将当天最新的数据插入结果
             ChartData.push({

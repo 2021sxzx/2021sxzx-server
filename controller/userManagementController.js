@@ -29,7 +29,7 @@ async function newUserList(res, unit_id) {
       return await unitService.calculateWhoIsParent(unit_id, item.unit_id)
     })
   } catch (error) {
-    return new ErrorModel({msg: e.message})
+    return new ErrorModel({msg: error.message})
   }
 }
 
@@ -152,8 +152,8 @@ async function searchUserAndReturnList(searchValue, unit_id) {
       msg: '查询成功',
       data: result
     })
-  } catch (e) {
-    throw new ErrorModel({msg: e.message})
+  } catch (error) {
+    throw new ErrorModel({msg: error.message})
   }
 }
 

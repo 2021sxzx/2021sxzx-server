@@ -22,16 +22,29 @@ function showIdc(str) {
  */
 async function saveComment(commentData) {
   try {
-    const itemData = await item.find({
-      _id: mongoose.Types.ObjectId(commentData.item_id),
-    });
+    // if (typeof commentData.item_id !== 'string'|| !(arr instanceof Array) 
+    // || nullVall === null || typeof unVal === 'undefined'||!(typeof numVal === 'number' && Number.isNaN(numVal) === false)){
+
+    // }
+
+    let itemData = [];
+    if(typeof commentData.item_id !== 'undefined') {
+      itemData = await item.find({
+        _id: mongoose.Types.ObjectId(commentData.item_id),
+      });
+    }
+    
+    if(itemData.length == 0) {
+      return {};
+    }
+
     commentData.task_code = itemData[0].task_code;
     commentData.task_name = itemData[0].item_name;
     let res = await comment.create(commentData);
     res.idc = showIdc(res.idc);
     return res;
   } catch (e) {
-    throw new Error(e.message);
+    return e.message;
   }
 }
 
