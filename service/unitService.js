@@ -2,7 +2,8 @@ const unit = require('../model/unit');
 // const { db } = require('../model/users');
 const users = require('../model/users');
 const roles = require('../model/role');
-const { SuccessModel, ErrorModel } = require('../utils/resultModel')
+const { SuccessModel, ErrorModel } = require('../utils/resultModel');
+// const { deleteUserAndReturnList } = require('../controller/userManagementController');
 
 class unitService {
 
@@ -164,10 +165,11 @@ class unitService {
         data: root,
       })
     } catch (error) {
-      throw new ErrorModel({
+      return {
         msg: '单位信息处理失败',
         data: e.message,
-      })
+        code: 400
+      }
     }
   }
 
@@ -282,7 +284,11 @@ class unitService {
         data: res
       })
     } catch (error) {
-      throw Error(e.message);
+      return {
+        msg: '获取单位用户失败',
+        data: error.message,
+        code: 400
+      };
     }
   }
 

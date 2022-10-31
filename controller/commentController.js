@@ -15,9 +15,14 @@ const { SuccessModel, ErrorModel } = require("../utils/resultModel");
 async function saveUserComment(commentData) {
   try {
     let data = await saveComment(commentData);
+    if(typeof data === 'string') {
+      return { msg: "评论添加失败", data: "发生未知错误", code: 500 };
+    } else if(typeof data == {}) {
+      return { msg: "评论添加失败", data: "传递参数有误", code: 400 };
+    }
     return new SuccessModel({ msg: "评论添加成功", data: data });
   } catch (e) {
-    return new ErrorModel({ msg: e.message });
+    return { msg: "评论添加失败", data: e.message, code: 500 };
   }
 }
 

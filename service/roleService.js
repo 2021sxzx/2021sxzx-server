@@ -63,7 +63,11 @@ async function addRole (role_name, role_describe, permission_identifier_array, r
     return res
 
   } catch (e) {
-    throw new Error(e.message)
+    return {
+        msg: "添加角色错误",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -110,7 +114,11 @@ async function getRole () {
     // console.log("getRole返回值:\n",resq)
     return resq;
   } catch (error) {
-    throw new Error(error.message)
+    return {
+        msg: "获取指定角色错误",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -174,7 +182,11 @@ async function getRoleList () {
     });
     return resq
   } catch (e) {
-    throw new Error(e.message);
+    return {
+        msg: "获取角色列表错误",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -196,7 +208,11 @@ async function updateRole (role_name, role_id, role_describe) {
     const res = await getRoleList();
     return res
   } catch (e) {
-    throw new Error(e.message)
+    return {
+        msg: "更新角色错误",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -220,7 +236,11 @@ async function deleteRole (role_id) {
     const res = await getRoleList();
     return res;
   } catch (e) {
-    throw new Error(e.message)
+    return {
+        msg: "删除角色错误",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -267,7 +287,11 @@ async function SearchRole (searchValue) {
     });
     return resq
   } catch (e) {
-    throw new Error(e.message)
+    return {
+        msg: "寻找角色错误",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -297,7 +321,11 @@ async function calcaulatePermission (role_id) {
     return permissionFindArr
 
   } catch (e) {
-    throw new Error(e.message)
+    return {
+        msg: "获取权限列表错误",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -316,7 +344,11 @@ async function calcaulatePermissionIdentifier (role_id) {
     return permissionFindArr
 
   } catch (e) {
-    throw new Error(e.message)
+    return {
+        msg: "获取全部区划的人社局组织机构代码失",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -332,7 +364,11 @@ async function getPermissionList () {
     }
     return permissionList;
   } catch (e) {
-    throw new Error(e.message)
+    return {
+        msg: "获取权限列表失败",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -353,8 +389,12 @@ async function addPermission (role_id, ...permission_identifier_array) {
     });
     return await roleMapPermission.create(insertValue);
 
-  } catch (error) {
-    throw new Error(e.message)
+  } catch (e) {
+    return {
+        msg: "添加权限失败",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
@@ -367,8 +407,12 @@ async function deletePermission (role_id) {
       role_id
     })
     return needDeleteData
-  } catch (error) {
-    throw new Error(e.message);
+  } catch (e) {
+    return {
+        msg: "删除权限失败",
+        data: e.message,
+        code: 400,
+    };
   }
 }
 
