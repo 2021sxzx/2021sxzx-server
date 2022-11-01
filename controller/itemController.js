@@ -2157,7 +2157,9 @@ async function getRecommend({
         for (let i = 0; i < rule_list.length; i++) {
             if (rule_list[i].rule_name == task_name) {
                 target_rule_id = rule_list[i].rule_id;
-                break
+                if(rule_list[i].children.length == 0) {
+                    break
+                }
             }
         }
 

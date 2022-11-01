@@ -24,7 +24,7 @@ function backup(mode, user_id = null) {
     try {
         console.log(mode, "backup");
         command = `sh ${filePath} root 123456 ${MONGO_CONFIG.ip} ${MONGO_CONFIG.port} ${MONGO_CONFIG.user} ${MONGO_CONFIG.password} ${MONGO_CONFIG.dbName} 365`;
-        // console.log(command);
+        console.log("备份指令：", command);
 
 
         fs.access("../mongodb_bak/mongodb_bak_now", fs.constants.F_OK, (err) => {
@@ -33,9 +33,14 @@ function backup(mode, user_id = null) {
                     if (!err) {
                         console.log("创建目录成功");
                     } else {
-                        console.log(err);
+                        console.log(
+                            "../mongodb_bak/mongodb_bak_now",
+                            "目录创建失败"
+                        );
                     }
                 })
+            } else {
+                console.log("../mongodb_bak/mongodb_bak_now", "目录已经创建");
             }
         });
 
@@ -45,11 +50,18 @@ function backup(mode, user_id = null) {
                     if (!err) {
                         console.log("创建目录成功");
                     } else {
-                        console.log(err);
+                        console.log(
+                            "../mongodb_bak/mongodb_bak_list",
+                            "目录创建失败"
+                            );
                     }
                 })
+            } else {
+                console.log("../mongodb_bak/mongodb_bak_list", "目录已经创建");
             }
         });
+        
+        console.log("ok")
 
         child
             .exec(command, async function (err, stdout, stderr) {
