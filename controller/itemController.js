@@ -2019,7 +2019,9 @@ async function getRules({
                             creator_name = null,
                             department_name = null,
                             start_time = null,
-                            end_time = null
+                            end_time = null,
+                            page_size = null,
+                            page_num = null
                         }) {
     try {
         var query = {}
@@ -2053,49 +2055,64 @@ async function getRules({
         var start = (start_time !== null) ? start_time : 0
         var end = (end_time !== null) ? end_time : 9999999999999
         query.create_time = {$gte: start, $lte: end}
-        var res = await modelRule.aggregate([
-            {
-                $match: query
-            },
-            {
-                $lookup: {
-                    from: modelUsers.collection.name,
-                    localField: 'creator_id',
-                    foreignField: '_id',
-                    as: 'user'
-                }
-            },
-            {
-                $addFields: {
-                    user: {$arrayElemAt: ['$user', 0]}
-                }
-            },
-            {
-                $lookup: {
-                    from: modelUnit.collection.name,
-                    localField: 'user.unit_id',
-                    foreignField: 'unit_id',
-                    as: 'unit'
-                }
-            },
-            {
-                $addFields: {
-                    unit: {$arrayElemAt: ['$unit', 0]}
-                }
-            },
-            {
-                $addFields: {
-                    creator: {
-                        id: '$creator_id',
-                        name: '$user.user_name',
-                        department_name: '$unit.unit_name'
+        if (page_size !== null && page_num === null || page_size === null && page_num !== null) {
+            throw new Error('page_size和page_num需要一起传')
+        }
+        if (page_size !== null && page_num !== null) {
+            var res = await modelRule.aggregate([
+                {
+                    $match: query,
+                },
+                {
+                    $facet: {
+                        'count': [{$group: {_id: null, total: {$sum: 1}}}],
+                        'data': [
+                            {$skip: page_num * page_size},
+                            {$limit: page_size},
+                            {
+                                $lookup: {
+                                    from: modelUsers.collection.name,
+                                    localField: "creator_id",
+                                    foreignField: "_id",
+                                    as: "user",
+                                },
+                            },
+                            {
+                                $addFields: {
+                                    user: { $arrayElemAt: ["$user", 0] },
+                                },
+                            },
+                            {
+                                $lookup: {
+                                    from: modelUnit.collection.name,
+                                    localField: "user.unit_id",
+                                    foreignField: "unit_id",
+                                    as: "unit",
+                                },
+                            },
+                            {
+                                $addFields: {
+                                    unit: { $arrayElemAt: ["$unit", 0] },
+                                },
+                            },
+                            {
+                                $addFields: {
+                                    creator: {
+                                        id: "$creator_id",
+                                        name: "$user.user_name",
+                                        department_name: "$unit.unit_name",
+                                    },
+                                },
+                            },
+                            {
+                                $project: { __v: 0, user: 0, unit: 0, creator_id: 0 },
+                            },
+                        ]
                     }
                 }
-            },
-            {
-                $project: {__v: 0, user: 0, unit: 0, creator_id: 0}
-            }
-        ])
+            ]);
+        }
+        
         //计算规则路径
         var ruleDic = itemService.getRuleDic()
         if (ruleDic === null) {
