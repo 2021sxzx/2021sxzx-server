@@ -23,7 +23,7 @@ function getDate() {
 function backup(mode, user_id = null) {
     try {
         console.log(mode, "backup");
-        command = `sh ${filePath} root 123456 ${MONGO_CONFIG.ip} ${MONGO_CONFIG.port} ${MONGO_CONFIG.user} ${MONGO_CONFIG.password} ${MONGO_CONFIG.dbName} 365`;
+        command = `sh ${filePath} root2 Hgc16711 ${MONGO_CONFIG.ip} ${MONGO_CONFIG.port} ${MONGO_CONFIG.user} ${MONGO_CONFIG.password} ${MONGO_CONFIG.dbName} 365`;
         console.log("备份指令：", command);
 
 
@@ -99,7 +99,7 @@ function backup(mode, user_id = null) {
                 writeStream.end();
                 isBackingUp = false;
 
-                // console.log('stderr',stderr)
+                console.log('stderr',stderr)
             })
         // console.log("Hello World")
     } catch (err) {

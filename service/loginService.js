@@ -39,7 +39,17 @@ async function authenticatebypwd(loginData) {
         let res = await User.findOne({account: account})
         // 错误检查
         if (res === null) return {msg: '该账号不存在.', code: 403}
-        if (password !== res.password) return {msg: '密码错误，请重试.', code: 403}
+        if (password !== res.password) {
+            let login_fail_solution = new Date(new Date().valueOf() + 5 * 1000)
+            
+            await selectRedisDatabase(2)
+            await redisClient.set(res.account, JSON.stringify({
+                expires: login_fail_solution
+            }), redisClient.print)
+            
+            console.log(login_fail_solution);
+            return {msg: '密码错误，请重试.', code: 403}
+        }
         if (res.activation_status !== 1) return {msg: '该号码未被激活，请重试.', code: 403}
 
         // 检查最后修改密码的时间，如果时间不存在，就将本次登录的时间设置为最后修改密码的时间。
@@ -94,6 +104,31 @@ async function authenticatebypwd(loginData) {
             code: 500,
             msg: e.message
         }
+    }
+}
+
+
+/**
+ * 登录失败处理，等待5s才允许继续访问
+ * @param loginData
+ * @returns {Promise<number>}
+ */
+async function whetherLockAccount(loginData) {
+    try {
+        const { account, password } = loginData;
+
+
+        await selectRedisDatabase(2);
+        let res = JSON.parse(await redisClient.get(account));
+        
+        console.log("res", res)
+        console.log(new Date(), res.expires);
+        
+        if (res === null || new Date() > new Date(res.expires)) return 0;
+        else return new Date(res.expires).valueOf() - new Date().valueOf();
+    } catch (e) {
+        console.log(e.message)
+        return e.message;
     }
 }
 
@@ -185,5 +220,9 @@ async function isLogin(token) {
 }
 
 module.exports = {
-    authenticatebypwd, authenticatebyvc, logout, isLogin
-}
+    authenticatebypwd,
+    authenticatebyvc,
+    logout,
+    isLogin,
+    whetherLockAccount,
+};

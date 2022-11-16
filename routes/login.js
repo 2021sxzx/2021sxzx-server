@@ -4,7 +4,6 @@ const router = express.Router();
 const {
     postLogin, postLogout, JudgeIsLogin
 } = require("../controller/loginController")
-
 router.post('/v1/login', async (req, res) => {
     let loginData = req.body
     let data = await postLogin(loginData)
