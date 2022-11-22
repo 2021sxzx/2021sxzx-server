@@ -60,7 +60,7 @@ async function authenticatebypwd(loginData) {
                 }
             }
         } else {
-            // 如果最后想修改密码的时间不存在，就把本次登录是时间作为最后修改密码的时间。
+            // 如果最后修改密码的时间不存在，就把本次登录是时间作为最后修改密码的时间。
             await User.updateOne(
                 {account: account},
                 {password_modify_date: new Date()},
