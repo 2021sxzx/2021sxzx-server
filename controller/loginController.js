@@ -1,5 +1,5 @@
 const {
-    authenticatebypwd, authenticatebyvc, logout, isLogin
+    authenticatebypwd, authenticatebyvc, logout, isLogin, whetherLockAccount
 } = require("../service/loginService")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -10,6 +10,11 @@ const {SuccessModel, ErrorModel} = require('../utils/resultModel');
  */
 async function postLogin(loginData) {
     try {
+        console.log("loginData", loginData);
+        let lockTime = await whetherLockAccount(loginData);
+        if(lockTime > 0)
+            return { msg: "账号已锁定，请等待" + lockTime / 1000 + "秒再尝试.", code: 403 };
+
         let data
         if (loginData.state === 1)
             // 短信验证登录

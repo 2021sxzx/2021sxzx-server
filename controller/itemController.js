@@ -2013,118 +2013,129 @@ function serviceObjectTypeMapping(serviceObject) {
  * @returns
  */
 async function getRules({
-                            rule_id = null,
-                            rule_name = null,
-                            parentId = null,
-                            creator_name = null,
-                            department_name = null,
-                            start_time = null,
-                            end_time = null
-                        }) {
+    rule_id = null,
+    rule_name = null,
+    parentId = null,
+    creator_name = null,
+    department_name = null,
+    start_time = null,
+    end_time = null,
+}) {
     try {
-        var query = {}
-        if (rule_id !== null) query.rule_id = {$in: rule_id}
-        if (rule_name !== null) query.rule_name = {$regex: rule_name}
-        else query.rule_name = {$ne: 'null'}
-        if (parentId !== null) query.parentId = {$in: parentId}
-        query['$and'] = []
+        var query = {};
+        if (rule_id !== null) query.rule_id = { $in: rule_id };
+        if (rule_name !== null) query.rule_name = { $regex: rule_name };
+        else query.rule_name = { $ne: "null" };
+        if (parentId !== null) query.parentId = { $in: parentId };
+        query["$and"] = [];
         if (creator_name !== null) {
-            let users = await modelUsers.find({user_name: {$regex: creator_name}}, {_id: 1})
+            let users = await modelUsers.find(
+                { user_name: { $regex: creator_name } },
+                { _id: 1 }
+            );
             for (let i = 0, len = users.length; i < len; i++) {
-                users.push(users.shift()._id)
+                users.push(users.shift()._id);
             }
-            query['$and'].push({creator_id: {$in: users}})
+            query["$and"].push({ creator_id: { $in: users } });
         }
         if (department_name !== null) {
             //这里不包含下级部门，只查询了正则匹配到的部门
-            let units = await modelUnit.find({unit_name: {$regex: department_name}}, {unit_id: 1})
+            let units = await modelUnit.find(
+                { unit_name: { $regex: department_name } },
+                { unit_id: 1 }
+            );
             for (let i = 0, len = units.length; i < len; i++) {
-                units.push(units.shift().unit_id)
+                units.push(units.shift().unit_id);
             }
-            let users = await modelUsers.find({unit_id: {$in: units}}, {_id: 1})
+            let users = await modelUsers.find(
+                { unit_id: { $in: units } },
+                { _id: 1 }
+            );
             for (let i = 0, len = users.length; i < len; i++) {
-                users.push(users.shift()._id)
+                users.push(users.shift()._id);
             }
-            query['$and'].push({creator_id: {$in: users}})
+            query["$and"].push({ creator_id: { $in: users } });
         }
-        if (query['$and'].length <= 0) {
-            delete query['$and']
+        if (query["$and"].length <= 0) {
+            delete query["$and"];
         }
-        var start = (start_time !== null) ? start_time : 0
-        var end = (end_time !== null) ? end_time : 9999999999999
-        query.create_time = {$gte: start, $lte: end}
+        var start = start_time !== null ? start_time : 0;
+        var end = end_time !== null ? end_time : 9999999999999;
+        query.create_time = { $gte: start, $lte: end };
         var res = await modelRule.aggregate([
             {
-                $match: query
+                $match: query,
             },
             {
                 $lookup: {
                     from: modelUsers.collection.name,
-                    localField: 'creator_id',
-                    foreignField: '_id',
-                    as: 'user'
-                }
+                    localField: "creator_id",
+                    foreignField: "_id",
+                    as: "user",
+                },
             },
             {
                 $addFields: {
-                    user: {$arrayElemAt: ['$user', 0]}
-                }
+                    user: { $arrayElemAt: ["$user", 0] },
+                },
             },
             {
                 $lookup: {
                     from: modelUnit.collection.name,
-                    localField: 'user.unit_id',
-                    foreignField: 'unit_id',
-                    as: 'unit'
-                }
+                    localField: "user.unit_id",
+                    foreignField: "unit_id",
+                    as: "unit",
+                },
             },
             {
                 $addFields: {
-                    unit: {$arrayElemAt: ['$unit', 0]}
-                }
+                    unit: { $arrayElemAt: ["$unit", 0] },
+                },
             },
             {
                 $addFields: {
                     creator: {
-                        id: '$creator_id',
-                        name: '$user.user_name',
-                        department_name: '$unit.unit_name'
-                    }
-                }
+                        id: "$creator_id",
+                        name: "$user.user_name",
+                        department_name: "$unit.unit_name",
+                    },
+                },
             },
             {
-                $project: {__v: 0, user: 0, unit: 0, creator_id: 0}
-            }
-        ])
+                $project: { __v: 0, user: 0, unit: 0, creator_id: 0 },
+            },
+        ]);
         //计算规则路径
-        var ruleDic = itemService.getRuleDic()
+        var ruleDic = itemService.getRuleDic();
         if (ruleDic === null) {
-            throw new Error('请刷新重试')
+            throw new Error("请刷新重试");
         }
+
+
         for (let i = 0; i < res.length; i++) {
-            let rulePath = ''
-            let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null
+            let rulePath = "";
+            let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null;
 
             while (node !== null) {
-                rulePath = node.rule_name + '/' + rulePath
-                node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null
+                rulePath = node.rule_name + "/" + rulePath;
+                node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null;
             }
 
             var _query = {};
-            _query.rule_id = res[i].rule_id
+            _query.rule_id = res[i].rule_id;
             var _res = await modelItem.aggregate([
                 {
-                    $match: {"rule_id": res[i].rule_id},
-                }
+                    $match: { rule_id: res[i].rule_id },
+                },
             ]);
 
-            res[i].isLeaf = (res[i].children == 0)
-            res[i].hasBindItem = _res.length > 0
-            res[i].rule_path = rulePath
+            res[i].isLeaf = res[i].children == 0;
+            res[i].hasBindItem = _res.length > 0;
+            res[i].rule_path = rulePath;
         }
-        return new SuccessModel({msg: '查询成功', data: res})
+        return new SuccessModel({ msg: "查询成功", data: res });
     } catch (err) {
-        return new ErrorModel({msg: '查询失败', data: err.message})
+        return new ErrorModel({ msg: "查询失败", data: err.message });
     }
 }
 
