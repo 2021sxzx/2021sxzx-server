@@ -1,3 +1,4 @@
+const fs = require("fs");
 let MONGO_CONFIG, REDIS_CONFIG, IMG_PATH
 
 // 根据启动环境连接不同的服务
@@ -25,6 +26,12 @@ if (process.env.NODE_ENV === 'local') {
         user: 'root2',
         password: 'Hgc16711',
         dbName: 'sxzx',
+        // sslCa:fs.readFileSync('./config/mongodbSSL/ca.pem'),
+        // sslKey:fs.readFileSync('./config/mongodbSSL/client.pem'),
+        // sslCert:fs.readFileSync('./config/mongodbSSL/client.pem'),
+        sslCa:'./config/mongodbSSL/ca.pem',
+        sslKey:'./config/mongodbSSL/client.pem',
+        sslCert:'./config/mongodbSSL/client.pem',
     }
     IMG_PATH = 'http://8.134.73.52:5001/imgs/'
 } else if (process.env.NODE_ENV === 'production') {

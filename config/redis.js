@@ -17,42 +17,42 @@ const ssl = {
     },
 }
 
-const redisClient = redis.createClient({
-    socket: {
-        port: REDIS_CONFIG.port,
-        host: REDIS_CONFIG.host,
-        tls: true,
-        ca: fs.readFileSync(
-            './config/redisSSL/ca.crt',
-            {encoding: 'ascii'},
-        ),
-        cert: fs.readFileSync(
-            './config/redisSSL/client.crt',//?
-            {encoding: 'ascii'},
-            // {encoding: 'base64'},
-        ),
-    },
-    password: REDIS_CONFIG.password,
-})
-
-
 // const redisClient = redis.createClient({
 //     socket: {
 //         port: REDIS_CONFIG.port,
-//         host: REDIS_CONFIG.host
+//         host: REDIS_CONFIG.host,
+//         tls: true,
+//         ca: fs.readFileSync(
+//             './config/redisSSL/ca.crt',
+//             {encoding: 'ascii'},
+//         ),
+//         cert: fs.readFileSync(
+//             './config/redisSSL/client.crt',//?
+//             {encoding: 'ascii'},
+//             // {encoding: 'base64'},
+//         ),
 //     },
 //     password: REDIS_CONFIG.password,
-// });
+// })
+
+
+const redisClient = redis.createClient({
+    socket: {
+        port: REDIS_CONFIG.port,
+        host: REDIS_CONFIG.host
+    },
+    password: REDIS_CONFIG.password,
+});
 
 // redisClient.on('connect', () => {
 //     console.log("redis连接成功");
 // })
 //
 
-redisClient.on('error', (error) => {
-    console.log('Redis Not Connected!', error);
-
-})
+// redisClient.on('error', (error) => {
+//     console.log('Redis Not Connected!', error);
+//
+// })
 
 
 module.exports = redisClient;

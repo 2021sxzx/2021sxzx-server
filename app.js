@@ -26,15 +26,37 @@ redisClient.connect().then(() => {
 mongoose.connect(MONGO_CONFIG.url, {
     ssl: true,
     sslValidate: true,
-    sslCA: './config/mongodbSSL/ca.pem'
+    sslCA: MONGO_CONFIG.sslCa,
+    sslKey: MONGO_CONFIG.sslKey,
+    sslCert: MONGO_CONFIG.sslCert,
+    // username: MONGO_CONFIG.user,
+    // password: MONGO_CONFIG.password,
+    // ssl: true,
+    // sslValidate: true,
+    // sslCA: './config/mongodbSSL/ca.pem'
 }, err => {
-    if (err) {
+    if (!err) {
+        console.log('MongoDB 连接成功')
+    } else {
         console.log('MongoDB 连接失败。错误信息如下：')
         console.dir(err)
-    } else {
-        console.log('MongoDB 连接成功')
     }
 })
+
+// 连接成功
+mongoose.connection.on('connected', function () {
+    console.log('Mongoose connection open to ' + MONGO_CONFIG.url);
+});
+
+// 连接异常
+mongoose.connection.on('error',function (err) {
+    console.log('Mongoose connection error: ' + err);
+});
+
+// 连接断开
+mongoose.connection.on('disconnected', function () {
+    console.log('Mongoose connection disconnected');
+});
 
 // 创建 express 对象
 const app = express()
