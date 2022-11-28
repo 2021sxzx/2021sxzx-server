@@ -16,18 +16,24 @@ const Statusset = new Set()
 
 // 异步连接 Redis
 redisClient.connect().then(() => {
-  console.log('Redis 连接成功')
+    console.log('Redis 连接成功')
 }).catch((err) => {
-  console.log('Redis 连接失败。错误信息如下：')
-  console.dir(err)
+    console.log('Redis 连接失败。错误信息如下：')
+    console.dir(err)
 })
 
 // 异步连接 MongoDB
-mongoose.connect(MONGO_CONFIG.url).then(() => {
-  console.log('MongoDB 连接成功')
-}).catch((err) => {
-  console.log('MongoDB 连接失败。错误信息如下：')
-  console.dir(err)
+mongoose.connect(MONGO_CONFIG.url, {
+    ssl: true,
+    sslValidate: true,
+    sslCA: './config/mongodbSSL/ca.pem'
+}, err => {
+    if (err) {
+        console.log('MongoDB 连接失败。错误信息如下：')
+        console.dir(err)
+    } else {
+        console.log('MongoDB 连接成功')
+    }
 })
 
 // 创建 express 对象
@@ -54,41 +60,41 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 // 为所有响应添加跨域设置
 app.use('*', function (req, res, next) {
-  // TODO（钟卓江）: 我认为为了安全性考虑应该限制允许跨域的来源
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With')
-  res.header('Access-Control-Allow-Methods', 'POST,GET,TRACE,OPTIONS')
-  res.header('X-Powered-By', '3.2.1')
-  next()
+    // TODO（钟卓江）: 我认为为了安全性考虑应该限制允许跨域的来源
+    res.header('Access-Control-Allow-Origin', '*')
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With')
+    res.header('Access-Control-Allow-Methods', 'POST,GET,TRACE,OPTIONS')
+    res.header('X-Powered-By', '3.2.1')
+    next()
 })
 
 // 前端的预检请求（preflight request），为了获知服务端是否允许该请求
 app.options('*', (req, res) => {
-  res.sendStatus(200)
+    res.sendStatus(200)
 })
 
 // 检查用户的 token 是否合法
 app.use('*', (req, res, next) => {
-  // 用户状态被切换成未激活，则或将 account 放进 statusSet 中
-  // 获取 token
-  const token = req.cookies['auth-token']
-  // 如果没有 token ，说明后台用户未登录或者是前台的请求，next()
-  if (token === undefined) {
-    // TODO
-    // console.log('I\'m in token undefined')
-  } else {
-    // 解析用户账号信息
-    const account = jwt.verify(token, jwt_secret, null, null).account
-    // 如果这个账号在 statusSet 中出现了，说明这个账号被切换成了未激活状态
-    if (statusSet.has(account)) {
-      //设置个定时器可以保证多个请求同时进来时都不响应
-      // TODO(钟卓江)：设置定时器延迟 500ms 再删除其中的 account 这里有风险，万一对方网络延迟大于 500ms 就失效。
-      setTimeout(() => statusSet.delete(account), 500)
-      // 设置响应码 401 并发送 JSON 对象
-      res.status(401).json({loginstate: 'loginout'})
+    // 用户状态被切换成未激活，则或将 account 放进 statusSet 中
+    // 获取 token
+    const token = req.cookies['auth-token']
+    // 如果没有 token ，说明后台用户未登录或者是前台的请求，next()
+    if (token === undefined) {
+        // TODO
+        // console.log('I\'m in token undefined')
+    } else {
+        // 解析用户账号信息
+        const account = jwt.verify(token, jwt_secret, null, null).account
+        // 如果这个账号在 statusSet 中出现了，说明这个账号被切换成了未激活状态
+        if (statusSet.has(account)) {
+            //设置个定时器可以保证多个请求同时进来时都不响应
+            // TODO(钟卓江)：设置定时器延迟 500ms 再删除其中的 account 这里有风险，万一对方网络延迟大于 500ms 就失效。
+            setTimeout(() => statusSet.delete(account), 500)
+            // 设置响应码 401 并发送 JSON 对象
+            res.status(401).json({loginstate: 'loginout'})
+        }
     }
-  }
-  next()
+    next()
 })
 
 // //验证是否有登录权限
@@ -105,18 +111,18 @@ app.use('*', (req, res, next) => {
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.log'), {flags: 'a'})
 // 往日志添加用户信息
 logger.token('id', function getId(req) {
-  return req.headers.userid
+    return req.headers.userid
 })
 // 往日志添加时间
 logger.token('localDate', function getDate() {
-  return new Date().toLocaleString()
+    return new Date().toLocaleString()
 })
 // 日志中间件的设置使用
 app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
-  skip: function (req) {
-    return req.headers.userid === undefined
-  },
-  stream: accessLogStream,
+    skip: function (req) {
+        return req.headers.userid === undefined
+    },
+    stream: accessLogStream,
 }))
 
 // 处理路由
@@ -124,15 +130,15 @@ loadRoutes(routesStore, '/api', app)
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  next(createError(404))
+    next(createError(404))
 })
 
 // error handler
 // WARNING by lhy - error handler 必须提供 4 参数方法版本，否则传递的参数为 (req, res, next) 会发生错误
 app.use((err, req, res, next) => {
-  console.error(`Error handler in app.js caught error:`)
-  console.error(err)
-  res.sendStatus(err.status || 500)
+    console.error(`Error handler in app.js caught error:`)
+    console.error(err)
+    res.sendStatus(err.status || 500)
 })
 
 module.exports = app
