@@ -30,8 +30,8 @@ if (process.env.NODE_ENV === 'local') {
         // sslKey:fs.readFileSync('./config/mongodbSSL/client.pem'),
         // sslCert:fs.readFileSync('./config/mongodbSSL/client.pem'),
         sslCa:'./config/mongodbSSL/ca.pem',
-        sslKey:'./config/mongodbSSL/client.pem',
-        sslCert:'./config/mongodbSSL/client.pem',
+        sslKey:'./config/mongodbSSL/client.key',
+        sslCert:'./config/mongodbSSL/client.crt',
     }
     IMG_PATH = 'http://8.134.73.52:5001/imgs/'
 } else if (process.env.NODE_ENV === 'production') {
