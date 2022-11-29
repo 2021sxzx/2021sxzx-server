@@ -52,12 +52,12 @@ readonly TAR_BAK="mongodb_bak_${DATE}.tar.gz"
 echo mongodump -h "${DB_IP}" -u "${DB_USER}" -p "${DB_PASS}" -d "${MONGO_DATABASE}" -o "${OUT_DIR}"/"${DATE}"
 mongodump -h "${DB_IP}" -u "${DB_USER}" -p "${DB_PASS}" -d "${MONGO_DATABASE}" -o "${OUT_DIR}"/"${DATE}" --sslAllowInvalidCertificates --sslAllowInvalidHostnames --ssl --sslPEMKeyFile /www/wwwroot/sxzx/config/mongodbSSL/client.pem --sslCAFile /www/wwwroot/sxzx/config/mongodbSSL/ca.pem
 # 压缩为.tar.gz格式，保存到 $TAR_DIR 目录下
-#tar -zcvPf ${TAR_DIR}/${TAR_BAK} ${OUT_DIR}/${DATE}
+tar -zcvPf ${TAR_DIR}/${TAR_BAK} ${OUT_DIR}/${DATE}
 # 删除 OUT_DIR 中的缓存文件
 # 关于删除文件为什么要加上 :? 来检查变量 => https://github.com/koalaman/shellcheck/wiki/SC2115
-#rm -rf "${OUT_DIR:?}"/*
+rm -rf "${OUT_DIR:?}"/*
 # 删除过期的备份文件
-#find "${TAR_DIR}"/ -mtime +"${EXPIRES}" -delete
+find "${TAR_DIR}"/ -mtime +"${EXPIRES}" -delete
 # 展示所有备份的文件
 echo "${TAR_DIR}"/"${TAR_BAK}"
 exit
