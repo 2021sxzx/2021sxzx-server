@@ -264,11 +264,11 @@ async function getItems({
             }
             console.log("user.unit_id", user.unit_id, typeof (user.unit_id))
             let units = await unitService._allChildUnitArr(user.unit_id)
-            var unit_name_list = units.map((item) => {
-                return item.unit_name;
+            var unit_id_list = units.map((item) => {
+                return item.unit_id;
             });
             console.log("顺利执行完成")
-            query["$and"].push({service_agent_name: {$in: unit_name_list}});
+            query["$and"].push({ service_agent_code: { $in: unit_id_list } });
 
             // let users = await modelUsers.find({unit_id: {$in: units}})
             // for (let i = 0, len = users.length; i < len; i++) {
@@ -1664,7 +1664,7 @@ async function createItems({
             if (region === null) {
                 throw new Error('region_code不存在: ' + region_code)
             }
-            if (region._id !== region_id) {
+            if (region._id != region_id) {
                 throw new Error('region_code和region_id不匹配: ' + region_code + '\t' + region_id)
             }
 
