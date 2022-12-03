@@ -45,31 +45,18 @@ router.post('/v1/website-settings-upload', multer({
   {name: 'wechatQRCodeFile', maxCount: 1}, {name: 'appQRCodeFile', maxCount: 1}]), (req, res) => res.sendStatus(200))
 
 
-router.post(
-    "/v1/user-guide-upload",
-    multer({
-        storage: multer.diskStorage({
-            destination(req, res, cb) {
-                cb(null, "public/xlsx");
-            },
-            filename(req, { fieldname, originalname }, cb) {
-                cb(
-                    null,
-                    `${
-                        {
-                            userGuideFile: "用户手册",
-                        }[fieldname]
-                    }.${originalname.split(".").slice(-1)[0]}`
-                );
-            },
-        }),
-        fileFilter(req, file, cb) {
-            cb(null, file.mimetype === "application/pdf");
-        },
-    }).fields([
-        { name: "userGuideFile", maxCount: 1 }
-    ]),
-    (req, res) => res.sendStatus(200)
-);
+router.post("/v1/user-guide-upload", multer({
+  storage: multer.diskStorage({
+      destination(req, res, cb) {
+        cb(null, "public/xlsx");
+      }, filename(req, { fieldname, originalname }, cb) {
+        cb(null, `${{
+          userManual: "用户手册",
+        }[fieldname]}.${originalname.split(".").slice(-1)[0]}`)
+      }
+  }), fileFilter(req, file, cb) {
+      cb(null, file.mimetype === "application/pdf");
+  },
+}).fields([{ name: "userManual", maxCount: 1 }]), (req, res) => res.sendStatus(200));
 
 module.exports = router

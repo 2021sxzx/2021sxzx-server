@@ -24,21 +24,21 @@ redisClient.connect().then(() => {
 
 // 异步连接 MongoDB
 mongoose.connect(MONGO_CONFIG.url, 
-    // {
-    // ssl: true,
-    // sslValidate: false,
+    {
+    ssl: true,
+    sslValidate: false,
     // sslCA: MONGO_CONFIG.sslCA,
     // sslKey: MONGO_CONFIG.sslKey, 
     // sslCert: MONGO_CONFIG.sslCert,
-    // sslCA: './config/mongodbSSL/ca.pem',
-    // sslKey: './config/mongodbSSL/client.key',
-    // sslCert: './config/mongodbSSL/client.crt',
+    sslCA: './config/mongodbSSL/ca.pem',
+    sslKey: './config/mongodbSSL/client.key',
+    sslCert: './config/mongodbSSL/client.crt',
     // username: MONGO_CONFIG.user,
     // password: MONGO_CONFIG.password,
     // ssl: true,
     // sslValidate: true,
     // sslCA: './config/mongodbSSL/ca.pem'
-// }, 
+}, 
 err => {
     if (!err) {
         console.log('MongoDB 连接成功')
