@@ -489,6 +489,28 @@ async function getItems({
     }
 }
 
+// 线程锁
+let isLock = false;
+let lockList = [];
+async function lock() {
+  function unlock() {
+    let waitFunc = lockList.shift();
+    if (waitFunc) {
+      waitFunc.resolve(unlock);
+    } else {
+      isLock = false;
+    }
+  }
+  if (isLock) {
+    return new Promise((resolve, reject) => {
+      lockList.push({ resolve, reject });
+    });
+  } else {
+    isLock = true;
+    return unlock;
+  }
+}
+
 /**
  * 创建规则
  * @param user_id
@@ -511,6 +533,8 @@ async function createRules({
         if (user === null) {
             throw new Error('user_id不存在: ' + user_id)
         }
+
+        let unlock = await lock()
         //检查桩
         var stakes = await modelRule.find({rule_name: 'null'}, {_id: 0, __v: 0})
         if (stakes.length !== 1) {
@@ -522,6 +546,26 @@ async function createRules({
         var maxRuleId = parseInt(stake.rule_id)
         //删除桩
         await modelRule.deleteOne({rule_id: stake.rule_id})
+         //创建桩
+        try {
+            await modelRule.create({
+                rule_id: (maxRuleId + 1).toString(),
+                rule_name: 'null',
+                parentId: '',
+                // creator: {
+                //     id: 'null',
+                //     name: 'null',
+                //     department_name: 'null'
+                // }
+                creator_id: user_id
+            })
+        } catch (e) {
+            unlock()
+            return new ErrorModel({msg: '创建规则失败', data: e.message})
+        }
+        unlock();
+        
+        
         //dict的key是temp_id，value是规则节点
         var dict = []
         //给传入的规则节点创建rule_id
@@ -576,25 +620,11 @@ async function createRules({
             data.push(rules[i].rule_id)
         }
         itemService.addUpdateTask('createRules', data)
-        //创建桩
-        try {
-            await modelRule.create({
-                rule_id: maxRuleId.toString(),
-                rule_name: 'null',
-                parentId: '',
-                // creator: {
-                //     id: 'null',
-                //     name: 'null',
-                //     department_name: 'null'
-                // }
-                creator_id: user_id
-            })
-        } catch (e) {
-            return new SuccessModel({msg: '创建规则成功', data: res})
-        }
         //返回结果
         return new SuccessModel({msg: '创建规则成功', data: res})
     } catch (err) {
+        unlock();
+        console.log(err.message)
         return new ErrorModel({msg: '创建规则失败', data: err.message})
     }
 }
