@@ -268,7 +268,7 @@ async function getItems({
                 return item.unit_id;
             });
             console.log("顺利执行完成")
-            query["$and"].push({ service_agent_code: { $in: unit_id_list } });
+            query["$and"].push({service_agent_code: {$in: unit_id_list}});
 
             // let users = await modelUsers.find({unit_id: {$in: units}})
             // for (let i = 0, len = users.length; i < len; i++) {
@@ -489,6 +489,30 @@ async function getItems({
     }
 }
 
+// 线程锁
+let isLock = false;
+let lockList = [];
+
+async function lock() {
+    function unlock() {
+        let waitFunc = lockList.shift();
+        if (waitFunc) {
+            waitFunc.resolve(unlock);
+        } else {
+            isLock = false;
+        }
+    }
+
+    if (isLock) {
+        return new Promise((resolve, reject) => {
+            lockList.push({resolve, reject});
+        });
+    } else {
+        isLock = true;
+        return unlock;
+    }
+}
+
 /**
  * 创建规则
  * @param user_id
@@ -511,19 +535,51 @@ async function createRules({
         if (user === null) {
             throw new Error('user_id不存在: ' + user_id)
         }
+
+        let unlock = await lock()
         //检查桩
+        // 找到 rule_name 为 null 的桩，其 rule_id 为所有 rule_id 的最大值
         var stakes = await modelRule.find({rule_name: 'null'}, {_id: 0, __v: 0})
+        // 如果没找到桩或者同时存在多个 null 桩，就创建一个新的 null 桩，确保 null 桩的 rule_id 为唯一最大值
         if (stakes.length !== 1) {
             await createRuleStake(user_id)
             stakes = await modelRule.find({rule_name: 'null'}, {_id: 0, __v: 0})
         }
-        var stake = stakes[0]
-        //桩的id就是最大的rule_id，用于后续赋值
-        var maxRuleId = parseInt(stake.rule_id)
-        //删除桩
-        await modelRule.deleteOne({rule_id: stake.rule_id})
+        // 成功找到桩
+        const stake = stakes[0];
+        // 桩的 id 就是最大的rule_id，用于后续赋值
+        let maxRuleId = parseInt(stake.rule_id);
+        // 修改桩的 rule_id，为要创建的新规则腾出一些空闲的 rule_id
+        try{
+            modelRule.updateOne({rule_id: stake.rule_id},
+                {$set:{'rule_id':(maxRuleId + rules.length).toString()}})
+        } catch (e) {
+            return new ErrorModel({msg: '创建规则失败', data: e.message})
+        }
+        unlock();
+        // // 删除桩
+        // await modelRule.deleteOne({rule_id: stake.rule_id})
+        // // 创建桩
+        // try {
+        //     await modelRule.create({
+        //         rule_id: (maxRuleId + 1).toString(),
+        //         rule_name: 'null',
+        //         parentId: '',
+        //         // creator: {
+        //         //     id: 'null',
+        //         //     name: 'null',
+        //         //     department_name: 'null'
+        //         // }
+        //         creator_id: user_id
+        //     })
+        // } catch (e) {
+        //     unlock()
+        //     return new ErrorModel({msg: '创建规则失败', data: e.message})
+        // }
+        // unlock();
+
         //dict的key是temp_id，value是规则节点
-        var dict = []
+        const dict = [];
         //给传入的规则节点创建rule_id
         for (let i = 0; i < rules.length; i++) {
             rules[i].rule_id = maxRuleId.toString()
@@ -576,25 +632,11 @@ async function createRules({
             data.push(rules[i].rule_id)
         }
         itemService.addUpdateTask('createRules', data)
-        //创建桩
-        try {
-            await modelRule.create({
-                rule_id: maxRuleId.toString(),
-                rule_name: 'null',
-                parentId: '',
-                // creator: {
-                //     id: 'null',
-                //     name: 'null',
-                //     department_name: 'null'
-                // }
-                creator_id: user_id
-            })
-        } catch (e) {
-            return new SuccessModel({msg: '创建规则成功', data: res})
-        }
         //返回结果
         return new SuccessModel({msg: '创建规则成功', data: res})
     } catch (err) {
+        unlock();
+        console.log(err.message)
         return new ErrorModel({msg: '创建规则失败', data: err.message})
     }
 }
@@ -1917,7 +1959,7 @@ async function doesRegionItemExist(ruleId, regionIds, serviceObject) {
             .findOne({
                 rule_id: ruleId,
                 item_status: 3,
-                region_id: { $in: regionIds },
+                region_id: {$in: regionIds},
             })
             // 2. 根据 item 中的 task_code 来查找 task 表中对应的 task
             .select("task_code")
@@ -2013,55 +2055,55 @@ function serviceObjectTypeMapping(serviceObject) {
  * @returns
  */
 async function getRules({
-    rule_id = null,
-    rule_name = null,
-    parentId = null,
-    creator_name = null,
-    department_name = null,
-    start_time = null,
-    end_time = null,
-}) {
+                            rule_id = null,
+                            rule_name = null,
+                            parentId = null,
+                            creator_name = null,
+                            department_name = null,
+                            start_time = null,
+                            end_time = null,
+                        }) {
     try {
         var query = {};
-        if (rule_id !== null) query.rule_id = { $in: rule_id };
-        if (rule_name !== null) query.rule_name = { $regex: rule_name };
-        else query.rule_name = { $ne: "null" };
-        if (parentId !== null) query.parentId = { $in: parentId };
+        if (rule_id !== null) query.rule_id = {$in: rule_id};
+        if (rule_name !== null) query.rule_name = {$regex: rule_name};
+        else query.rule_name = {$ne: "null"};
+        if (parentId !== null) query.parentId = {$in: parentId};
         query["$and"] = [];
         if (creator_name !== null) {
             let users = await modelUsers.find(
-                { user_name: { $regex: creator_name } },
-                { _id: 1 }
+                {user_name: {$regex: creator_name}},
+                {_id: 1}
             );
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id);
             }
-            query["$and"].push({ creator_id: { $in: users } });
+            query["$and"].push({creator_id: {$in: users}});
         }
         if (department_name !== null) {
             //这里不包含下级部门，只查询了正则匹配到的部门
             let units = await modelUnit.find(
-                { unit_name: { $regex: department_name } },
-                { unit_id: 1 }
+                {unit_name: {$regex: department_name}},
+                {unit_id: 1}
             );
             for (let i = 0, len = units.length; i < len; i++) {
                 units.push(units.shift().unit_id);
             }
             let users = await modelUsers.find(
-                { unit_id: { $in: units } },
-                { _id: 1 }
+                {unit_id: {$in: units}},
+                {_id: 1}
             );
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id);
             }
-            query["$and"].push({ creator_id: { $in: users } });
+            query["$and"].push({creator_id: {$in: users}});
         }
         if (query["$and"].length <= 0) {
             delete query["$and"];
         }
         var start = start_time !== null ? start_time : 0;
         var end = end_time !== null ? end_time : 9999999999999;
-        query.create_time = { $gte: start, $lte: end };
+        query.create_time = {$gte: start, $lte: end};
         var res = await modelRule.aggregate([
             {
                 $match: query,
@@ -2076,7 +2118,7 @@ async function getRules({
             },
             {
                 $addFields: {
-                    user: { $arrayElemAt: ["$user", 0] },
+                    user: {$arrayElemAt: ["$user", 0]},
                 },
             },
             {
@@ -2089,7 +2131,7 @@ async function getRules({
             },
             {
                 $addFields: {
-                    unit: { $arrayElemAt: ["$unit", 0] },
+                    unit: {$arrayElemAt: ["$unit", 0]},
                 },
             },
             {
@@ -2102,7 +2144,7 @@ async function getRules({
                 },
             },
             {
-                $project: { __v: 0, user: 0, unit: 0, creator_id: 0 },
+                $project: {__v: 0, user: 0, unit: 0, creator_id: 0},
             },
         ]);
         //计算规则路径
@@ -2125,7 +2167,7 @@ async function getRules({
             _query.rule_id = res[i].rule_id;
             var _res = await modelItem.aggregate([
                 {
-                    $match: { rule_id: res[i].rule_id },
+                    $match: {rule_id: res[i].rule_id},
                 },
             ]);
 
@@ -2133,9 +2175,9 @@ async function getRules({
             res[i].hasBindItem = _res.length > 0;
             res[i].rule_path = rulePath;
         }
-        return new SuccessModel({ msg: "查询成功", data: res });
+        return new SuccessModel({msg: "查询成功", data: res});
     } catch (err) {
-        return new ErrorModel({ msg: "查询失败", data: err.message });
+        return new ErrorModel({msg: "查询失败", data: err.message});
     }
 }
 
@@ -2168,7 +2210,7 @@ async function getRecommend({
         for (let i = 0; i < rule_list.length; i++) {
             if (rule_list[i].rule_name == task_name) {
                 target_rule_id = rule_list[i].rule_id;
-                if(rule_list[i].children.length == 0) {
+                if (rule_list[i].children.length == 0) {
                     break
                 }
             }
@@ -2275,7 +2317,7 @@ async function createRegion({
         if (parent._doc.region_level + 1 !== region_level) {
             throw new Error(
                 "region_level错误，上级区划的region_level是" +
-                    parent.region_level
+                parent.region_level
             );
         }
         //创建区划
