@@ -4,8 +4,6 @@ const modelTask = require('../model/task')
 const modelRemoteCheckLog = require('../model/remoteCheckLog')
 const request = require('request')
 const schedule = require('node-schedule')
-const { ErrorModel } = require('../utils/resultModel')
-
 //---------------------------------------------------------------------------------
 //以下为初始化所需的全局变量
 /**
@@ -139,8 +137,8 @@ async function createRules(rule_id) {
     //把字典设为不可用状态
     ruleDic.status = 0
     //以数据库中已创建的数据为准
-    var result = null
-    var result1 = null
+    let result = null;
+    let result1 = null;
     try {
         result = await modelRule.find({rule_id: {$in: rule_id}}, {__v: 0})
         let id = []
@@ -1304,7 +1302,7 @@ async function updateCheckResult(arr) {
 //     }
 // }
 
-// 初始化 task 事项指南表
+// 初始化 task 事项指南表（会清空数据库task表！！）
 async function initializeTaskSchema() {
     console.log('开始初始化 task 表')
 
