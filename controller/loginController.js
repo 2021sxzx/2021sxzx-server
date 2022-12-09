@@ -12,10 +12,12 @@ async function postLogin(loginData) {
     try {
         console.log("loginData", loginData);
         let lockTime = await whetherLockAccount(loginData);
-        if(lockTime > 0)
+        if(lockTime > 0) {
+            console.log("账号已经锁定")
             return { msg: "账号已锁定，请等待" + lockTime / 1000 + "秒再尝试.", code: 403 };
+        }
 
-        let data
+        let data;
         if (loginData.state === 1)
             // 短信验证登录
             data = await authenticatebyvc(loginData)

@@ -40,17 +40,60 @@ async function authenticatebypwd(loginData) {
         // 错误检查
         if (res === null) return {msg: '该账号不存在.', code: 403}
         if (password !== res.password) {
-            let login_fail_solution = new Date(new Date().valueOf() + 5 * 1000)
-
+            // let login_fail_solution = new Date(new Date().valueOf() + 5 * 1000)
+            
             await selectRedisDatabase(2)
-            await redisClient.set(res.account, JSON.stringify({
-                expires: login_fail_solution
-            }), redisClient.print)
+            let redis_res = await redisClient.get(account)
+            console.log("res", redis_res);
+            // console.log(JSON.parse(redis_res).hasOwnProperty("loginFailTimes"));
+            if (redis_res == null || JSON.parse(redis_res).hasOwnProperty("loginFailTimes") == false) {
+                // 第一次错误
+                console.log(account, "第一次错误")
+                await redisClient.set(
+                    res.account,
+                    JSON.stringify({
+                        loginFailTimes: 1,
+                        expires: new Date(),
+                    }),
+                    redisClient.print
+                );
 
-            console.log(login_fail_solution);
+            } else if (JSON.parse(redis_res).loginFailTimes < 4) {
+                // 后面几次错误
+                console.log(account, JSON.parse(redis_res).loginFailTimes + 1);
+                await redisClient.set(
+                    res.account,
+                    JSON.stringify({
+                        loginFailTimes: JSON.parse(redis_res).loginFailTimes + 1,
+                        expires: new Date(),
+                    }),
+                    redisClient.print
+                );
+            } else {
+                // 第五次错误
+                console.log(account, "锁定");
+                await redisClient.set(
+                    res.account,
+                    JSON.stringify({
+                        loginFailTimes: 0,
+                        expires: new Date(new Date().valueOf() + 5 * 60 * 1000),
+                    }),
+                    redisClient.print
+                );
+            }
+        
             return {msg: '密码错误，请重试.', code: 403}
         }
         if (res.activation_status !== 1) return {msg: '该号码未被激活，请重试.', code: 403}
+        
+        await redisClient.set(
+            res.account,
+            JSON.stringify({
+                loginFailTimes: 0,
+                expires: new Date(),
+            }),
+            redisClient.print
+        );
 
         // 检查最后修改密码的时间，如果时间不存在，就将本次登录的时间设置为最后修改密码的时间。
         // 如果时间存在，就判断该事件到本次登录的时间是否超过3个月。
@@ -100,6 +143,7 @@ async function authenticatebypwd(loginData) {
             }
         }
     } catch (e) {
+        console.log(e)
         return {
             code: 500,
             msg: e.message
@@ -121,8 +165,8 @@ async function whetherLockAccount(loginData) {
         await selectRedisDatabase(2);
         let res = JSON.parse(await redisClient.get(account));
 
-        console.log("res", res)
-        console.log(new Date(), res.expires);
+        // console.log("res", res)
+        // console.log(new Date(), res.expires);
 
         if (res === null || new Date() > new Date(res.expires)) return 0;
         else return new Date(res.expires).valueOf() - new Date().valueOf();

@@ -14,6 +14,7 @@ const itemService = require("../service/itemService");
 const modelRoleMapPermission = require("../model/roleMapPermission");
 const modelStatusType = require("../model/statusType");
 const unitService = require("../service/unitService");
+const redisClient = require("../config/redis");
 /**
  * 获取事项状态表
  * @returns
@@ -566,7 +567,7 @@ async function getMaxRuleId() {
 }
 
 let maxRuleId = -1
-
+let tempUserCache = new Map();
 async function initMaxRuleId() {
     try {
         maxRuleId = await getMaxRuleId()
@@ -602,6 +603,19 @@ async function lock() {
 }
 
 /**
+ * 验证用户身份、生成jwt
+ * @returns {Promise<*>}
+ * @param db
+ */
+async function selectRedisDatabase(db) {
+    try {
+        await redisClient.select(db)
+    } catch (error) {
+        await selectRedisDatabase(db)
+    }
+}
+
+/**
  * 创建规则
  * @param user_id
  * @param {Array<Object>} rules 待创建的规则
@@ -610,7 +624,7 @@ async function lock() {
 async function createRules({user_id = null, rules = null}) {
     // let unlock = null
     try {
-        // let t1 = new Date().getTime()
+        let t1 = new Date().getTime()
         if (user_id === null || rules === null) {
             throw new Error("请求体中需要 user_id 和 rules ")
         }
@@ -618,11 +632,29 @@ async function createRules({user_id = null, rules = null}) {
             throw new Error("数组长度小于等于 0")
         }
         //检查user_id
-        const user = await modelUsers.findOne({_id: user_id}, {__v: 0})
+        // selectRedisDatabase(3);
+        // 缓存查找
+        let user = tempUserCache.get(user_id)
+        if (user == null || new Date() > new Date(user.expires)) {
+            user = await modelUsers.findOne({ _id: user_id }, { __v: 0 });
+            if (user !== null) {
+                tempUserCache.set(
+                    user_id,
+                    {
+                        data: user,
+                        expires: new Date().getTime() + 5 * 60 * 1000,
+                    },
+                    redisClient.print
+                );
+            }
+        }
+
         if (user === null) {
             throw new Error("user_id 不存在: " + user_id)
-        }
-        // let t2 = new Date().getTime();
+        } 
+        
+        
+        let t2 = new Date().getTime();
         // unlock = await lock();
         // //检查桩
         // // 找到 rule_name 为 null 的桩，其 rule_id 为所有 rule_id 的最大值
@@ -716,9 +748,9 @@ async function createRules({user_id = null, rules = null}) {
             }
         })
 
-        // let t3 = new Date().getTime();
-        await modelRule.create(rulesDoc);
-        await modelRule.bulkWrite(bulkOps);
+        let t3 = new Date().getTime();
+        modelRule.create(rulesDoc);
+        modelRule.bulkWrite(bulkOps);
 
         //返回真实的rule_id和_id
         const res = {};
@@ -733,10 +765,10 @@ async function createRules({user_id = null, rules = null}) {
             return rule.rule_id
         })
 
-        // let t4 = new Date().getTime();
-        await itemService.addUpdateTask("createRules", data);
-        // let t5 = new Date().getTime();
-        // console.log(t2 - t1, t3 - t2, t4 - t3, t5 - t4, t5 - t1)
+        let t4 = new Date().getTime();
+        itemService.addUpdateTask("createRules", data);
+        let t5 = new Date().getTime();
+        console.log(t2 - t1, t3 - t2, t4 - t3, t5 - t4, t5 - t1)
         //返回结果
         return new SuccessModel({msg: "创建规则成功", data: res});
     } catch (err) {
@@ -3121,3 +3153,4 @@ module.exports = {
     // getRuleDic,
     // getRegionDic
 };
+
