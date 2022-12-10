@@ -23,30 +23,30 @@ redisClient.connect().then(() => {
 })
 
 // 异步连接 MongoDB
-mongoose.connect(MONGO_CONFIG.url, 
+mongoose.connect(MONGO_CONFIG.url,
     {
-    ssl: true,
-    sslValidate: false,
-    // sslCA: MONGO_CONFIG.sslCA,
-    // sslKey: MONGO_CONFIG.sslKey, 
-    // sslCert: MONGO_CONFIG.sslCert,
-    sslCA: './config/mongodbSSL/ca.pem',
-    sslKey: './config/mongodbSSL/client.key',
-    sslCert: './config/mongodbSSL/client.crt',
-    // username: MONGO_CONFIG.user,
-    // password: MONGO_CONFIG.password,
-    // ssl: true,
-    // sslValidate: true,
-    // sslCA: './config/mongodbSSL/ca.pem'
-}, 
-err => {
-    if (!err) {
-        console.log('MongoDB 连接成功')
-    } else {
-        console.log('MongoDB 连接失败。错误信息如下：')
-        console.dir(err)
-    }
-})
+        ssl: true,
+        sslValidate: false,
+        // sslCA: MONGO_CONFIG.sslCA,
+        // sslKey: MONGO_CONFIG.sslKey,
+        // sslCert: MONGO_CONFIG.sslCert,
+        sslCA: './config/mongodbSSL/ca.pem',
+        sslKey: './config/mongodbSSL/client.key',
+        sslCert: './config/mongodbSSL/client.crt',
+        // username: MONGO_CONFIG.user,
+        // password: MONGO_CONFIG.password,
+        // ssl: true,
+        // sslValidate: true,
+        // sslCA: './config/mongodbSSL/ca.pem'
+    },
+    err => {
+        if (!err) {
+            console.log('MongoDB 连接成功')
+        } else {
+            console.log('MongoDB 连接失败。错误信息如下：')
+            console.dir(err)
+        }
+    })
 
 // 连接成功
 mongoose.connection.on('connected', function () {
@@ -54,7 +54,7 @@ mongoose.connection.on('connected', function () {
 });
 
 // 连接异常
-mongoose.connection.on('error',function (err) {
+mongoose.connection.on('error', function (err) {
     console.log('Mongoose connection error: ' + err);
 });
 
@@ -115,7 +115,7 @@ app.use('*', (req, res, next) => {
         // 如果这个账号在 statusSet 中出现了，说明这个账号被切换成了未激活状态
         if (statusSet.has(account)) {
             //设置个定时器可以保证多个请求同时进来时都不响应
-            // TODO(钟卓江)：设置定时器延迟 500ms 再删除其中的 account 这里有风险，万一对方网络延迟大于 500ms 就失效。
+            // TODO：设置定时器延迟 500ms 再删除其中的 account 这里有风险(?)
             setTimeout(() => statusSet.delete(account), 500)
             // 设置响应码 401 并发送 JSON 对象
             res.status(401).json({loginstate: 'loginout'})
