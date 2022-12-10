@@ -15,6 +15,7 @@ const modelRoleMapPermission = require("../model/roleMapPermission");
 const modelStatusType = require("../model/statusType");
 const unitService = require("../service/unitService");
 const redisClient = require("../config/redis");
+
 /**
  * 获取事项状态表
  * @returns
@@ -253,10 +254,7 @@ async function getItems(
         page_num = null,
     }
 ) {
-    let items;
-    let ruleDic;
-    let regionDic;
-
+    let items
     try {
         const query = {};
         if (item_name !== null) query.item_name = {$regex: item_name};
@@ -353,7 +351,7 @@ async function getItems(
         ) {
             throw new Error("page_size和page_num需要一起传");
         }
-        //分页返回查询结果
+        // 分页返回查询结果
         if (page_size !== null && page_num !== null) {
             items = await modelItem.aggregate([
                 {$match: query},
@@ -425,27 +423,34 @@ async function getItems(
             ]);
 
             //计算规则路径和区划路径
-            ruleDic = itemService.getRuleDic();
-            regionDic = itemService.getRegionDic();
+            const ruleDic = itemService.getRuleDic()
+            const regionDic = itemService.getRegionDic()
+
             if (ruleDic === null || regionDic === null) {
                 return new ErrorModel({
                     msg: "请刷新重试",
                     data: "请刷新重试",
                 });
             }
-            const data = items[0].data;
+
+            const data = items[0].data
             for (let i = 0; i < data.length; i++) {
-                let rulePath = "";
-                let node = ruleDic[data[i].rule_id]
-                    ? ruleDic[data[i].rule_id]
-                    : null;
+                // 生成规则路径
+                let rulePath = ""
+
+                let node = ruleDic.has(data[i].rule_id)
+                    ? ruleDic.get(data[i].rule_id)
+                    : null
+
                 while (node !== null) {
                     rulePath = node.rule_name + "/" + rulePath;
-                    node = ruleDic[node.parentId]
-                        ? ruleDic[node.parentId]
-                        : null;
+                    node = ruleDic.has(node.parentId)
+                        ? ruleDic.get(node.parentId)
+                        : null
                 }
                 data[i].rule_path = rulePath;
+
+                // 生成区划路径
                 let regionPath = "";
                 let node1 = regionDic[data[i].region_id]
                     ? regionDic[data[i].region_id]
@@ -458,8 +463,9 @@ async function getItems(
                 }
                 data[i].region_path = regionPath;
             }
+
             //返回结果
-            var dict = {};
+            const dict = {};
             dict.data = data;
             dict.total =
                 items[0].count.length > 0 ? items[0].count[0].total : 0;
@@ -467,7 +473,8 @@ async function getItems(
             dict.page_num = page_num;
             return new SuccessModel({msg: "查询成功", data: dict});
         }
-        //直接返回查询结果
+
+        // 不分页返回查询结果
         items = await modelItem.aggregate([
             {$match: query},
             {
@@ -525,22 +532,32 @@ async function getItems(
                 },
             },
         ]);
+
         //计算规则路径和区划路径
-        ruleDic = itemService.getRuleDic();
-        regionDic = itemService.getRegionDic();
+        const ruleDic = itemService.getRuleDic()
+        const regionDic = itemService.getRegionDic()
+
         if (ruleDic === null || regionDic === null) {
             return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
         }
+
         for (let i = 0; i < items.length; i++) {
-            let rulePath = "";
-            let node = ruleDic[items[i].rule_id]
-                ? ruleDic[items[i].rule_id]
-                : null;
+            // 生成规则路径
+            let rulePath = ""
+
+            let node = ruleDic.has(items[i].rule_id)
+                ? ruleDic.get(items[i].rule_id)
+                : null
+
             while (node !== null) {
                 rulePath = node.rule_name + "/" + rulePath;
-                node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null;
+                node = ruleDic.has(node.parentId)
+                    ? ruleDic.get(node.parentId)
+                    : null
             }
             items[i].rule_path = rulePath;
+
+            // 生成区划路径
             let regionPath = "";
             let node1 = regionDic[items[i].region_id]
                 ? regionDic[items[i].region_id]
@@ -571,6 +588,7 @@ async function getMaxRuleId() {
 
 let maxRuleId = -1
 let tempUserCache = new Map();
+
 async function initMaxRuleId() {
     try {
         maxRuleId = await getMaxRuleId()
@@ -626,7 +644,7 @@ async function createRules({user_id = null, rules = null}) {
         // 缓存查找
         let user = tempUserCache.get(user_id)
         if (user == null || new Date() > new Date(user.expires)) {
-            user = await modelUsers.findOne({ _id: user_id }, { __v: 0 });
+            user = await modelUsers.findOne({_id: user_id}, {__v: 0});
             if (user !== null) {
                 tempUserCache.set(
                     user_id,
@@ -641,9 +659,8 @@ async function createRules({user_id = null, rules = null}) {
 
         if (user === null) {
             throw new Error("user_id 不存在: " + user_id)
-        } 
-        
-        
+        }
+
         let t2 = new Date().getTime();
         // unlock = await lock();
         // //检查桩
@@ -950,23 +967,28 @@ async function updateRules({rules = null}) {
 async function getRulePaths({rule_id = null}) {
     try {
         if (rule_id === null) {
-            throw new Error("请求体中需要一个ruleIds属性，且该属性是一个数组");
+            throw new Error("请求体中需要一个ruleIds属性，且该属性是一个数组")
         }
         if (rule_id.length <= 0) {
-            throw new Error("数组长度小于等于0");
+            throw new Error("数组长度小于等于0")
         }
+
         //计算路径
-        var ruleDic = itemService.getRuleDic();
+        const ruleDic = itemService.getRuleDic()
         if (ruleDic === null) {
              return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
         }
-        var res = {};
+
+        const res = {};
         for (let i = 0; i < rule_id.length; i++) {
             let rulePath = [];
-            let node = ruleDic[rule_id[i]] ? ruleDic[rule_id[i]] : null;
+            let node = ruleDic.has(rule_id[i])
+                ? ruleDic.get(rule_id[i]) : null
+
             while (node !== null) {
-                rulePath.unshift(node);
-                node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null;
+                rulePath.unshift(node)
+                node = ruleDic.has(node.parentId) ?
+                    ruleDic.get(node.parentId) : null;
             }
             res[rule_id[i]] = rulePath;
         }
@@ -2314,57 +2336,57 @@ function serviceObjectTypeMapping(serviceObject) {
  * @returns
  */
 async function getRules({
-    rule_id = null,
-    rule_name = null,
-    parentId = null,
-    creator_name = null,
-    department_name = null,
-    start_time = null,
-    end_time = null,
-    page_size = null,
-    page_num = null,
-}) {
+                            rule_id = null,
+                            rule_name = null,
+                            parentId = null,
+                            creator_name = null,
+                            department_name = null,
+                            start_time = null,
+                            end_time = null,
+                            page_size = null,
+                            page_num = null,
+                        }) {
     try {
         var query = {};
-        if (rule_id !== null) query.rule_id = { $in: rule_id };
-        if (rule_name !== null) query.rule_name = { $regex: rule_name };
-        else query.rule_name = { $ne: "null" };
-        if (parentId !== null) query.parentId = { $in: parentId };
+        if (rule_id !== null) query.rule_id = {$in: rule_id};
+        if (rule_name !== null) query.rule_name = {$regex: rule_name};
+        else query.rule_name = {$ne: "null"};
+        if (parentId !== null) query.parentId = {$in: parentId};
         query["$and"] = [];
         if (creator_name !== null) {
             let users = await modelUsers.find(
-                { user_name: { $regex: creator_name } },
-                { _id: 1 }
+                {user_name: {$regex: creator_name}},
+                {_id: 1}
             );
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id);
             }
-            query["$and"].push({ creator_id: { $in: users } });
+            query["$and"].push({creator_id: {$in: users}});
         }
         if (department_name !== null) {
             //这里不包含下级部门，只查询了正则匹配到的部门
             let units = await modelUnit.find(
-                { unit_name: { $regex: department_name } },
-                { unit_id: 1 }
+                {unit_name: {$regex: department_name}},
+                {unit_id: 1}
             );
             for (let i = 0, len = units.length; i < len; i++) {
                 units.push(units.shift().unit_id);
             }
             let users = await modelUsers.find(
-                { unit_id: { $in: units } },
-                { _id: 1 }
+                {unit_id: {$in: units}},
+                {_id: 1}
             );
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id);
             }
-            query["$and"].push({ creator_id: { $in: users } });
+            query["$and"].push({creator_id: {$in: users}});
         }
         if (query["$and"].length <= 0) {
             delete query["$and"];
         }
         var start = start_time !== null ? start_time : 0;
         var end = end_time !== null ? end_time : 9999999999999;
-        query.create_time = { $gte: start, $lte: end };
+        query.create_time = {$gte: start, $lte: end};
         if (
             (page_size !== null && page_num === null) ||
             (page_size === null && page_num !== null)
@@ -2373,7 +2395,7 @@ async function getRules({
         }
         //分页返回查询结果
         if (page_size !== null && page_num !== null) {
-            var res = await modelRule.aggregate([
+            const res = await modelRule.aggregate([
                 {
                     $match: query,
                 },
@@ -2383,16 +2405,17 @@ async function getRules({
                         data: [
                             {$skip: page_num * page_size},
                             {$limit: page_size},
-                            {$lookup: {
-                                from: modelUsers.collection.name,
-                                localField: "creator_id",
-                                foreignField: "_id",
-                                as: "user",
-                            },
+                            {
+                                $lookup: {
+                                    from: modelUsers.collection.name,
+                                    localField: "creator_id",
+                                    foreignField: "_id",
+                                    as: "user",
+                                },
                             },
                             {
                                 $addFields: {
-                                    user: { $arrayElemAt: ["$user", 0] },
+                                    user: {$arrayElemAt: ["$user", 0]},
                                 },
                             },
                             {
@@ -2405,7 +2428,7 @@ async function getRules({
                             },
                             {
                                 $addFields: {
-                                    unit: { $arrayElemAt: ["$unit", 0] },
+                                    unit: {$arrayElemAt: ["$unit", 0]},
                                 },
                             },
                             {
@@ -2418,12 +2441,12 @@ async function getRules({
                                 },
                             },
                             {
-                                $project: { __v: 0, user: 0, unit: 0, creator_id: 0 },
+                                $project: {__v: 0, user: 0, unit: 0, creator_id: 0},
                             },
                         ]
                     }
                 }
-                
+
             ]);
             //计算规则路径
             var ruleDic = itemService.getRuleDic(true);
@@ -2451,9 +2474,9 @@ async function getRules({
 
                 while (node !== null) {
                     rulePath = node.rule_name + "/" + rulePath;
-                    node = ruleDic[node.parentId]
-                        ? ruleDic[node.parentId]
-                        : null;
+                    node = ruleDic.has(node.parentId)
+                        ? ruleDic.get(node.parentId)
+                        : null
                 }
                 
 
@@ -2461,7 +2484,7 @@ async function getRules({
                 _query.rule_id = data[i].rule_id;
                 var _res = await modelItem.aggregate([
                     {
-                        $match: { rule_id: data[i].rule_id },
+                        $match: {rule_id: data[i].rule_id},
                     },
                 ]);
 
@@ -2483,7 +2506,7 @@ async function getRules({
         }
 
         // 直接返回全部的结果
-        var res = await modelRule.aggregate([
+        const res = await modelRule.aggregate([
             {
                 $match: query,
             },
@@ -2497,7 +2520,7 @@ async function getRules({
             },
             {
                 $addFields: {
-                    user: { $arrayElemAt: ["$user", 0] },
+                    user: {$arrayElemAt: ["$user", 0]},
                 },
             },
             {
@@ -2510,7 +2533,7 @@ async function getRules({
             },
             {
                 $addFields: {
-                    unit: { $arrayElemAt: ["$unit", 0] },
+                    unit: {$arrayElemAt: ["$unit", 0]},
                 },
             },
             {
@@ -2523,37 +2546,40 @@ async function getRules({
                 },
             },
             {
-                $project: { __v: 0, user: 0, unit: 0, creator_id: 0 },
+                $project: {__v: 0, user: 0, unit: 0, creator_id: 0},
             },
-        ]);
+        ])
+
         //计算规则路径
-        var ruleDic = itemService.getRuleDic();
+        const ruleDic = itemService.getRuleDic();
         if (ruleDic === null) {
             return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
         }
 
         for (let i = 0; i < res.length; i++) {
             let rulePath = "";
-            let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null;
+            let node = ruleDic.has(res[i].rule_id)
+                ? ruleDic.get(res[i].rule_id) : null
 
             while (node !== null) {
                 rulePath = node.rule_name + "/" + rulePath;
-                node = ruleDic[node.parentId] ? ruleDic[node.parentId] : null;
+                node = ruleDic.has(node.parentId) ?
+                    ruleDic.get(node.parentId) : null
             }
 
-            var _query = {};
+            const _query = {};
             _query.rule_id = res[i].rule_id;
-            var _res = await modelItem.aggregate([
+            const _res = await modelItem.aggregate([
                 {
-                    $match: { rule_id: res[i].rule_id },
+                    $match: {rule_id: res[i].rule_id},
                 },
             ]);
 
-            res[i].isLeaf = res[i].children == 0;
+            res[i].isLeaf = res[i].children.length === 0;
             res[i].hasBindItem = _res.length > 0;
             res[i].rule_path = rulePath;
         }
-        return new SuccessModel({ msg: "查询成功", data: res });
+        return new SuccessModel({msg: "查询成功", data: res});
     } catch (err) {
         console.log(err)
         return new ErrorModel({ msg: "查询失败", data: err.message });

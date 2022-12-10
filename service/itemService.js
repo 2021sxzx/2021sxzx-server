@@ -13,9 +13,12 @@ const schedule = require('node-schedule')
 const regionDic = {status: 0, data: {}}
 /**
  * 规则树的缓存对象。当 status === 0 表示该对象处于空闲状态。但 status === 1 表示该对象正在被写入，此时禁止读取。
- * @type {{data: {}, status: number}}
+ * @type {{data: Map<string,{}>, status: number}}
  */
-const ruleDic = {status: 0, data: {}}
+const ruleDic = {
+    status: 0, // 0 表示未上锁，可读写。1 表示上锁，不可读写。
+    data: new Map() // key：rule_id, value: rule
+}
 
 //------------------------------------------------------------------------------------
 //以下为本地缓存相关的代码
@@ -40,12 +43,16 @@ function initializeMemory() {
 
         // 异步初始化规则树
         ;(async () => { // 这个分号用于防止歧义，不能删除。
+            // 上锁
             ruleDic.status = 0
-            const rules = await modelRule.find({rule_name: {$ne: 'null'}}, {_id: 0, __v: 0});
-            for (let i = 0, len = rules.length; i < len; i++) {
-                ruleDic.data[rules[i].rule_id] = Object.assign({}, rules[i]._doc)
+
+            const rules = await modelRule.find({rule_name: {$ne: 'null'}}, {_id: 0, __v: 0})
+
+            for (let i = 0; i < rules.length; i++) {
+                ruleDic.data.set(rules[i].rule_id, rules[i]._doc)
             }
-            //规则树完成
+
+            //规则树完成，解锁
             ruleDic.status = 1
             console.log('规则树缓存对象初始化成功')
         })()
@@ -133,75 +140,98 @@ async function updateRegions(region_id) {
     regionDic.status = 1
 }
 
-async function createRules(rule_id) {
+async function createRules(ruleIdArray) {
     //把字典设为不可用状态
     ruleDic.status = 0
     //以数据库中已创建的数据为准
-    let result = null;
-    let result1 = null;
+    let newRules // 新添加的规则
+    let parentRules // 新添加的规则的父规则
+
     try {
-        result = await modelRule.find({rule_id: {$in: rule_id}}, {__v: 0})
-        let id = []
-        for (let i = 0; i < result.length; i++) {
-            id.push(result[i].parentId)
-        }
-        result1 = await modelRule.find({rule_id: {$in: id}}, {__v: 0})
+        // 找出所有新添加的规则
+        newRules = await modelRule.find({rule_id: {$in: ruleIdArray}}, {__v: 0})
+
+        const id = newRules.map(rule => {
+            return rule.parentId
+        })
+
+        // 找出所有新添加的规则的父规则
+        parentRules = await modelRule.find({rule_id: {$in: id}}, {__v: 0})
     } catch (err) {
         throw new Error(err.message)
     }
+
     //新增数据
-    for (let i = 0; i < result.length; i++) {
-        ruleDic.data[result[i].rule_id] = Object.assign({}, result[i]._doc)
+    for (let i = 0; i < newRules.length; i++) {
+        ruleDic.data.set(newRules[i].rule_id, newRules[i]._doc)
     }
+
     //更新对应父节点的children数组
-    for (let i = 0; i < result1.length; i++) {
-        ruleDic.data[result1[i].rule_id].children = Array.prototype.concat([], result1[i].children)
-    }
-    //把字典设为可用状态
-    ruleDic.status = 1
-}
-
-async function deleteRules(rule_id) {
-    //把字典设为不可用状态
-    ruleDic.status = 0
-    //删除数据
-    for (let i = 0; i < rule_id.length; i++) {
-        let parent = ruleDic.data[ruleDic.data[rule_id[i]].parentId]
-        if (parent) {
-            parent.children.splice(parent.children.indexOf(rule_id[i]), 1)
+    for (let i = 0; i < parentRules.length; i++) {
+        if(ruleDic.data.has(parentRules[i].rule_id)){
+            ruleDic.data.get(parentRules[i].rule_id).children = parentRules[i].children
         }
-        delete ruleDic.data[rule_id[i]]
     }
+
     //把字典设为可用状态
     ruleDic.status = 1
 }
 
-async function updateRules(rule_id) {
+async function deleteRules(ruleIdArray) {
     //把字典设为不可用状态
     ruleDic.status = 0
+
+    // 在规则树中删除对应规则
+    for (let i = 0; i < ruleIdArray.length; i++) {
+        ruleDic.data.delete(ruleIdArray[i])
+    }
+
+    // 在父规则的孩子中删除对应规则
+    for (let i = 0; i < ruleIdArray.length; i++) {
+        if (ruleDic.data.has(ruleIdArray[i].parentId)) {
+            const parent = ruleDic.data.get(ruleIdArray[i].parentId)
+            parent.children.splice(parent.children.indexOf(ruleIdArray[i]), 1)
+        }
+    }
+
+    //把字典设为可用状态
+    ruleDic.status = 1
+}
+
+async function updateRules(ruleIdArray) {
+    //把字典设为不可用状态
+    ruleDic.status = 0
+
     //以数据库当前数据为准，仅更新单个数据
+    let updateRules
     try {
-        var result = await modelRule.find({rule_id: {$in: rule_id}}, {__v: 0})
+        updateRules = await modelRule.find({rule_id: {$in: ruleIdArray}}, {__v: 0})
     } catch (err) {
         throw new Error(err.message)
     }
+
     //修改内存中的数据
-    for (let i = 0; i < result.length; i++) {
-        ruleDic.data[result[i].rule_id].rule_name = result[i].rule_name
-        ruleDic.data[result[i].rule_id].creator_id = result[i].creator_id
-        //parentId有改变的话要修改父节点的children数组
-        if (ruleDic.data[result[i].rule_id].parentId !== result[i].parentId) {
-            let old_parent = ruleDic.data[ruleDic.data[result[i].rule_id].parentId]
-            if (old_parent) {
-                old_parent.children.splice(old_parent.children.indexOf(result[i].rule_id), 1)
+    for (let i = 0; i < updateRules.length; i++) {
+        const rule = ruleDic.data.get(updateRules[i].rule_id)
+        rule.rule_name= updateRules[i].rule_name
+        rule.creator_id = updateRules[i].creator_id
+
+        //parentId 有改变的话，还要额外更新新旧父节点的 children 数组
+        if (rule.parentId !== updateRules[i].parentId) {
+            const oldParent = ruleDic.data.get(rule.parentId)
+            if (oldParent) {
+                oldParent.children.splice(oldParent.children.indexOf(updateRules[i].rule_id), 1)
             }
-            let new_parent = ruleDic.data[result[i].parentId]
-            if (new_parent) {
-                new_parent.children.push(result[i].rule_id)
+
+            const newParent = ruleDic.data.get(updateRules[i].parentId)
+            if (newParent) {
+                newParent.children.push(updateRules[i].rule_id)
             }
-            ruleDic.data[result[i].rule_id].parentId = result[i].parentId
+
+           rule.parentId = updateRules[i].parentId
         }
     }
+
     //把字典设为可用状态
     ruleDic.status = 1
 }
@@ -224,7 +254,7 @@ async function runTasks() {
     if (running === true) return
     running = true
     while (tasks.length > 0) {
-        var obj = tasks.shift()
+        const obj = tasks.shift();
         switch (obj.functionName) {
             case 'createRegions':
                 await createRegions(obj.data)
@@ -263,7 +293,7 @@ function getRegionDic() {
 
 /**
  * 获取内存中的规则树
- * @returns Object || null
+ * @returns Map<string,{}> || null
  */
 function getRuleDic(must = false) {
     if (ruleDic.status === 1 || must == true) {
@@ -1302,7 +1332,7 @@ async function updateCheckResult(arr) {
 //     }
 // }
 
-// 初始化 task 事项指南表（会清空数据库task表！！）
+// 初始化 task 事项指南表（会清空数据库task表！！请勿在非初始化阶段使用！）
 async function initializeTaskSchema() {
     console.log('开始初始化 task 表')
 

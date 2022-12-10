@@ -1,5 +1,9 @@
 const {
-    authenticatebypwd, authenticatebyvc, logout, isLogin, whetherLockAccount
+    authenticatebypwd,
+    authenticatebyvc,
+    logout,
+    isLogin,
+    whetherLockAccount,
 } = require("../service/loginService")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -59,5 +63,7 @@ async function JudgeIsLogin(token) {
 }
 
 module.exports = {
-    postLogin, postLogout, JudgeIsLogin
+    postLogin,
+    postLogout,
+    JudgeIsLogin
 }
