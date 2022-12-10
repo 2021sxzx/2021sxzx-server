@@ -265,8 +265,8 @@ function getRegionDic() {
  * 获取内存中的规则树
  * @returns Object || null
  */
-function getRuleDic() {
-    if (ruleDic.status === 1) {
+function getRuleDic(must = false) {
+    if (ruleDic.status === 1 || must == true) {
         return ruleDic.data
     } else {
         return null

@@ -428,7 +428,10 @@ async function getItems(
             ruleDic = itemService.getRuleDic();
             regionDic = itemService.getRegionDic();
             if (ruleDic === null || regionDic === null) {
-                throw new Error("请刷新重试");
+                return new ErrorModel({
+                    msg: "请刷新重试",
+                    data: "请刷新重试",
+                });
             }
             const data = items[0].data;
             for (let i = 0; i < data.length; i++) {
@@ -526,7 +529,7 @@ async function getItems(
         ruleDic = itemService.getRuleDic();
         regionDic = itemService.getRegionDic();
         if (ruleDic === null || regionDic === null) {
-            throw new Error("请刷新重试");
+            return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
         }
         for (let i = 0; i < items.length; i++) {
             let rulePath = "";
@@ -599,19 +602,6 @@ async function lock() {
     } else {
         isLock = true
         return unlock
-    }
-}
-
-/**
- * 验证用户身份、生成jwt
- * @returns {Promise<*>}
- * @param db
- */
-async function selectRedisDatabase(db) {
-    try {
-        await redisClient.select(db)
-    } catch (error) {
-        await selectRedisDatabase(db)
     }
 }
 
@@ -749,8 +739,8 @@ async function createRules({user_id = null, rules = null}) {
         })
 
         let t3 = new Date().getTime();
-        modelRule.create(rulesDoc);
-        modelRule.bulkWrite(bulkOps);
+        await modelRule.create(rulesDoc);
+        await modelRule.bulkWrite(bulkOps);
 
         //返回真实的rule_id和_id
         const res = {};
@@ -766,7 +756,7 @@ async function createRules({user_id = null, rules = null}) {
         })
 
         let t4 = new Date().getTime();
-        itemService.addUpdateTask("createRules", data);
+        await itemService.addUpdateTask("createRules", data);
         let t5 = new Date().getTime();
         // console.log(t2 - t1, t3 - t2, t4 - t3, t5 - t4, t5 - t1)
         //返回结果
@@ -968,7 +958,7 @@ async function getRulePaths({rule_id = null}) {
         //计算路径
         var ruleDic = itemService.getRuleDic();
         if (ruleDic === null) {
-            throw new Error("请刷新重试");
+             return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
         }
         var res = {};
         for (let i = 0; i < rule_id.length; i++) {
@@ -1612,7 +1602,7 @@ async function getRegionPaths({region_id = null}) {
         //计算路径
         var regionDic = itemService.getRegionDic();
         if (regionDic === null) {
-            throw new Error("请刷新重试");
+             return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
         }
         var res = {};
         for (let i = 0; i < region_id.length; i++) {
@@ -1780,7 +1770,7 @@ async function getRegions({
             //计算区划路径
             regionDic = itemService.getRegionDic();
             if (regionDic === null) {
-                throw new Error("请刷新重试");
+                return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
             }
             const data = regions[0].data;
             for (let i = 0; i < data.length; i++) {
@@ -1848,7 +1838,7 @@ async function getRegions({
         //计算区划路径
         regionDic = itemService.getRegionDic();
         if (regionDic === null) {
-            throw new Error("请刷新重试");
+            return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
         }
         for (let i = 0; i < regions.length; i++) {
             let regionPath = "";
@@ -2310,6 +2300,8 @@ function serviceObjectTypeMapping(serviceObject) {
     }
 }
 
+
+
 /**
  * 获取规则
  * @param {Array<String>} rule_id 规则id
@@ -2434,15 +2426,25 @@ async function getRules({
                 
             ]);
             //计算规则路径
-            var ruleDic = itemService.getRuleDic();
+            var ruleDic = itemService.getRuleDic(true);
+            console.log(ruleDic === null)
             if (ruleDic === null) {
-                throw new Error("请刷新重试");
+                return new ErrorModel({
+                    msg: "请刷新重试",
+                    data: "请刷新重试",
+                });
             }
 
             var data = res[0].data;
             var count = res[0].count;
+
             for (let i = 0; i < data.length; i++) {
                 let rulePath = "";
+                // console.log(data)
+                // 说明还没完全更新，只做最终一致性
+                if(ruleDic.hasOwnProperty(data[i].rule_id) == false)
+                    continue
+
                 let node = ruleDic[data[i].rule_id]
                     ? ruleDic[data[i].rule_id]
                     : null;
@@ -2453,6 +2455,7 @@ async function getRules({
                         ? ruleDic[node.parentId]
                         : null;
                 }
+                
 
                 var _query = {};
                 _query.rule_id = data[i].rule_id;
@@ -2475,7 +2478,7 @@ async function getRules({
             dict.page_size = page_size;
             dict.page_num = page_num;
             
-            console.log(dict)
+            // console.log(dict)
             return new SuccessModel({ msg: "查询成功", data: dict });
         }
 
@@ -2526,7 +2529,7 @@ async function getRules({
         //计算规则路径
         var ruleDic = itemService.getRuleDic();
         if (ruleDic === null) {
-            throw new Error("请刷新重试");
+            return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
         }
 
         for (let i = 0; i < res.length; i++) {
@@ -2552,6 +2555,7 @@ async function getRules({
         }
         return new SuccessModel({ msg: "查询成功", data: res });
     } catch (err) {
+        console.log(err)
         return new ErrorModel({ msg: "查询失败", data: err.message });
     }
 }
