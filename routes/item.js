@@ -90,7 +90,9 @@ router.post('/v1/getRulePaths', async (req, res, next) => {
 })
 
 router.post('/v1/createRules', async (req, res, next) => {
+    // let t0 = new Date().getTime()
     let data = await itemController.createRules(req.body)
+    // console.log("最终时间", new Date().getTime() - t0)
     setStatusCode(res, data)
     res.json(data)
 })
