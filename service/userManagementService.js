@@ -172,10 +172,18 @@ async function shouldUpdatePasswordModifyDate(account, password) {
 async function deleteUser(account) {
     try {
         isNeedUpdateUserCache = true
+
+        // 确保该用户没有创建相关的事项
         if ((await item.find({creator_id: (await users.findOne({account}))._id}).count()) === 0) {
             await users.deleteOne({
                 account
             })
+
+            // 删除 redis 中的数据
+            await selectRedisDatabase(1)
+            await redisClient.del(account)
+            await selectRedisDatabase(0)
+
             return true
         } else return false
     } catch (e) {
