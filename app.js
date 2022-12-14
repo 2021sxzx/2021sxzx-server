@@ -105,7 +105,7 @@ app.use('*', (req, res, next) => {
     // 用户状态被切换成未激活，则或将 account 放进 statusSet 中
     // 获取 token
     const token = req.cookies['auth-token']
-    // 如果没有 token ，说明后台用户未登录或者是前台的请求，next()
+    // 如果没有 token ，说明后台用户未登录或者是前台的请求， next()
     if (token === undefined) {
         // TODO
         // console.log('I\'m in token undefined')
