@@ -2449,7 +2449,7 @@ async function getRules({
 
             ]);
             //计算规则路径
-            var ruleDic = itemService.getRuleDic(true);
+            const ruleDic = itemService.getRuleDic(true);
             console.log(ruleDic === null)
             if (ruleDic === null) {
                 return new ErrorModel({
