@@ -2377,7 +2377,7 @@ async function getRules({
         if (page_size !== null && page_num !== null) {
             let t1 = new Date().getTime();
             
-            var _query = {};
+            let _query = {};
             Object.assign(_query, query)
             _query["page_name"] = page_num;
             _query["page_size"] = page_size;
