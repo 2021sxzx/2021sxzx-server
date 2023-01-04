@@ -22,7 +22,16 @@ router.get('/v1/personal', wrap(personalController.getTopBarData));
 // 新增的发送验证码
 router.post('/v2/modifyPwd', async (req, res) => {
     const account = req.body.account
+    const prePassword = req.body.prepwd
     const password = req.body.pwd
+
+    let isPrePasswordChange = await shouldUpdatePasswordModifyDate(account, prePassword)
+    if (isPrePasswordChange === true) {
+        res.status(403).json({
+            msg: "旧密码输入错误，请重新修改。",
+        });
+    }
+
 
     // 如果密码改变了，就更新最后修改密码的时间戳。
     let isPasswordChange = await shouldUpdatePasswordModifyDate(account, password)
