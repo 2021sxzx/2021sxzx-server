@@ -12,6 +12,7 @@ const {
     setActivationAndReturn,
     getActivationAndReturn
 } = require('../controller/userManagementController');
+const {validateString} = require("../utils/validateString");
 
 
 function setStatusCode(res, data) {
@@ -44,16 +45,22 @@ router.get('/v1/user', async (req, res, next) => {
 
 // 添加用户
 router.post('/v1/user', async (req, res, next) => {
-    const unit_id = req.cookies.unit_id
+    // 检查输入的合法性
+    const userName = validateString(req.body.user_name).legalStr
+    const account = validateString(req.body.account).legalStr
+    const password = validateString(req.body.password).legalStr
+    const roleID = Number(validateString(req.body.role_id).legalStr)
+    const unitID = validateString(String(req.body.unit_id)).legalStr
+    const creatorUnitID = validateString(req.cookies.unit_id).legalStr
 
-    if (validatePwd(req.body.password)) {
+    if (validatePwd(password)) {
         const data = await addUserAndReturnList({
-            user_name: req.body.user_name,
-            account: req.body.account,
-            password: req.body.password,
-            role_id: req.body.role_id,
-            unit_id: String(req.body.unit_id)
-        }, unit_id);
+            user_name: userName,
+            account: account,
+            password: password,
+            role_id: roleID,
+            unit_id: unitID
+        }, creatorUnitID);
         setStatusCode(res, data);
         res.json(data)
     } else {
@@ -67,9 +74,18 @@ router.post('/v1/user', async (req, res, next) => {
 
 // 修改用户
 router.patch('/v1/user', async (req, res, next) => {
-    const {user_name, password, role_id, account, new_account, unit_id} = req.body
-    const my_unit_id = req.cookies.unit_id
-    const data = await updateUserAndReturnList(user_name, password, role_id, account, new_account, String(unit_id), my_unit_id);
+    // 检查字符串合法性
+    const userName = validateString(req.body.user_name).legalStr
+    const account = validateString(req.body.account).legalStr
+    const newAccount = validateString(req.body.new_account).legalStr
+    const password = validateString(req.body.password).legalStr
+    const roleID = Number(validateString(req.body.role_id).legalStr)
+    const unitID = validateString(String(req.body.unit_id)).legalStr
+    const creatorUnitID = validateString(req.cookies.unit_id).legalStr
+
+    const data = await updateUserAndReturnList(userName, password,
+        roleID, account, newAccount, unitID, creatorUnitID)
+
     setStatusCode(res, data)
     res.json(data)
 })
