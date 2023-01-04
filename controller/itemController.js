@@ -15,6 +15,8 @@ const modelRoleMapPermission = require("../model/roleMapPermission");
 const modelStatusType = require("../model/statusType");
 const unitService = require("../service/unitService");
 const redisClient = require("../config/redis");
+const {validateString} = require("../utils/validateString");
+
 /**
  * 获取事项状态表
  * @returns
@@ -530,7 +532,7 @@ async function getItems({
         ruleDic = itemService.getRuleDic();
         regionDic = itemService.getRegionDic();
         if (ruleDic === null || regionDic === null) {
-            return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
+            return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
         }
         for (let i = 0; i < items.length; i++) {
             let rulePath = "";
@@ -574,6 +576,7 @@ async function getMaxRuleId() {
 
 let maxRuleId = -1;
 let tempUserCache = new Map();
+
 async function initMaxRuleId() {
     try {
         maxRuleId = await getMaxRuleId();
@@ -629,7 +632,7 @@ async function createRules({ user_id = null, rules = null }) {
         // 缓存查找
         let user = tempUserCache.get(user_id);
         if (user == null || new Date() > new Date(user.expires)) {
-            user = await modelUsers.findOne({ _id: user_id }, { __v: 0 });
+            user = await modelUsers.findOne({_id: user_id}, {__v: 0});
             if (user !== null) {
                 tempUserCache.set(
                     user_id,
@@ -643,8 +646,9 @@ async function createRules({ user_id = null, rules = null }) {
         }
 
         if (user === null) {
-            throw new Error("user_id 不存在: " + user_id);
+            throw new Error("user_id 不存在: " + user_id)
         }
+
 
         let t2 = new Date().getTime();
 
@@ -913,7 +917,7 @@ async function getRulePaths({ rule_id = null }) {
         //计算路径
         var ruleDic = itemService.getRuleDic();
         if (ruleDic === null) {
-            return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
+            return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
         }
         var res = {};
         for (let i = 0; i < rule_id.length; i++) {
@@ -1559,7 +1563,7 @@ async function getRegionPaths({ region_id = null }) {
         //计算路径
         var regionDic = itemService.getRegionDic();
         if (regionDic === null) {
-            return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
+            return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
         }
         var res = {};
         for (let i = 0; i < region_id.length; i++) {
@@ -1727,10 +1731,7 @@ async function getRegions({
             //计算区划路径
             regionDic = itemService.getRegionDic();
             if (regionDic === null) {
-                return new ErrorModel({
-                    msg: "请刷新重试",
-                    data: "请刷新重试",
-                });
+                return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
             }
             const data = regions[0].data;
             for (let i = 0; i < data.length; i++) {
@@ -1798,7 +1799,7 @@ async function getRegions({
         //计算区划路径
         regionDic = itemService.getRegionDic();
         if (regionDic === null) {
-            return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
+            return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
         }
         for (let i = 0; i < regions.length; i++) {
             let regionPath = "";
@@ -1825,29 +1826,49 @@ async function getRegions({
  * @param {Array<Object>} items 待创建的事项（传三个字段，事项指南编码、规则id和区划编码）
  * @returns
  */
-async function createItems({ user_id = null, items = null }) {
+async function createItems({user_id = null, items = null}) {
+    // 检查字符串合法性
+    user_id = validateString(user_id).legalStr
+    for (let item of items) {
+        if (item.task_code) {
+            item.task_code = validateString(item.task_code).legalStr
+        }
+        if (item.rule_id) {
+            item.rule_id = validateString(item.rule_id).legalStr
+        }
+        if (item.region_code) {
+            item.region_code = validateString(item.region_code).legalStr
+        }
+        if (item.region_id) {
+            item.region_id = validateString(item.region_id).legalStr
+        }
+    }
+
     try {
+        // 错误检查
         if (user_id === null || items === null) {
             throw new Error("需要user_id和items");
         }
         if (!items.length || items.length <= 0) {
             throw new Error("数组长度小于等于0");
         }
+
         //检查user_id
-        var user = await modelUsers.findOne({ _id: user_id }, { __v: 0 });
+        const user = await modelUsers.findOne({_id: user_id}, {__v: 0});
         if (user === null) {
             throw new Error("user_id不存在: " + user_id);
         }
-        var unit = await modelUnit.findOne(
-            { unit_id: user.unit_id },
-            { __v: 0 }
+        const unit = await modelUnit.findOne(
+            {unit_id: user.unit_id},
+            {__v: 0}
         );
         if (unit === null) {
             throw new Error("用户没有所属部门");
         }
+
         //遍历数组创建事项
-        var newData = [];
-        var bulkOps = [];
+        const newData = []
+        const bulkOps = []
         for (let i = 0; i < items.length; i++) {
             //解构，没有传的字段默认是null
             let {
@@ -1855,7 +1876,8 @@ async function createItems({ user_id = null, items = null }) {
                 rule_id = null,
                 region_code = null,
                 region_id = null,
-            } = items[i];
+            } = items[i]
+
             if (
                 task_code === null ||
                 rule_id === null ||
@@ -1866,6 +1888,7 @@ async function createItems({ user_id = null, items = null }) {
                     "task_code、rule_id、region_code和region_id必须同时存在"
                 );
             }
+
             //检查task_code的合法性
             let task = await modelTask.findOne(
                 { task_code: task_code },
@@ -1896,13 +1919,13 @@ async function createItems({ user_id = null, items = null }) {
                 );
             }
 
-            var is_exist =
+            const is_exist =
                 (
                     await modelItem.find({
                         rule_id: rule_id,
                         region_id: region_id,
                     })
-                ).length > 0;
+                ).length > 0
             if (is_exist)
                 return {
                     msg: "创建事项失败",
@@ -2001,8 +2024,10 @@ async function updateItems({ items = null }) {
         if (items.length <= 0) {
             throw new Error("数组长度小于等于0");
         }
-        var bulkOps = [];
-        var taskBulkOps = [];
+
+        const bulkOps = []
+        const taskBulkOps = []
+
         for (let i = 0; i < items.length; i++) {
             //解构，默认null
             let {
@@ -2012,22 +2037,28 @@ async function updateItems({ items = null }) {
                 // region_code = null,
                 region_id = null,
             } = items[i];
+
             if (_id === null) {
                 throw new Error("更新事项信息需要传_id");
             }
+
             //判断_id的合法性
-            let item = await modelItem.exists({ _id: _id });
+            _id = validateString(_id).legalStr
+            let item = await modelItem.exists({_id: _id})
             if (item === false) {
-                throw new Error("_id不存在: " + _id);
+                throw new Error("_id不存在: " + _id)
             }
+
             //更新item（差量）
-            var newData = {};
+            const newData = {}
             if (task_code !== null) {
                 //检查task_code的合法性
-                let task = await modelTask.findOne({ task_code: task_code });
+                task_code = validateString(task_code).legalStr
+                let task = await modelTask.findOne({task_code: task_code});
                 if (task === null) {
                     throw new Error("task_code不存在: " + task_code);
                 }
+
                 //检查是否需要更改对应事项指南的状态
                 let count = await modelItem
                     .find({ task_code: task_code })
@@ -2043,22 +2074,27 @@ async function updateItems({ items = null }) {
                 newData.task_code = task_code;
                 newData.item_name = task.task_name;
             }
+
             if (rule_id !== null) {
                 //检查rule_id的合法性
-                let rule = await modelRule.exists({ rule_id: rule_id });
+                rule_id = validateString(rule_id).legalStr
+                let rule = await modelRule.exists({rule_id: rule_id});
                 if (rule === false) {
                     throw new Error("rule_id不存在: " + rule_id);
                 }
                 newData.rule_id = rule_id;
             }
+
             if (region_id !== null) {
                 //检查region_id的合法性
-                let region = await modelRegion.exists({ _id: region_id });
+                region_id = validateString(region_id).legalStr
+                let region = await modelRegion.exists({_id: region_id});
                 if (region === false) {
                     throw new Error("region_id不存在");
                 }
                 newData.region_id = region_id;
             }
+
             bulkOps.push({
                 updateOne: {
                     filter: { _id: _id },
@@ -2067,9 +2103,9 @@ async function updateItems({ items = null }) {
             });
         }
         //批量更新
-        var result = await modelItem.bulkWrite(bulkOps);
+        const result = await modelItem.bulkWrite(bulkOps)
         await modelTask.bulkWrite(taskBulkOps);
-        return new SuccessModel({ msg: "更新成功", data: result });
+        return new SuccessModel({msg: "更新成功", data: result})
     } catch (err) {
         return new ErrorModel({ msg: "更新失败", data: err.message });
     }
@@ -2272,60 +2308,65 @@ let ruleCache = new Map();
  * @param {String} department_name 部门名称
  * @param {Number} start_time 规则创建时间的起始时间
  * @param {Number} end_time 规则创建时间的终止时间
+ * @param page_size
+ * @param page_num
  * @returns
  */
 async function getRules({
-    rule_id = null,
-    rule_name = null,
-    parentId = null,
-    creator_name = null,
-    department_name = null,
-    start_time = null,
-    end_time = null,
-    page_size = null,
-    page_num = null,
-}) {
+                            rule_id = null,
+                            rule_name = null,
+                            parentId = null,
+                            creator_name = null,
+                            department_name = null,
+                            start_time = null,
+                            end_time = null,
+                            page_size = null,
+                            page_num = null,
+                        }) {
+    let _res;
+    let _query;
     try {
+        let ruleDic;
         var query = {};
-        if (rule_id !== null) query.rule_id = { $in: rule_id };
-        if (rule_name !== null) query.rule_name = { $regex: rule_name };
-        else query.rule_name = { $ne: "null" };
-        if (parentId !== null) query.parentId = { $in: parentId };
+        if (rule_id !== null) query.rule_id = {$in: rule_id};
+        if (rule_name !== null) query.rule_name = {$regex: rule_name};
+        else query.rule_name = {$ne: "null"};
+        if (parentId !== null) query.parentId = {$in: parentId};
         query["$and"] = [];
         if (creator_name !== null) {
             let users = await modelUsers.find(
-                { user_name: { $regex: creator_name } },
-                { _id: 1 }
+                {user_name: {$regex: creator_name}},
+                {_id: 1}
             );
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id);
             }
-            query["$and"].push({ creator_id: { $in: users } });
+            query["$and"].push({creator_id: {$in: users}});
         }
         if (department_name !== null) {
             //这里不包含下级部门，只查询了正则匹配到的部门
             let units = await modelUnit.find(
-                { unit_name: { $regex: department_name } },
-                { unit_id: 1 }
+                {unit_name: {$regex: department_name}},
+                {unit_id: 1}
             );
             for (let i = 0, len = units.length; i < len; i++) {
                 units.push(units.shift().unit_id);
             }
             let users = await modelUsers.find(
-                { unit_id: { $in: units } },
-                { _id: 1 }
+                {unit_id: {$in: units}},
+                {_id: 1}
             );
             for (let i = 0, len = users.length; i < len; i++) {
                 users.push(users.shift()._id);
             }
-            query["$and"].push({ creator_id: { $in: users } });
+            query["$and"].push({creator_id: {$in: users}});
         }
         if (query["$and"].length <= 0) {
             delete query["$and"];
         }
         var start = start_time !== null ? start_time : 0;
         var end = end_time !== null ? end_time : 9999999999999;
-        query.create_time = { $gte: start, $lte: end };
+        query.create_time = {$gte: start, $lte: end};
         if (
             (page_size !== null && page_num === null) ||
             (page_size === null && page_num !== null)
@@ -2450,7 +2491,8 @@ async function getRules({
                         : null;
                 }
 
-                var _query = {};
+
+                _query = {};
                 _query.rule_id = data[i].rule_id;
                 
                 // 缓存设计
@@ -2501,7 +2543,7 @@ async function getRules({
             },
             {
                 $addFields: {
-                    user: { $arrayElemAt: ["$user", 0] },
+                    user: {$arrayElemAt: ["$user", 0]},
                 },
             },
             {
@@ -2514,7 +2556,7 @@ async function getRules({
             },
             {
                 $addFields: {
-                    unit: { $arrayElemAt: ["$unit", 0] },
+                    unit: {$arrayElemAt: ["$unit", 0]},
                 },
             },
             {
@@ -2527,13 +2569,13 @@ async function getRules({
                 },
             },
             {
-                $project: { __v: 0, user: 0, unit: 0, creator_id: 0 },
+                $project: {__v: 0, user: 0, unit: 0, creator_id: 0},
             },
         ]);
         //计算规则路径
-        var ruleDic = itemService.getRuleDic();
+        ruleDic = itemService.getRuleDic();
         if (ruleDic === null) {
-            return new ErrorModel({ msg: "请刷新重试", data: "请刷新重试" });
+            return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
         }
 
         for (let i = 0; i < res.length; i++) {
@@ -2547,11 +2589,11 @@ async function getRules({
                     : null;
             }
 
-            var _query = {};
+            _query = {};
             _query.rule_id = res[i].rule_id;
-            var _res = await modelItem.aggregate([
+            _res = await modelItem.aggregate([
                 {
-                    $match: { rule_id: res[i].rule_id },
+                    $match: {rule_id: res[i].rule_id},
                 },
             ]);
 
@@ -2559,10 +2601,10 @@ async function getRules({
             res[i].hasBindItem = _res.length > 0;
             res[i].rule_path = rulePath;
         }
-        return new SuccessModel({ msg: "查询成功", data: res });
+        return new SuccessModel({msg: "查询成功", data: res});
     } catch (err) {
-        console.log(err);
-        return new ErrorModel({ msg: "查询失败", data: err.message });
+        console.log(err)
+        return new ErrorModel({msg: "查询失败", data: err.message});
     }
 }
 
@@ -2590,9 +2632,9 @@ async function getRecommend({ parentId = null, task_name = null }) {
 
         var target_rule_id = ""; // 叶节点规则的rule_id
         for (let i = 0; i < rule_list.length; i++) {
-            if (rule_list[i].rule_name == task_name) {
+            if (rule_list[i].rule_name === task_name) {
                 target_rule_id = rule_list[i].rule_id;
-                if (rule_list[i].children.length == 0) {
+                if (rule_list[i].children.length === 0) {
                     break;
                 }
             }
@@ -2605,7 +2647,7 @@ async function getRecommend({ parentId = null, task_name = null }) {
         );
 
         // 如果没有匹配到叶节点规则，那么直接返回空
-        if (target_rule_id == "") {
+        if (target_rule_id === "") {
             console.log("未匹配到相关叶节点");
             return { msg: "查询成功", data: [], code: 200 };
         } else {
@@ -2624,7 +2666,7 @@ async function getRecommend({ parentId = null, task_name = null }) {
         // console.log("res", res);
 
         // 查询客户当前所在的规则
-        if (res.msg == "查询失败")
+        if (res.msg === "查询失败")
             return {
                 msg: "查询失败",
                 data: "服务器繁忙，请重新尝试",
@@ -2634,7 +2676,7 @@ async function getRecommend({ parentId = null, task_name = null }) {
             return { msg: "查询成功", data: [], code: 200 };
         else {
             var ans = "";
-            while (target_rule_id != "" && ans == "") {
+            while (target_rule_id !== "" && ans === "") {
                 console.log(
                     target_rule_id,
                     rule_map_by_rule_id[target_rule_id].parentId
@@ -2642,7 +2684,7 @@ async function getRecommend({ parentId = null, task_name = null }) {
                 // console.dir(rule_list[target_rule_id])
                 // break;
                 for (let i = 0; i < res.data.length; i++) {
-                    if (res.data[i].rule_id == target_rule_id) {
+                    if (res.data[i].rule_id === target_rule_id) {
                         ans = target_rule_id;
                         break;
                     }
@@ -2670,6 +2712,7 @@ async function getRecommend({ parentId = null, task_name = null }) {
 
 /**
  * 创建区划
+ * @param user_id
  * @param {String} region_code 区划编码
  * @param {String} region_name 区划名称
  * @param {String} region_level 区划等级
