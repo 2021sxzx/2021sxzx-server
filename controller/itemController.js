@@ -922,8 +922,8 @@ async function getRulePaths({ rule_id = null }) {
         var res = {};
         for (let i = 0; i < rule_id.length; i++) {
             let rulePath = [];
-            let node = ruleDic[rule_id[i]] ? ruleDic[rule_id[i]] : null;
-            while (node !== null) {
+            let node = ruleDic.get(rule_id[i])
+            while (node) {
                 rulePath.unshift(node);
                 node = ruleDic.get(node.parentId)
                     ? ruleDic.get(node.parentId)
@@ -2326,7 +2326,6 @@ async function getRules({
     let _res;
     let _query;
     try {
-        let ruleDic;
         var query = {};
         if (rule_id !== null) query.rule_id = {$in: rule_id};
         if (rule_name !== null) query.rule_name = {$regex: rule_name};
