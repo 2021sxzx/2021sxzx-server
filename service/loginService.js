@@ -172,6 +172,37 @@ async function whetherLockAccount(loginData) {
     }
 }
 
+// 发送验证码
+async function sendvc(loginData) {
+    /**
+     * @property res - 数据库中返回的帐户信息
+     * @property res.account - 帐户帐号
+     * @property res.password - 帐户密码
+     * @property res.activation_status - 帐户激活状态
+     * @property res.role_id
+     * @property res.unit_id
+     * @property res._id
+     */
+    try {
+        let account = loginData.account;
+        // 仅作为参考
+        // axios.post("http://10.147.25.152:8082/sms/v2/std/send_single",
+        //     {
+        //         userid: v_account.userid,//字符串
+        //         pwd: v_account.pwd,
+        //         mobile: account,//字符串
+        //         content: "验证码：" + verificationCode + ',请妥善保管。'
+        //     }).then((res) => {
+        //     console.log("发送短信成功", res)
+        // }).catch((err) => {
+        //     console.log("发送失败", err)
+        // })
+    } catch (e) {
+        return e.message;
+    }
+
+}
+
 //验证码登录
 async function authenticatebyvc(loginData) {
     /**
@@ -187,7 +218,7 @@ async function authenticatebyvc(loginData) {
         const {account} = loginData
         let res = await User.findOne({account: account})
         // 错误检查
-        if (res === null) return {msg: '该账号不存在.', code: 403}
+        if (res === null) return {msg: '验证码错误', code: 403}
         if (res.activation_status !== 1) return {message: '该号码未被激活，请重试.', code: 403}
         // 通过错误检查
         let refresh_token = generate_refresh_token(64)
@@ -266,4 +297,5 @@ module.exports = {
     logout,
     isLogin,
     whetherLockAccount,
+    sendvc,
 };

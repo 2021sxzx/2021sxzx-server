@@ -4,6 +4,7 @@ const {
     logout,
     isLogin,
     whetherLockAccount,
+    sendvc
 } = require("../service/loginService")
 const {SuccessModel, ErrorModel} = require('../utils/resultModel');
 
@@ -61,8 +62,24 @@ async function JudgeIsLogin(token) {
     }
 }
 
+async function postSendVC(loginData) {
+    try {
+        const res = await sendvc(loginData);
+        return new SuccessModel({
+            msg: "验证码发送成功",
+            data: {
+                isLogin: res,
+            },
+        });
+    } catch (err) {
+        return err;
+    }
+}
+
+
 module.exports = {
     postLogin,
     postLogout,
+    postSendVC,
     JudgeIsLogin
 }

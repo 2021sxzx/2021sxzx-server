@@ -2,8 +2,12 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    postLogin, postLogout, JudgeIsLogin
-} = require("../controller/loginController")
+    postLogin,
+    postLogout,
+    JudgeIsLogin,
+    postSendVC,
+} = require("../controller/loginController");
+
 router.post('/v1/login', async (req, res) => {
     let loginData = req.body
     let data = await postLogin(loginData)
@@ -22,6 +26,12 @@ router.post('/v1/login', async (req, res) => {
     } else {
         res.status(data.code).json(data)
     }
+});
+
+router.post("/v1/sendVC", async (req, res) => {
+    let loginData = req.body;
+    let data = await postSendVC(loginData);
+    res.json(data);
 });
 
 router.post('/v1/logout', async (req, res) => {
