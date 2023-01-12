@@ -4,6 +4,7 @@ const {
     jwt_secret, jwt_refresh_expiration, generate_refresh_token,
 } = require('../utils/validateJwt')
 
+import axios from "axios";
 const redisClient = require('../config/redis')
 
 /**
@@ -175,28 +176,28 @@ async function whetherLockAccount(loginData) {
 // 发送验证码
 async function sendvc(loginData) {
     /**
-     * @property res - 数据库中返回的帐户信息
-     * @property res.account - 帐户帐号
-     * @property res.password - 帐户密码
-     * @property res.activation_status - 帐户激活状态
-     * @property res.role_id
-     * @property res.unit_id
-     * @property res._id
+     * @property loginData.account - 帐户帐号
      */
     try {
         let account = loginData.account;
         // 仅作为参考
-        // axios.post("http://10.147.25.152:8082/sms/v2/std/send_single",
-        //     {
-        //         userid: v_account.userid,//字符串
-        //         pwd: v_account.pwd,
-        //         mobile: account,//字符串
-        //         content: "验证码：" + verificationCode + ',请妥善保管。'
-        //     }).then((res) => {
-        //     console.log("发送短信成功", res)
-        // }).catch((err) => {
-        //     console.log("发送失败", err)
-        // })
+        var Rand = Math.random();
+        var verificationCode = Math.round(Rand * 100000000);
+        
+        let res = await axios.post("http://10.147.25.152:8082/sms/v2/std/send_single", {
+            userid: "ZNZXPT",//字符串
+            pwd: "ZNZXPT@#2022",
+            mobile: account,//字符串
+            content: "验证码：" + verificationCode + ',请妥善保管。'
+        })
+
+        if(res.result == 0) {
+            console.log("验证码发送成功")
+            // 记录下验证码
+        } else {
+            console.log("验证码发送失败")
+        }
+
     } catch (e) {
         return e.message;
     }

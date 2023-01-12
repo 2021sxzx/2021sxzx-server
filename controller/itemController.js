@@ -627,8 +627,6 @@ async function createRules({ user_id = null, rules = null }) {
         if (rules.length <= 0) {
             throw new Error("数组长度小于等于 0");
         }
-        //检查user_id
-        // selectRedisDatabase(3);
         // 缓存查找
         let user = tempUserCache.get(user_id);
         if (user == null || new Date() > new Date(user.expires)) {
