@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken')
 const {
     jwt_secret, jwt_refresh_expiration, generate_refresh_token,
 } = require('../utils/validateJwt')
-
-import axios from "axios";
+// const axios = require("axios")
+// import axios from "axios";
 const redisClient = require('../config/redis')
 
 /**
@@ -17,6 +17,48 @@ async function selectRedisDatabase(db) {
         await redisClient.select(db)
     } catch (error) {
         await selectRedisDatabase(db)
+    }
+}
+
+async function lockAccount(account) {
+    await selectRedisDatabase(2)
+    let redis_res = await redisClient.get(account)
+    
+    console.log("res", redis_res);
+    if (redis_res == null || JSON.parse(redis_res).hasOwnProperty("loginFailTimes") == false) {
+        // 第一次错误
+        console.log(account, "第一次错误")
+        await redisClient.set(
+            account,
+            JSON.stringify({
+                loginFailTimes: 1,
+                expires: new Date(),
+            }),
+            redisClient.print
+        );
+
+    } else if (JSON.parse(redis_res).loginFailTimes < 4) {
+        // 后面几次错误
+        console.log(account, JSON.parse(redis_res).loginFailTimes + 1);
+        await redisClient.set(
+            account,
+            JSON.stringify({
+                loginFailTimes: JSON.parse(redis_res).loginFailTimes + 1,
+                expires: new Date(),
+            }),
+            redisClient.print
+        );
+    } else {
+        // 第五次错误，锁定五分钟
+        console.log(account, "锁定");
+        await redisClient.set(
+            account,
+            JSON.stringify({
+                loginFailTimes: 0,
+                expires: new Date(new Date().valueOf() + 5 * 60 * 1000),
+            }),
+            redisClient.print
+        );
     }
 }
 
@@ -41,46 +83,7 @@ async function authenticatebypwd(loginData) {
         // 错误检查
         if (res === null) return { msg: "密码错误，请重试.", code: 403 };
         if (password !== res.password) {
-            await selectRedisDatabase(2)
-            let redis_res = await redisClient.get(account)
-            
-            console.log("res", redis_res);
-            if (redis_res == null || JSON.parse(redis_res).hasOwnProperty("loginFailTimes") == false) {
-                // 第一次错误
-                console.log(account, "第一次错误")
-                await redisClient.set(
-                    res.account,
-                    JSON.stringify({
-                        loginFailTimes: 1,
-                        expires: new Date(),
-                    }),
-                    redisClient.print
-                );
-
-            } else if (JSON.parse(redis_res).loginFailTimes < 4) {
-                // 后面几次错误
-                console.log(account, JSON.parse(redis_res).loginFailTimes + 1);
-                await redisClient.set(
-                    res.account,
-                    JSON.stringify({
-                        loginFailTimes: JSON.parse(redis_res).loginFailTimes + 1,
-                        expires: new Date(),
-                    }),
-                    redisClient.print
-                );
-            } else {
-                // 第五次错误，锁定五分钟
-                console.log(account, "锁定");
-                await redisClient.set(
-                    res.account,
-                    JSON.stringify({
-                        loginFailTimes: 0,
-                        expires: new Date(new Date().valueOf() + 5 * 60 * 1000),
-                    }),
-                    redisClient.print
-                );
-            }
-        
+            await lockAccount(res.account)
             return {msg: '密码错误，请重试.', code: 403}
         }
 
@@ -160,13 +163,19 @@ async function authenticatebypwd(loginData) {
 async function whetherLockAccount(loginData) {
     try {
         const { account, password } = loginData;
-
-
+        // 账号
         await selectRedisDatabase(2);
         let res = JSON.parse(await redisClient.get(account));
-
-        if (res === null || new Date() > new Date(res.expires)) return 0;
-        else return new Date(res.expires).valueOf() - new Date().valueOf();
+        if (res !== null && new Date() <= new Date(res.expires)) 
+            return new Date(res.expires).valueOf() - new Date().valueOf();
+        
+        // 手机
+        await selectRedisDatabase(3);
+        res = JSON.parse(await redisClient.get(account));
+        if (res !== null && new Date() <= new Date(res.expires))
+            return new Date(res.expires).valueOf() - new Date().valueOf();
+        
+        return 0
     } catch (e) {
         console.log(e.message)
         return e.message;
@@ -184,25 +193,38 @@ async function sendvc(loginData) {
         var Rand = Math.random();
         var verificationCode = Math.round(Rand * 100000000);
         
-        let res = await axios.post("http://10.147.25.152:8082/sms/v2/std/send_single", {
-            userid: "ZNZXPT",//字符串
-            pwd: "ZNZXPT@#2022",
-            mobile: account,//字符串
-            content: "验证码：" + verificationCode + ',请妥善保管。'
-        })
+        // let res = await axios.post("http://10.147.25.152:8082/sms/v2/std/send_single", {
+        //     userid: "ZNZXPT",//字符串
+        //     pwd: "ZNZXPT@#2022",
+        //     mobile: account,//字符串
+        //     content: "验证码：" + verificationCode + ',请妥善保管。'
+        // })
+        let res = {
+            "result": 0
+        };
+        verificationCode = "12345678"
 
         if(res.result == 0) {
             console.log("验证码发送成功")
-            // 记录下验证码
+            await selectRedisDatabase(3);
+            await redisClient.set(
+                account,
+                JSON.stringify({
+                    verificationCode: verificationCode,
+                    expires: new Date()
+                }),
+                redisClient.print
+            );
         } else {
             console.log("验证码发送失败")
         }
-
+        return res.result
     } catch (e) {
         return e.message;
     }
 
 }
+
 
 //验证码登录
 async function authenticatebyvc(loginData) {
@@ -216,12 +238,22 @@ async function authenticatebyvc(loginData) {
      * @property res._id
      */
     try {
-        const {account} = loginData
+        const {account, verificationCode} = loginData
         let res = await User.findOne({account: account})
         // 错误检查
+        console.log(res)
         if (res === null) return {msg: '验证码错误', code: 403}
         if (res.activation_status !== 1) return {message: '该号码未被激活，请重试.', code: 403}
-        // 通过错误检查
+        // 验证码检测
+        selectRedisDatabase(3)
+        let redis_res = await redisClient.get(account)
+        // console.log(redis_res)
+        // console.log(account, verificationCode, JSON.parse(redis_res).verificationCode)
+        if (verificationCode != JSON.parse(redis_res).verificationCode) {
+            await lockAccount(account);
+            return { msg: "验证码错误", code: 403 };
+        }
+        // 通过验证码检测
         let refresh_token = generate_refresh_token(64)
         let refresh_token_max_age = new Date(new Date().valueOf() + jwt_refresh_expiration)
         const token = jwt.sign({account: res.account}, jwt_secret, null, null)

@@ -72,6 +72,7 @@ async function postSendVC(loginData) {
             });
         else
             return {
+                code: 200,
                 msg: "验证码发送失败",
                 data: {},
             };
