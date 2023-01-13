@@ -65,6 +65,7 @@ async function JudgeIsLogin(token) {
 async function postSendVC(loginData) {
     try {
         const res = await sendvc(loginData);
+        console.log(res)
         if(res == 0)
             return new SuccessModel({
                 msg: "验证码发送成功",

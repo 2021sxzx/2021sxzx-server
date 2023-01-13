@@ -194,36 +194,40 @@ async function sendvc(loginData) {
         var Rand = Math.random();
         var verificationCode = Math.round(Rand * 100000000);
         
-        let res = await request.post({
-                url: "http://10.147.25.152:8082/sms/v2/std/send_single",
-                userid: "ZNZXPT", //字符串
-                pwd: "ZNZXPT@#2022",
-                mobile: account, //字符串
-                content: "验证码：" + verificationCode + ",请妥善保管。",
-            }, function (error, response, body) {
-                if()
-            });
-        console.log(res)
+        options = {
+            url: "http://8.134.73.52/searchApi/helloWorld",
+            userid: "ZNZXPT", //字符串
+            pwd: "ZNZXPT@#2022",
+            mobile: account, //字符串
+            content: "验证码：" + verificationCode + ",请妥善保管。",
+        };
+
+        await selectRedisDatabase(3);
+        request.post(options, function (err, res, body) {
+            if (err) {
+                console.log("发送验证码失败", err);
+                return -1
+            } 
+
+            redisClient.set(
+                account,
+                JSON.stringify({
+                    verificationCode: verificationCode,
+                    expires: new Date() + jwt_refresh_expiration,
+                }),
+                redisClient.print
+            );
+
+            // console.dir(JSON.parse(body).result)
+            // console.dir(res)
+        });
         // let res = {
         //     "result": 0
         // };
         // verificationCode = "12345678"
 
-        if(res.result == 0) {
-            console.log("验证码已发送成功")
-            await selectRedisDatabase(3);
-            await redisClient.set(
-                account,
-                JSON.stringify({
-                    verificationCode: verificationCode,
-                    expires: new Date() + jwt_refresh_expiration
-                }),
-                redisClient.print
-            );
-        } else {
-            console.log("验证码发送失败")
-        }
-        return res.result
+        console.log("验证码已经发送")
+        return 0
     } catch (e) {
         return e.message;
     }
