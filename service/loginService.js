@@ -195,7 +195,7 @@ async function sendvc(loginData) {
         var verificationCode = Math.round(Rand * 100000000);
         
         options = {
-            url: "http://8.134.73.52/searchApi/helloWorld",
+            url: "http://19.147.25.152:882/sms/v2/std/send_single",
             userid: "ZNZXPT", //字符串
             pwd: "ZNZXPT@#2022",
             mobile: account, //字符串
