@@ -6,6 +6,7 @@ const {
 // const axios = require("axios")
 // import axios from "axios";
 const redisClient = require('../config/redis')
+const request = require("request");
 
 /**
  * 验证用户身份、生成jwt
@@ -193,25 +194,29 @@ async function sendvc(loginData) {
         var Rand = Math.random();
         var verificationCode = Math.round(Rand * 100000000);
         
-        // let res = await axios.post("http://10.147.25.152:8082/sms/v2/std/send_single", {
-        //     userid: "ZNZXPT",//字符串
-        //     pwd: "ZNZXPT@#2022",
-        //     mobile: account,//字符串
-        //     content: "验证码：" + verificationCode + ',请妥善保管。'
-        // })
-        let res = {
-            "result": 0
-        };
-        verificationCode = "12345678"
+        let res = await request.post({
+                url: "http://10.147.25.152:8082/sms/v2/std/send_single",
+                userid: "ZNZXPT", //字符串
+                pwd: "ZNZXPT@#2022",
+                mobile: account, //字符串
+                content: "验证码：" + verificationCode + ",请妥善保管。",
+            }, function (error, response, body) {
+                if()
+            });
+        console.log(res)
+        // let res = {
+        //     "result": 0
+        // };
+        // verificationCode = "12345678"
 
         if(res.result == 0) {
-            console.log("验证码发送成功")
+            console.log("验证码已发送成功")
             await selectRedisDatabase(3);
             await redisClient.set(
                 account,
                 JSON.stringify({
                     verificationCode: verificationCode,
-                    expires: new Date()
+                    expires: new Date() + jwt_refresh_expiration
                 }),
                 redisClient.print
             );
@@ -247,8 +252,11 @@ async function authenticatebyvc(loginData) {
         // 验证码检测
         selectRedisDatabase(3)
         let redis_res = await redisClient.get(account)
-        // console.log(redis_res)
-        // console.log(account, verificationCode, JSON.parse(redis_res).verificationCode)
+        
+        if (new Date(redis_res.expires).valueOf() < new Date().valueOf()) {
+            return { msg: "验证码错误", code: 403 };
+        }
+        
         if (verificationCode != JSON.parse(redis_res).verificationCode) {
             await lockAccount(account);
             return { msg: "验证码错误", code: 403 };
