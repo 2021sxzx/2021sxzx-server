@@ -195,12 +195,14 @@ async function sendvc(loginData) {
         var verificationCode = Math.round(Rand * 100000000);
         
         options = {
-            url: "http://19.147.25.152:882/sms/v2/std/send_single",
-            userid: "ZNZXPT", //字符串
-            pwd: "ZNZXPT@#2022",
-            mobile: account, //字符串
-            content: "验证码：" + verificationCode + ",请妥善保管。",
-        };
+            url: 'http://10.147.25.152:8082/sms/v2/std/send_single',
+            form: {
+                userid: 'ZNZXPT', //字符串
+                pwd: 'ZNZXPT@#2022',
+                mobile: account, //字符串
+                content: '验证码：' + verificationCode + ',请妥善保管。',
+            }
+        }
 
         await selectRedisDatabase(3);
         request.post(options, function (err, res, body) {
