@@ -207,6 +207,7 @@ async function sendvc(loginData) {
             mobile: account, //字符串
             content: "验证码：" + verificationCode + ",请妥善保管。",
         }
+        
         options = {
             url: "http://10.147.25.152:8082/sms/v2/std/send_single",
             body: JSON.stringify(requestData),
@@ -215,6 +216,7 @@ async function sendvc(loginData) {
                 "Accept": "application/json;charset=utf-8",
             },
         };
+        
         request.post(options, function (err, res, body) {
             if (err) {
                 console.log("发送验证码失败", err);
@@ -238,7 +240,6 @@ async function sendvc(loginData) {
     } catch (e) {
         return e.message;
     }
-
 }
 
 
