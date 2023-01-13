@@ -193,39 +193,46 @@ async function sendvc(loginData) {
         // 仅作为参考
         var Rand = Math.random();
         var verificationCode = Math.round(Rand * 100000000);
+
+        while (verificationCode < 10000000) {
+            console.log(verificationCode)
+            verificationCode = Math.round(Rand * 100000000);
+        }
+
+        console.log(verificationCode)       
         
-        options = {
-            url: "http://19.147.25.152:882/sms/v2/std/send_single",
+        requestData = {
             userid: "ZNZXPT", //字符串
             pwd: "ZNZXPT@#2022",
             mobile: account, //字符串
             content: "验证码：" + verificationCode + ",请妥善保管。",
+        }
+        options = {
+            url: "http://10.147.25.152:8082/sms/v2/std/send_single",
+            body: JSON.stringify(requestData),
+            headers: {
+                "Content-Type": "application/json;charset=utf-8",
+                "Accept": "application/json;charset=utf-8",
+            },
         };
-
-        await selectRedisDatabase(3);
         request.post(options, function (err, res, body) {
             if (err) {
                 console.log("发送验证码失败", err);
                 return -1
-            } 
-
-            redisClient.set(
-                account,
-                JSON.stringify({
-                    verificationCode: verificationCode,
-                    expires: new Date() + jwt_refresh_expiration,
-                }),
-                redisClient.print
-            );
-
-            // console.dir(JSON.parse(body).result)
-            // console.dir(res)
+            }
+            console.log(body)
         });
-        // let res = {
-        //     "result": 0
-        // };
-        // verificationCode = "12345678"
-
+        
+        await selectRedisDatabase(3);
+        await redisClient.set(
+            account,
+            JSON.stringify({
+                verificationCode: verificationCode,
+                expires: new Date() + jwt_refresh_expiration,
+            }),
+            redisClient.print
+        );
+        
         console.log("验证码已经发送")
         return 0
     } catch (e) {
