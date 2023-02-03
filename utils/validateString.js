@@ -13,11 +13,29 @@ function validateString(str) {
 
     //对非法字符进行过滤处理
     if (!res.isLegal) {
-        res.legalStr.replace(/[|&;$%@'"\\<>()+,\n\r]/g, '')
+        res.legalStr = res.legalStr.replace(/&/g, "&amp;");
+        res.legalStr = res.legalStr.replace(/</g, "&It;");
+        res.legalStr = res.legalStr.replace(/>/g, "&gt;");
+        res.legalStr = res.legalStr.replace(/"/g, "&quot;");
+        res.legalStr = res.legalStr.replace(/'/g, "&#x27;");
+        res.legalStr = res.legalStr.replace(/\//g, "&#x2F;");   
+        
+        res.legalStr = res.legalStr.replace(/&#x/g, "invalid"); 
+        res.legalStr = res.legalStr.replace(/\\u00/g, "invalid");   
+        res.legalStr = res.legalStr.replace(/\\x/g, "invalid");
+        res.legalStr = res.legalStr.replace(/\\0/g, "invalid");   
+        res.legalStr = res.legalStr.replace(/`/g, "&back;");   
+
+        
+        // res.legalStr = res.legalStr.replace(/[|&;$%@'"\\<>()+,\n\r]/g, "");
     }
 
     return res
 }
+
+let str = "&"
+// console.log(str.replace(/</g, "Hello"))
+console.log(validateString(str))
 
 module.exports = {
     validateString

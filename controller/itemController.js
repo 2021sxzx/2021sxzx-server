@@ -2521,7 +2521,7 @@ async function getRules({
             dict.page_size = page_size;
             dict.page_num = page_num;
 
-            console.log(t2 - t1, t3 - t2, t4 - t3)
+            // console.log(t2 - t1, t3 - t2, t4 - t3)
             return new SuccessModel({ msg: "查询成功", data: dict });
         }
 
