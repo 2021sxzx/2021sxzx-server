@@ -283,6 +283,8 @@ async function getItems({
             const unit_id_list = units.map((item) => {
                 return item.unit_id;
             });
+            if (unit_id_list.indexOf("1653018366962") != -1)
+                unit_id_list.push("696927671");
             console.log("顺利执行完成");
             query["$and"].push({ service_agent_code: { $in: unit_id_list } });
 
@@ -2447,7 +2449,7 @@ async function getRules({
                     _query,
                     {
                         data: res,
-                        expires: new Date().getTime() + 10 * 1000 + Math.random() * 10 * 1000,
+                        expires: new Date().getTime() // + 10 * 1000 + Math.random() * 10 * 1000,
                     },
                     redisClient.print
                 );
@@ -2503,7 +2505,7 @@ async function getRules({
                         data[i].rule_id,
                         {
                             data: _res,
-                            expires: new Date().getTime() + 60 * 1000 + Math.random() * 60 * 1000,
+                            expires: new Date().getTime() // + 60 * 1000 + Math.random() * 60 * 1000,
                         },
                         redisClient.print
                     );

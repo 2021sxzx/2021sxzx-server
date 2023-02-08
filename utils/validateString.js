@@ -17,14 +17,17 @@ function validateString(str) {
         res.legalStr = res.legalStr.replace(/</g, "&It;");
         res.legalStr = res.legalStr.replace(/>/g, "&gt;");
         res.legalStr = res.legalStr.replace(/"/g, "&quot;");
-        res.legalStr = res.legalStr.replace(/'/g, "&#x27;");
-        res.legalStr = res.legalStr.replace(/\//g, "&#x2F;");   
-        
+
+        res.legalStr = res.legalStr.replace(/&#/g, "invalid");
         res.legalStr = res.legalStr.replace(/&#x/g, "invalid"); 
         res.legalStr = res.legalStr.replace(/\\u00/g, "invalid");   
         res.legalStr = res.legalStr.replace(/\\x/g, "invalid");
         res.legalStr = res.legalStr.replace(/\\0/g, "invalid");   
         res.legalStr = res.legalStr.replace(/`/g, "&back;");   
+
+        res.legalStr = res.legalStr.replace(/'/g, "&#x27;");
+        res.legalStr = res.legalStr.replace(/\//g, "&#x2F;");   
+        
 
         
         // res.legalStr = res.legalStr.replace(/[|&;$%@'"\\<>()+,\n\r]/g, "");
