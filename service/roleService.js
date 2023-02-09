@@ -137,7 +137,7 @@ async function getRoleList () {
     //   role_id: 1657090863413
     // })
     // console.log("In getRoleList,Test's permission:\n",permissionFindArrPrve)
-    if (roleList == null || isNeedUpdateRoleList == true) {
+    if (roleList == null || true) {
       resq = await role.aggregate([
         {//多表查询
           /*

@@ -116,7 +116,7 @@ class systemMetaService {
         const readline = require('readline')
         const fs = require('fs')
         const rl = readline.createInterface({
-            input: fs.createReadStream('log/access.log'),
+            input: fs.createReadStream('/www/wwwlogs/access.log'),
         })
 
         let PV = 0 // PV初始化为0
@@ -136,14 +136,14 @@ class systemMetaService {
 
     calculateUV = () => {
         // 本地访问不到服务器的nginx日志, 返回一个随机数据[100,200]
-        return Math.floor(Math.random() * 101) + 100
+        // return Math.floor(Math.random() * 101) + 100
 
         const shell = require('shelljs')
 
         const file_path = '/www/wwwlogs' // 前台nginx日志所在目录
-        const file_name = 'sxzx_qt_access.log'  //前台nginx日志文件名
+        const file_name = "/www/wwwlog/ssxzx_qt_access.log";  //前台nginx日志文件名
 
-        shell.cd(file_path) //切换到前台nginx日志所在目录
+        // shell.cd(file_path) //切换到前台nginx日志所在目录
         const time = shell.exec('date "+%d/%b/%Y"').stdout //获取当前系统时间
         const uv = shell
             .exec(
