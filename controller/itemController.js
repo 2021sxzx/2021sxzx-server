@@ -16,6 +16,7 @@ const modelStatusType = require("../model/statusType");
 const unitService = require("../service/unitService");
 const redisClient = require("../config/redis");
 const {validateString} = require("../utils/validateString");
+const { mongo } = require("mongoose");
 
 /**
  * 获取事项状态表
@@ -2322,6 +2323,7 @@ async function getRules({
                             end_time = null,
                             page_size = null,
                             page_num = null,
+                            service_object = null,
                         }) {
     let _res;
     let _query;
@@ -2576,7 +2578,9 @@ async function getRules({
         if (ruleDic === null) {
             return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
         }
-
+        
+        // 晒徐个人业务or法人业务or事业单位业务
+        res = await fliterByServiceObject(res, service_object, ruleDic)
         for (let i = 0; i < res.length; i++) {
             let rulePath = "";
             let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null;
@@ -2605,6 +2609,45 @@ async function getRules({
         console.log(err)
         return new ErrorModel({msg: "查询失败", data: err.message});
     }
+}
+
+async function fliterByServiceObject(res, service_object, ruleDic) {
+    if(service_object == null)
+        return true
+    
+
+    let filter_res = []
+    // console.log(res.length)
+    // return res
+    for (let i = 0; i < res.length; i++) {
+        if(await dfsFliterByServiceObject(res[i], service_object, ruleDic))
+            filter_res.push(res[i])
+    }
+
+    return filter_res
+}
+
+async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
+    if (service_object == null) return res;
+  
+    // console.log(rule.rule_id)
+    // console.log(ruleDic.get(rule.rule_id));
+    // return true
+    let children = ruleDic.get(rule.rule_id).children;
+    //console.log(children.children)
+    //return true
+    if (children.length == 0 && await modelItem.exists({
+            rule_id: rule.rule_id,
+            service_object: { $in: service_object },
+        }))
+        return true
+    
+    for (let i = 0; i < children.length; i++) {
+        if (dfsFliterByServiceObject(ruleDic.get(children[i]), service_object, ruleDic))
+            return true
+    }
+
+    return false;
 }
 
 /**
