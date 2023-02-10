@@ -2580,7 +2580,8 @@ async function getRules({
         }
         
         // 晒徐个人业务or法人业务or事业单位业务
-        res = await fliterByServiceObject(res, service_object, ruleDic)
+        console.log(service_object == null)
+	res = await fliterByServiceObject(res, service_object, ruleDic)
         for (let i = 0; i < res.length; i++) {
             let rulePath = "";
             let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null;
@@ -2612,39 +2613,60 @@ async function getRules({
 }
 
 async function fliterByServiceObject(res, service_object, ruleDic) {
+    // console.log(service_object == null)
     if(service_object == null)
-        return true
+        return res
     
 
     let filter_res = []
-    // console.log(res.length)
+    console.log("res", res)
     // return res
     for (let i = 0; i < res.length; i++) {
         if(await dfsFliterByServiceObject(res[i], service_object, ruleDic))
             filter_res.push(res[i])
+        console.log(filter_res)
     }
 
     return filter_res
 }
 
 async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
-    if (service_object == null) return res;
+    console.log(service_object == null)
+    if (service_object == null) return true;
   
     // console.log(rule.rule_id)
-    // console.log(ruleDic.get(rule.rule_id));
+    //console.log(service_object);
     // return true
-    let children = ruleDic.get(rule.rule_id).children;
     //console.log(children.children)
     //return true
-    if (children.length == 0 && await modelItem.exists({
+    let children = ruleDic.get(rule.rule_id).children;
+    if (children.length == 0) {
+        let itemList = await modelItem.find({
             rule_id: rule.rule_id,
-            service_object: { $in: service_object },
-        }))
-        return true
+            item_status: 3,
+        })
+        // console.log(itemList)
+        for (let i = 0; i < itemList.length; i++) {
+            if (
+                await modelTask.exists({
+                    task_code: itemList[i].task_code,
+                    service_object_type: {
+                        $regex: serviceObjectTypeMapping(service_object.toString()),
+                    },
+		})
+            ) {
+	        console.log("H", rule)
+		return true
+	    }
+	}
+	return false
+    }
     
     for (let i = 0; i < children.length; i++) {
-        if (dfsFliterByServiceObject(ruleDic.get(children[i]), service_object, ruleDic))
-            return true
+        if (await dfsFliterByServiceObject(ruleDic.get(children[i]), service_object, ruleDic)) {
+            
+            return true	
+	}
     }
 
     return false;
