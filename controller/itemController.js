@@ -2283,24 +2283,24 @@ async function doesChildRegionItemExist(ruleId, regionIds, serviceObject) {
  * @return {RegExp}
  */
 function serviceObjectTypeMapping(serviceObject) {
-    if (serviceObject == null)
-        return /./
+    // if (serviceObject == null)
+    //     return /./
     
-    let _ = []
-    let charNumber = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-    for (let i = 0, len = charNumber.length; i < len; i++) {
-        if (serviceObject.indexOf(charNumber[i]) != -1) {
-            _.push(charNumber[i]);
-        }
-    }
+    // let _ = []
+    // let charNumber = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    // for (let i = 0, len = charNumber.length; i < len; i++) {
+    //     if (serviceObject.indexOf(charNumber[i]) != -1) {
+    //         _.push(charNumber[i]);
+    //     }
+    // }
 
-    res = "["
-    for(let i = 0, len = _.length; i < len; i++) 
-        res = res + _[i]
-    res = res + "]"
+    // res = "["
+    // for(let i = 0, len = _.length; i < len; i++) 
+    //     res = res + _[i]
+    // res = res + "]"
 
     // console.log(res)
-    return res
+    // return res
     
     switch (serviceObject) {
             case "[1]":
