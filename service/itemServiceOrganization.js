@@ -123,6 +123,8 @@ async function getOrganListByRegionCode(region_code) {
     }
 }
 
+
+// 获取区划信息
 async function mmmain() {
     return new Promise(async (resolve, reject) => {
         console.log("开始获取所有的区划");
@@ -149,6 +151,36 @@ async function mmmain() {
         }
     });
 }
+
+
+// 获取事项指南的信息
+// async function main() {
+//     return new Promise(async (resolve, reject) => {
+//         console.log("开始获取所有的事项指南信息");
+//         const units = {};
+//         try {
+//             let regions = await modelRegion.find({}, {});
+//             console.log("开始获取所有区划对应的实施主体");
+
+//             for (let i = 0; i < regions.length; i++) {
+//                 let data = await getOrganListByRegionCode(
+//                     regions[i].region_code
+//                 );
+//                 //.then是接收正确返回的信息
+//                 console.log(i, regions.length);
+//                 units[regions[i].region_code] = data;
+
+//                 // break
+//             }
+
+//             resolve(units);
+//         } catch (err) {
+//             console.log("err", err);
+//             reject(err);
+//         }
+//     });
+// }
+
 
 // 异步连接 MongoDB
 mongoose

@@ -2283,18 +2283,37 @@ async function doesChildRegionItemExist(ruleId, regionIds, serviceObject) {
  * @return {RegExp}
  */
 function serviceObjectTypeMapping(serviceObject) {
-    switch (serviceObject) {
-        case "[1]":
-            return /1/;
-        case "[2,3,4]":
-            return /[234]/;
-        case "[5,6,9]":
-            return /[569]/;
-        case null:
-            return /./;
-        default:
-            throw new Error("无法识别的服务对象类型");
+    if (serviceObject == null)
+        return /./
+    
+    let _ = []
+    let charNumber = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    for (let i = 0, len = charNumber.length; i < len; i++) {
+        if (serviceObject.indexOf(charNumber[i]) != -1) {
+            _.push(charNumber[i]);
+        }
     }
+
+    res = "["
+    for(let i = 0, len = _.length; i < len; i++) 
+        res = res + _[i]
+    res = res + "]"
+
+    // console.log(res)
+    return res
+    
+    switch (serviceObject) {
+            case "[1]":
+                return /1/;
+            case "[2,3,4]":
+                return /[234]/;
+            case "[5,6,9]":
+                return /[569]/;
+            case null:
+                return /./;
+            default:
+                throw new Error("无法识别的服务对象类型");
+        }
 }
 
 let itemCache = new Map();
@@ -2580,7 +2599,7 @@ async function getRules({
         }
         
         // 晒徐个人业务or法人业务or事业单位业务
-        console.log(service_object == null)
+        // console.log(service_object == null)
 	res = await fliterByServiceObject(res, service_object, ruleDic)
         for (let i = 0; i < res.length; i++) {
             let rulePath = "";
@@ -2619,19 +2638,19 @@ async function fliterByServiceObject(res, service_object, ruleDic) {
     
 
     let filter_res = []
-    console.log("res", res)
+    // console.log("res", res)
     // return res
     for (let i = 0; i < res.length; i++) {
         if(await dfsFliterByServiceObject(res[i], service_object, ruleDic))
             filter_res.push(res[i])
-        console.log(filter_res)
+        // console.log(filter_res)
     }
 
     return filter_res
 }
 
 async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
-    console.log(service_object == null)
+    // console.log(service_object == null)
     if (service_object == null) return true;
   
     // console.log(rule.rule_id)
@@ -2655,7 +2674,7 @@ async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
                     },
 		})
             ) {
-	        console.log("H", rule)
+	        // console.log("H", rule)
 		return true
 	    }
 	}
