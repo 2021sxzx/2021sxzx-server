@@ -18,37 +18,39 @@ const imageRouter = require('./image')
 const personalRouter = require('./personal')
 const systemMetaAboutUserRouter = require('./systemMetaDataAboutUser')
 const verify = require('./verify')
+const tyrzRouter = require('./tyrz')
 
 const routesStore = [
-  unitRouter,
-  commentRouter,
-  systemLogRouter,
-  taskRouter,
-  itemRouter,
-  systemResourceRouter,
-  loginRouter,
-  userManagementRouter,
-  roleRouter,
-  sideBarRouter,
-  permissionRouter,
-  systemFailureRouter,
-  systemMetaDataRouter,
-  systemBasicRouter,
-  systemBackupRouter,
-  userDepartmentRouter,
-  imageRouter,
-  personalRouter,
-  systemMetaAboutUserRouter,
-  verify
+    unitRouter,
+    commentRouter,
+    systemLogRouter,
+    taskRouter,
+    itemRouter,
+    systemResourceRouter,
+    loginRouter,
+    userManagementRouter,
+    roleRouter,
+    sideBarRouter,
+    permissionRouter,
+    systemFailureRouter,
+    systemMetaDataRouter,
+    systemBasicRouter,
+    systemBackupRouter,
+    userDepartmentRouter,
+    imageRouter,
+    personalRouter,
+    systemMetaAboutUserRouter,
+    verify,
+    tyrzRouter,
 ]
 
 const loadRoutes = (routesStore, path = '/api', expressInstance) => {
-  routesStore.forEach(route => {
-    expressInstance?.use(path, route)
-  })
+    routesStore.forEach(route => {
+        expressInstance?.use(path, route)
+    })
 }
 
 module.exports = {
-  routesStore,
-  loadRoutes
+    routesStore,
+    loadRoutes
 }

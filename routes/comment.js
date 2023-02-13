@@ -35,6 +35,7 @@ router.post("/v1/comment", async (req, res, next) => {
   let commentData = req.body;
   commentData.content = xss(commentData.content);
   commentData.create_time = parseInt(Date.now());
+  commentData.tyrz_identifier = req.cookies.tyrz_identifier;
   let data = await saveUserComment(commentData);
   setStatusCode(res, data);
   res.json(data);
