@@ -4,6 +4,7 @@ const item = require("../model/item");
 const mongoose = require("mongoose");
 const task = require("../model/task");
 const rule = require("../model/rule");
+const redis=require("../config/redis")
 
 function showIdc(str) {
   if (str.length > 0) {
@@ -22,10 +23,19 @@ function showIdc(str) {
  */
 async function saveComment(commentData) {
   try {
-    // if (typeof commentData.item_id !== 'string'|| !(arr instanceof Array) 
+    // if (typeof commentData.item_id !== 'string'|| !(arr instanceof Array)
     // || nullVall === null || typeof unVal === 'undefined'||!(typeof numVal === 'number' && Number.isNaN(numVal) === false)){
 
     // }
+
+    /**
+     * 通过 tyrz_identifier 获取用户身份证信息
+     * @property idcardnumber 用户身份证
+     */
+    if (commentData.sign && commentData.tyrz_identifier) {
+      await redis.select(4)
+      commentData.idc = JSON.parse(await redis.get(commentData.tyrz_identifier)).idcardnumber
+    }
 
     let itemData = [];
     if(typeof commentData.item_id !== 'undefined') {
@@ -33,7 +43,7 @@ async function saveComment(commentData) {
         _id: mongoose.Types.ObjectId(commentData.item_id),
       });
     }
-    
+
     if(itemData.length == 0) {
       return {};
     }
