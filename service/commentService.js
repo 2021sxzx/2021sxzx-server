@@ -300,6 +300,7 @@ async function getAllUserCommentByCondition({
   category,
 }) {
   try {
+    // console.log(Array.isArray(category));
     if (Array.isArray(category)) {
       const Reg = new RegExp(typeData, "i");
       const arr = [
@@ -326,7 +327,7 @@ async function getAllUserCommentByCondition({
         .find({
           $and: arr,
         })
-        .skip(0)
+        .skip((pageNum - 1) * 10)
         .limit(10)
         .lean();
       let total = await comment

@@ -64,6 +64,7 @@ router.post("/v1/searchComment", async (req, res, next) => {
   if (searchData.typeData) {
     searchData.typeData = xss(searchData.typeData);
   }
+  // console.log(searchData.typeData);
   let data = await getSearchComment(searchData);
   setStatusCode(res, data);
   res.json(data);
