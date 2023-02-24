@@ -61,7 +61,10 @@ async function loginByCode({cookies: {tyrz_identifier}, query: {code}}) {
         // 随机生成一个 redis 中没有的新 cookie
     }
     // 获取 access_token
-    request(`${TYRZ.url}/pscp/sso/connect/page/oauth2/access_token/?client_id=${TYRZ.client_id}&client_secret=${TYRZ.client_secret}&code=${code}&scope=all&redirect_uri=${TYRZ.redirect_url}&grant_type=authorization_code`,
+    
+    // console.log(`${TYRZ.url}/pscp/sso/connect/page/oauth2/access_token/?client_id=${TYRZ.client_id}&client_secret=${TYRZ.client_secret}&code=${code}&scope=all&redirect_uri=${TYRZ.redirect_url}&grant_type=authorization_code`)
+    
+    request(`${TYRZ.url}/pscp/sso/connect/page/oauth2/access_token?client_id=${TYRZ.client_id}&client_secret=${TYRZ.client_secret}&code=${code}&scope=all&redirect_uri=${TYRZ.redirect_url}&grant_type=authorization_code`,
         (err, res, data) => {
             if (err) throw(err)
             const access_token = JSON.parse(data).access_token
