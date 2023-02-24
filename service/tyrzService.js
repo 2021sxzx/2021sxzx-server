@@ -76,9 +76,10 @@ async function loginByCode({cookies: {tyrz_identifier}, query: {code}}) {
                     if (data.errcode) {
                         console.error('用户信息获取失败，错误信息')
                         console.error(data)
-                    } else
+                    } else {
                         // 保存用户信息，整个 JSON 都会保存在 data 中
                         redisClient.set(tyrz_identifier, JSON.stringify(data.userobj)).then()
+                    }
                 })
             else {
                 console.error('access_token 获取失败，错误信息')
