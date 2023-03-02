@@ -31,6 +31,7 @@ async function getInfo({cookies: {tyrz_identifier}}) {
      */
     // 根据 cookie 获取 redis 中的对应条目，此处只获取姓名
     if (tyrz_identifier) {
+        await redisClient.select(4)
         const data = JSON.parse(await redisClient.get(tyrz_identifier))
         // 若条目存在
         if (data)
@@ -63,7 +64,7 @@ async function loginByCode({cookies: {tyrz_identifier}, query: {code}}) {
     // 获取 access_token
     
     // console.log(`${TYRZ.url}/pscp/sso/connect/page/oauth2/access_token/?client_id=${TYRZ.client_id}&client_secret=${TYRZ.client_secret}&code=${code}&scope=all&redirect_uri=${TYRZ.redirect_url}&grant_type=authorization_code`)
-    
+    await redisClient.select(4);
     request(`${TYRZ.url}/pscp/sso/connect/page/oauth2/access_token?client_id=${TYRZ.client_id}&client_secret=${TYRZ.client_secret}&code=${code}&scope=all&redirect_uri=${TYRZ.redirect_url}&grant_type=authorization_code`,
         (err, res, data) => {
             if (err) throw(err)
