@@ -126,6 +126,10 @@ async function getOrganListByRegionCode(region_code) {
 
 // 获取区划信息
 async function mmmain() {
+    console.log("开始getToken")
+    let token = await getToken()
+    console.log(token)
+    return ""
     return new Promise(async (resolve, reject) => {
         console.log("开始获取所有的区划");
         const units = {};
@@ -184,7 +188,13 @@ async function mmmain() {
 
 // 异步连接 MongoDB
 mongoose
-    .connect("mongodb://root2:Hgc16711@8.134.73.52:27017/sxzx")
+    .connect("mongodb://root2:Hgc16711@10.196.133.5:27017/sxzx", {
+        ssl: true,
+        sslValidate: false,
+        sslCA: "./config/mongodbSSL/ca.pem",
+        sslKey: "./config/mongodbSSL/client.key",
+        sslCert: "./config/mongodbSSL/client.crt",
+    })
     .then(() => {
         console.log("MongoDB 连接成功");
     })
@@ -192,6 +202,7 @@ mongoose
         console.log("MongoDB 连接失败。错误信息如下：");
         consoe.dir(err);
     });
+
 
 var res = mmmain()
     .then((res) => {

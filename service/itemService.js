@@ -979,7 +979,7 @@ async function checkAllRegionsItems(regions, time) {
         //     throw new Error(err.message)
         // }
     }
-    const orgs = getOrganOfRegions(regions)
+    const orgs = await getOrganOfRegions(regions)
 
     //遍历regions数组
     for (let i = 0, len = orgs.length; i < len; i++) {
@@ -1425,7 +1425,7 @@ function initializeCheckJob() {
         return
     }
     //初始状态是每周日4点
-    setCheckJobRule([0], 4, 0)
+    setCheckJobRule([4], 16, 30)
 }
 
 /**
