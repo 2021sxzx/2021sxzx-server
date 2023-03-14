@@ -979,6 +979,8 @@ async function checkAllRegionsItems(regions, time) {
         //     throw new Error(err.message)
         // }
     }
+
+    // await 了
     const orgs = await getOrganOfRegions(regions)
 
     //遍历regions数组
@@ -996,7 +998,7 @@ async function checkAllRegionsItems(regions, time) {
     //存到数据库中
     const bulkOps = []
     const regionCodes = Object.keys(checkResult)
-    for (let i = 0, len = regionCodes; i < len; i++) {
+    for (let i = 0, len = regionCodes.length; i < len; i++) {
         try {
             const log = await modelRemoteCheckLog.exists({region_code: regionCodes[i]})
             if (log === false) {

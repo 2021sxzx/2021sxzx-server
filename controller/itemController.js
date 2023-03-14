@@ -285,9 +285,13 @@ async function getItems({
                 return item.unit_id;
             });
             if (unit_id_list.indexOf("1653018366962") != -1)
-                unit_id_list.push("696927671");
-            console.log("顺利执行完成");
-            query["$and"].push({ service_agent_code: { $in: unit_id_list } });
+                unit_id_list.push("696927671"); 
+            if (unit_id_list.indexOf("78605187X") != -1)
+                unit_id_list.push("78605187X "); 
+
+            query["$and"].push({
+                service_agent_code: { $in: unit_id_list },
+            });
 
             // let users = await modelUsers.find({unit_id: {$in: units}})
             // for (let i = 0, len = users.length; i < len; i++) {
@@ -3202,8 +3206,8 @@ async function getEveryItemStatusCount() {
         var result = [];
         for (let i = 0, len = status.length; i < len; i++) {
             let count = await modelItem
-                .find({ item_status: status[i].id })
-                .count();
+            .find({ item_status: status[i].id })
+            .count();
             result.push({
                 status_name: status[i].cn_name,
                 count: count,

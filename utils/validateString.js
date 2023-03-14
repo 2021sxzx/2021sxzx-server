@@ -27,12 +27,9 @@ function validateString(str) {
 
         res.legalStr = res.legalStr.replace(/'/g, "&#x27;");
         res.legalStr = res.legalStr.replace(/\//g, "&#x2F;");   
-        
-
-        
+       
         // res.legalStr = res.legalStr.replace(/[|&;$%@'"\\<>()+,\n\r]/g, "");
     }
-
     return res
 }
 
