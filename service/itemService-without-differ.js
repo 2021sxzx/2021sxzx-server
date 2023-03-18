@@ -805,7 +805,7 @@ async function getAllItemsByOrg(org_code) {
         for (let basicItem of basicItems) {
             res.push(basicItem.carry_out_code);
         }
-        return res
+        // return res
         console.log('getAllItemBasicByOrg 成功',)
         // 事项详细信息列表（包括空事项 [] 和没有拆分的办理项 [subItem1, subItem2, ...] 以及事项 [item]
         let items = []

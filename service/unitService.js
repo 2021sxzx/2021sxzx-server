@@ -148,7 +148,7 @@ class unitService {
     try {
       if (arguments.length === 0) {
         // 根节点
-        unit_id = 1653018366962;
+        unit_id = "1653018366962";
       }
       let allData = null;
       // 在这里，如果发现needUpdateData变为true时，这个时候就会重新拉下所有的数据更新allData
@@ -165,11 +165,12 @@ class unitService {
         data: root,
       })
     } catch (error) {
+      console.log(error);
       return {
-        msg: '单位信息处理失败',
-        data: e.message,
-        code: 400
-      }
+          msg: "单位信息处理失败",
+          data: error.message,
+          code: 400,
+      };
     }
   }
 

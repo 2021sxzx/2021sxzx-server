@@ -36,9 +36,11 @@ class unitController {
 
   async getUnit (req, res) {
     // 使用cookie来进行单位的控制
-    const result = await unitService.newUnitTree(Number(req.cookies.unit_id));
-    setStatusCode(res, result);
-    res.json(result);
+      const result = await unitService.newUnitTree(
+          req.cookies.unit_id
+      );
+      setStatusCode(res, result);
+      res.json(result);
   }
 
   async searchUnit (req, res) {
