@@ -4,6 +4,7 @@ const modelTask = require('../model/task')
 const modelRemoteCheckLog = require('../model/remoteCheckLog')
 const request = require('request')
 const schedule = require('node-schedule')
+const mongoose = require("mongoose");
 //---------------------------------------------------------------------------------
 //以下为初始化所需的全局变量
 /**
@@ -315,7 +316,7 @@ const ANNOUNCED = '3'   //已公示的事项的状态码
 const client_id = 'basicUser20190821144223063'
 const client_secret = 'e9e413e43b8d43cd8e71243cdbec5cd6'
 let token = ''
-const TYPE = 'PARALLEL'   //SERIAL或者PARALLEL
+const TYPE = "PARALLEL";   //SERIAL或者PARALLEL
 const GZ_REGIONCODE = '440100000000'
 
 /**
@@ -325,6 +326,7 @@ const GZ_REGIONCODE = '440100000000'
 function getToken() {
     return new Promise(function (resolve, reject) {
         const url = getToken_Url + '?client_id=' + client_id + '&client_secret=' + client_secret
+        console.log("getToken")
         const option = {
             url: url,
             method: 'GET',
@@ -450,16 +452,20 @@ async function listItemBasicByOrg(org_code, page_size, page_num) {
     try {
         let body = {}
         let retry = 10
+        //console.logorg_code))
+        if(org_code[0] === "007485864")
+            org_code[0] = "00749949X"
+        
         do {
             body = await postRequest(listItemBasicByOrg_Url, {
-                org_code: org_code,
+                org_code: org_code[0],
                 task_state: ANNOUNCED,
                 page_size: page_size,
                 page_num: page_num
             })
             retry -= 1
         } while (body === 'RETRY' && retry > 0)
-
+        console.log(body.total)
         if (body === 'RETRY') {
             console.log('获取' + org_code + '第' + page_num + '页的事项列表失败，重试了' + retry + '次')
             return null
@@ -636,7 +642,7 @@ async function getAllChildRegions(region_code) {
             const len = arr.length
 
             //并行
-            if (TYPE === 'PARALLEL') {
+            if (true) {
                 // console.log('获取' + arr + '的下级区划')
                 const promiseList = []
                 console.log('正在获取下级区划...')
@@ -685,7 +691,7 @@ async function getOrganOfRegions(regionCodes) {
     try {
         let value = []
 
-        if (TYPE === 'PARALLEL') { //并行
+        if (true) { //并行
             const promiseList = []
             for (let i = 0, len = regionCodes.length; i < len; i++) {
                 promiseList.push(getOrganListByRegionCode(regionCodes[i]))
@@ -806,6 +812,7 @@ async function getAllItemsByOrg(org_code) {
             }
             items = await Promise.all(promiseList)
         } else { //串行
+            console.log("串行", org_code)
             for (let i = 0; i < basicItems.length; i++) {
                 items.push(await getItem(basicItems[i].carry_out_code))
             }
@@ -945,19 +952,19 @@ const checkResult = {}    //检查结果，key是区划编码，value是对象
  * @returns
  */
 async function checkAllRegionsItems(regions, time) {
-    const recheckRegions = [] //检查过程中出错的区划，需要重新检查
-    const recheckTime = 3     //最大重新检查次数
+    const recheckRegions = []; //检查过程中出错的区划，需要重新检查
+    const recheckTime = 3; //最大重新检查次数
 
-    console.log('开始检查各区划的事项指南信息')
+    console.log("开始检查各区划的事项指南信息");
 
     //检查是否超过最大次数
     if (time > recheckTime) {
-        return
+        return;
     }
     //如果传入空数组就是检查全部区划，否则只检查regions数组内的区划
 
     if (regions.length <= 0) {
-        regions = await getAllChildRegions(GZ_REGIONCODE)
+        regions = await getAllChildRegions(GZ_REGIONCODE);
         // console.log("获得的regions:",regions)
         //检查一下区划信息
         // var inLocalNinRemote = []   //数据库有但是省政务没有
@@ -982,68 +989,109 @@ async function checkAllRegionsItems(regions, time) {
 
     // await 了
     const orgs = await getOrganOfRegions(regions)
+    // 荔湾区，越秀区，海珠区，白云区，天河区
+    // 黄浦区，花都区，南沙区，从化区，增城区
+    // 番禺区
+    const orgs_need_list = [
+        "007493506",
+        "007496491",
+        "00749949X",
+        "007502521",
+        "00750851X",
+        "558372292",
+        "007514442",
+        "783785421",
+        "007517547",
+        "007520260",
+        "552366115",
+        "007485864",
+    ];
+    console.log("const orgs = await 已经获取全部事项");
 
     //遍历regions数组
     for (let i = 0, len = orgs.length; i < len; i++) {
-        const region = orgs[i]
-        try {
-            checkResult[region.region_code] = await checkOrganizationItems(region.org_code)
-        } catch (err) {
-            console.log('检查' + region.region_name + '事项出错，错误信息：')
-            console.log(err.message)
-            recheckRegions.push(region.region_code)
+        console.log(i, "+", len)
+        const region = orgs[i];
+        console.log(region.region_code)
+
+
+        const childList = await getChildRegionList(region.region_code);
+        if(childList == null) {
+            console.log("居委会暂不处理")
+            continue
         }
+        
+        try {
+            checkResult[region.region_code] = await checkOrganizationItems(
+                region.org_code
+            );
+        } catch (err) {
+            console.log("检查" + region.region_name + "事项出错，错误信息：");
+            console.log(err.message);
+            recheckRegions.push(region.region_code);
+        }
+        // break
     }
 
     //存到数据库中
-    const bulkOps = []
-    const regionCodes = Object.keys(checkResult)
+    const bulkOps = [];
+    const regionCodes = Object.keys(checkResult);
     for (let i = 0, len = regionCodes.length; i < len; i++) {
+        //console.log(regionCodes[i])
+        //console.log(checkResult[regionCodes[i]])
         try {
-            const log = await modelRemoteCheckLog.exists({region_code: regionCodes[i]})
+            const log = await modelRemoteCheckLog.exists({
+                region_code: regionCodes[i],
+            });
             if (log === false) {
                 //数据不存在就新建
                 bulkOps.push({
                     insertOne: {
                         document: {
                             region_code: regionCodes[i],
-                            inLocalNinRemote: checkResult[regionCodes[i]].inLocalNinRemote,
-                            inRemoteNinLocal: checkResult[regionCodes[i]].inRemoteNinLocal,
-                            differences: checkResult[regionCodes[i]].differences
-                        }
-                    }
-                })
+                            inLocalNinRemote:
+                                checkResult[regionCodes[i]].inLocalNinRemote,
+                            inRemoteNinLocal:
+                                checkResult[regionCodes[i]].inRemoteNinLocal,
+                            differences:
+                                checkResult[regionCodes[i]].differences,
+                        },
+                    },
+                });
             } else {
                 //数据存在就覆盖
                 bulkOps.push({
                     updateOne: {
-                        filter: {region_code: regionCodes[i]},
+                        filter: { region_code: regionCodes[i] },
                         update: {
-                            inLocalNinRemote: checkResult[regionCodes[i]].inLocalNinRemote,
-                            inRemoteNinLocal: checkResult[regionCodes[i]].inRemoteNinLocal,
-                            differences: checkResult[regionCodes[i]].differences
-                        }
-                    }
-                })
+                            inLocalNinRemote:
+                                checkResult[regionCodes[i]].inLocalNinRemote,
+                            inRemoteNinLocal:
+                                checkResult[regionCodes[i]].inRemoteNinLocal,
+                            differences:
+                                checkResult[regionCodes[i]].differences,
+                        },
+                    },
+                });
             }
         } catch (err) {
-            console.log('查询' + regionCodes[i] + '相关数据失败，错误信息：')
-            console.log(err.message)
+            console.log("查询" + regionCodes[i] + "相关数据失败，错误信息：");
+            console.log(err.message);
         }
     }
     try {
-        await modelRemoteCheckLog.bulkWrite(bulkOps)
+        await modelRemoteCheckLog.bulkWrite(bulkOps);
     } catch (err) {
-        console.log('数据库操作失败，只更新了部分数据，错误信息：')
-        console.log(err.message)
+        console.log("数据库操作失败，只更新了部分数据，错误信息：");
+        console.log(err.message);
     }
 
     //中途有出错的区划需要重新检查
     if (recheckRegions.length > 0) {
-        await checkAllRegionsItems(recheckRegions, time + 1)
+        await checkAllRegionsItems(recheckRegions, time + 1);
     }
 
-    console.log('检查完毕')
+    console.log("检查完毕");
 }
 
 /**
@@ -1058,7 +1106,7 @@ async function getCheckResult() {
     // 该语句用于向MongoDB的数组插入数据
     // var insert = await modelRemoteCheckLog.update({$addToSet:{inLocalNinRemote:"11440115783785421N4442111015019"}})
     // var checkallregions = await checkAllRegionsItems([],0)
-    var logs = await modelRemoteCheckLog.find({})
+    var logs = await modelRemoteCheckLog.find({}, { inRemoteNinLocal: 1 });
     // for(let item of logs[0].inLocalNinRemote)
     // {
     //         let res = await modelItem.find({task_code:item})
@@ -1070,15 +1118,24 @@ async function getCheckResult() {
     var result = {}
     for (let i = 0, len = logs.length; i < len; i++) {
         result[logs[i].region_code] = {
-            inLocalNinRemote: logs[i].inLocalNinRemote,
+            // inLocalNinRemote: logs[i].inLocalNinRemote,
+            // inRemoteNinLocal: logs[i].inRemoteNinLocal,
+            // differences: logs[i].differences,
+            // handle_inLocalNinRemote: logs[i].handle_inLocalNinRemote,
+            // handle_inRemoteNinLocal: logs[i].handle_inRemoteNinLocal,
+            // handle_differences: logs[i].handle_differences,
+            // inLocalNinRemoteGuideNames: logs[i].inLocalNinRemoteGuideNames,
+            // differencesGuideNames: logs[i].differencesGuideNames
+
+            inLocalNinRemote: [],
             inRemoteNinLocal: logs[i].inRemoteNinLocal,
-            differences: logs[i].differences,
-            handle_inLocalNinRemote: logs[i].handle_inLocalNinRemote,
-            handle_inRemoteNinLocal: logs[i].handle_inRemoteNinLocal,
-            handle_differences: logs[i].handle_differences,
-            inLocalNinRemoteGuideNames: logs[i].inLocalNinRemoteGuideNames,
-            differencesGuideNames: logs[i].differencesGuideNames
-        }
+            differences: [],
+            handle_inLocalNinRemote: [],
+            handle_inRemoteNinLocal: [],
+            handle_differences: [],
+            inLocalNinRemoteGuideNames: [],
+            differencesGuideNames: [],
+        };
     }
     return result
 }
@@ -1481,15 +1538,45 @@ function getCheckJobRule() {
 //---------------------------------------------------------------------------------
 //以下为项目启动时的代码
 
+
+
 // 初始化缓存对象
 initializeMemory()
 
 //初始化定时器
-initializeCheckJob()
-
+// initializeCheckJob()
 // 初始化 task 表
 // initializeTaskSchema()
 // getChildRegionList("440100000000");
+
+
+mongoose
+    .connect("mongodb://root2:Hgc16711@8.134.73.52:27017/sxzx", {
+        ssl: true,
+        sslValidate: false,
+        sslCA: "./config/mongodbSSL/ca.pem",
+        sslKey: "./config/mongodbSSL/client.key",
+        sslCert: "./config/mongodbSSL/client.crt",
+    })
+    .then(() => {
+        console.log("MongoDB 连接成功");
+    })
+    .catch((err) => {
+        console.log("MongoDB 连接失败。错误信息如下：");
+        console.dir(err);
+    });
+
+
+function setCheckJobRule() {
+    checkAllRegionsItems([], 0).then(() => {
+                console.log('下一次检查时间：' + checkJob.nextInvocation())
+            }).catch((err) => {
+                console.log('检查区划事项失败')
+                console.log(err)
+            })
+}
+
+setCheckJobRule()
 
 module.exports = {
     addUpdateTask,
