@@ -1544,39 +1544,39 @@ function getCheckJobRule() {
 initializeMemory()
 
 //初始化定时器
-// initializeCheckJob()
+initializeCheckJob()
 // 初始化 task 表
 // initializeTaskSchema()
 // getChildRegionList("440100000000");
 
 
-mongoose
-    .connect("mongodb://root2:Hgc16711@8.134.73.52:27017/sxzx", {
-        ssl: true,
-        sslValidate: false,
-        sslCA: "./config/mongodbSSL/ca.pem",
-        sslKey: "./config/mongodbSSL/client.key",
-        sslCert: "./config/mongodbSSL/client.crt",
-    })
-    .then(() => {
-        console.log("MongoDB 连接成功");
-    })
-    .catch((err) => {
-        console.log("MongoDB 连接失败。错误信息如下：");
-        console.dir(err);
-    });
+// mongoose
+//     .connect("mongodb://root2:Hgc16711@8.134.73.52:27017/sxzx", {
+//         ssl: true,
+//         sslValidate: false,
+//         sslCA: "./config/mongodbSSL/ca.pem",
+//         sslKey: "./config/mongodbSSL/client.key",
+//         sslCert: "./config/mongodbSSL/client.crt",
+//     })
+//     .then(() => {
+//         console.log("MongoDB 连接成功");
+//     })
+//     .catch((err) => {
+//         console.log("MongoDB 连接失败。错误信息如下：");
+//         console.dir(err);
+//     });
 
 
-function setCheckJobRule() {
-    checkAllRegionsItems([], 0).then(() => {
-                console.log('下一次检查时间：' + checkJob.nextInvocation())
-            }).catch((err) => {
-                console.log('检查区划事项失败')
-                console.log(err)
-            })
-}
+// function setCheckJobRule() {
+//     checkAllRegionsItems([], 0).then(() => {
+//                 console.log('下一次检查时间：' + checkJob.nextInvocation())
+//             }).catch((err) => {
+//                 console.log('检查区划事项失败')
+//                 console.log(err)
+//             })
+// }
 
-setCheckJobRule()
+// setCheckJobRule()
 
 module.exports = {
     addUpdateTask,

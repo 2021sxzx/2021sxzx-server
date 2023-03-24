@@ -2704,6 +2704,23 @@ async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
 async function getRecommend({ parentId = null, task_name = null }) {
     try {
         console.log("开始推荐相关规则节点");
+        var target_rule_id = ""; // 叶节点规则的rule_id
+
+        var target_item = await modelItem.findOne({
+            "item_name": task_name
+        })
+        
+        if(target_item === null) {
+            console.log("未匹配到相关item");
+            return { msg: "查询成功", data: [], code: 200 };
+        }
+        // console.log(target_item);
+
+        // 这个就是该事项需要最终绑定的rule_id
+        target_rule_id = target_item["rule_id"];
+
+
+        // 以下是为了找出rule_id属于parentId下的哪个目录 
         var rule_list = await modelRule.aggregate([
             {
                 $match: {},
@@ -2717,16 +2734,6 @@ async function getRecommend({ parentId = null, task_name = null }) {
             rule_map_by_rule_name[rule_list[i].rule_name] = rule_list[i];
         }
 
-        var target_rule_id = ""; // 叶节点规则的rule_id
-        for (let i = 0; i < rule_list.length; i++) {
-            if (rule_list[i].rule_name === task_name) {
-                target_rule_id = rule_list[i].rule_id;
-                if (rule_list[i].children.length === 0) {
-                    break;
-                }
-            }
-        }
-
         console.log("target_rule_id", target_rule_id);
         console.log(
             "target_rule_id content",
@@ -2737,12 +2744,8 @@ async function getRecommend({ parentId = null, task_name = null }) {
         if (target_rule_id === "") {
             console.log("未匹配到相关叶节点");
             return { msg: "查询成功", data: [], code: 200 };
-        } else {
-            console.log("匹配到了相关叶节点规则");
         }
 
-        // if (parentId !== null) console.log(parentId)
-        // else console.log("十个孔氏")
         console.log("parentId type", typeof parentId);
         console.log("parentTId", parentId);
 
@@ -2768,8 +2771,7 @@ async function getRecommend({ parentId = null, task_name = null }) {
                     target_rule_id,
                     rule_map_by_rule_id[target_rule_id].parentId
                 );
-                // console.dir(rule_list[target_rule_id])
-                // break;
+
                 for (let i = 0; i < res.data.length; i++) {
                     if (res.data[i].rule_id === target_rule_id) {
                         ans = target_rule_id;

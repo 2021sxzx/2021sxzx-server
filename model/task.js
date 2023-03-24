@@ -74,19 +74,19 @@ const taskSchema = new mongoose.Schema({
         type: [{
             name: {           //窗口名称
                 type: String,
-                required: true,
+                // required: true,
             },
             phone: {          //电话
                 type: String,
-                required: true,
+                // required: true,
             },
             address: {        //地址
                 type: String,
-                required: true
+                // required: true
             },
             office_hour: {    //办公时间
                 type: String,
-                required: true
+                // required: true
             }
         }],
         default: [],
