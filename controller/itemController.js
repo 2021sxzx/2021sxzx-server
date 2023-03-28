@@ -2003,13 +2003,16 @@ async function deleteItems({ items = null }) {
                 updateTasks.push(item.task_code);
             }
         }
-        //批量删除
-        var result = await modelItem.deleteMany({ _id: { $in: items } });
         //批量更新
-        await modelTask.updateMany(
-            { task_code: { $in: updateTasks } },
-            { task_status: 0 }
+        var result = await modelItem.updateMany(
+            { _id: { $in: items } },
+            { item_status: 5}
         );
+        //批量更新
+        // await modelTask.updateMany(
+        //     { task_code: { $in: updateTasks } },
+        //     { task_status: 0 }
+        // );
         return new SuccessModel({ msg: "删除成功", data: result });
     } catch (err) {
         return new ErrorModel({ msg: "删除失败", data: err.message });
