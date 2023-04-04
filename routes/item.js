@@ -220,6 +220,13 @@ router.post('/v1/updateCheckResult', async (req, res, next) => {
     res.json(data)
 })
 
+router.post("/v1/withdrawItems", async (req, res, next) => {
+    const arr = req.body;
+    let data = await itemController.withdrawItems(arr);
+    setStatusCode(res, data);
+    res.json(data);
+});
+
 router.post('/v1/getItemUsers', async (req, res, next) => {
     let data = await itemController.getItemUsers(req.body)
     setStatusCode(res, data)

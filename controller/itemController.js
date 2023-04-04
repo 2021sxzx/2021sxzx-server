@@ -1975,11 +1975,53 @@ async function createItems({user_id = null, items = null}) {
 }
 
 /**
- * 删除事项
+ * 删除事项，解绑功能
  * @param {Array<String>} items 待删除的事项
  * @returns
  */
 async function deleteItems({ items = null }) {
+    try {
+        if (items === null) {
+            throw new Error("需要items字段，且该字段是一个数组");
+        }
+        if (!items.length || items.length <= 0) {
+            throw new Error("数组长度小于等于0");
+        }
+        var updateTasks = [];
+        for (let i = 0; i < items.length; i++) {
+            //判断item_id的合法性
+            let item = await modelItem.findOne({ _id: items[i] }, { __v: 0 });
+            if (item === null) {
+                throw new Error("_id错误: " + items[i]);
+            }
+            //检查对应事项指南的状态是否需要更改
+            let count = await modelItem
+                .find({ task_code: item.task_code, _id: { $ne: item._id } })
+                .count();
+            if (count <= 0) {
+                //对应事项指南的状态改为未绑定
+                updateTasks.push(item.task_code);
+            }
+        }
+        //批量删除
+        var result = await modelItem.deleteMany({ _id: { $in: items } });
+        //批量更新
+        await modelTask.updateMany(
+            { task_code: { $in: updateTasks } },
+            { task_status: 0 }
+        );
+        return new SuccessModel({ msg: "删除成功", data: result });
+    } catch (err) {
+        return new ErrorModel({ msg: "删除失败", data: err.message });
+    }
+}
+
+/**
+ * 删除事项，批量撤回功能
+ * @param {Array<String>} items 待删除的事项
+ * @returns
+ */
+async function withdrawItems({ items = null }) {
     try {
         if (items === null) {
             throw new Error("需要items字段，且该字段是一个数组");
@@ -3404,6 +3446,7 @@ module.exports = {
     getCheckJobRule,
     getCheckResult,
     updateCheckResult,
+    withdrawItems,
     // getRuleDic,
     // getRegionDic
 };
