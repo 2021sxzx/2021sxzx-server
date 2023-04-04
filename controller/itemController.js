@@ -1094,111 +1094,8 @@ async function getItemGuides({
         ) {
             throw new Error("page_size和page_num需要一起传");
         }
-
-        //分页返回查询结果
-        if (page_size !== null && page_num !== null) {
-            var tasks = await modelTask.aggregate([
-                { $match: query },
-                {
-                    $facet: {
-                        count: [{ $group: { _id: null, total: { $sum: 1 } } }],
-                        data: [
-                            { $skip: page_size * page_num },
-                            { $limit: page_size },
-                            {
-                                $lookup: {
-                                    from: modelUsers.collection.name,
-                                    localField: "creator_id",
-                                    foreignField: "_id",
-                                    as: "user",
-                                },
-                            },
-                            {
-                                $addFields: {
-                                    user: { $arrayElemAt: ["$user", 0] },
-                                },
-                            },
-                            {
-                                $lookup: {
-                                    from: modelUnit.collection.name,
-                                    localField: "user.unit_id",
-                                    foreignField: "unit_id",
-                                    as: "unit",
-                                },
-                            },
-                            {
-                                $addFields: {
-                                    unit: { $arrayElemAt: ["$unit", 0] },
-                                },
-                            },
-                            {
-                                $addFields: {
-                                    creator: {
-                                        id: "$creator_id",
-                                        name: "$user.user_name",
-                                        department_name: "$unit.unit_name",
-                                    },
-                                },
-                            },
-                            {
-                                $project: {
-                                    task_status: 1,
-                                    task_code: 1,
-                                    task_name: 1,
-                                    create_time: 1,
-                                    creator: 1,
-                                    service_agent_name: 1,
-                                },
-                            },
-                        ],
-                    },
-                },
-            ]);
-            const result = {};
-            result.data = tasks[0].data;
-            result.total = tasks[0].count.length ? tasks[0].count[0].total : 0;
-            result.page_size = page_size;
-            result.page_num = page_num;
-            return new SuccessModel({ msg: "查询成功", data: result });
-        }
-        //直接返回查询结果
-        const result = await modelTask.aggregate([
-            { $match: query },
-            {
-                $lookup: {
-                    from: modelUsers.collection.name,
-                    localField: "creator_id",
-                    foreignField: "_id",
-                    as: "user",
-                },
-            },
-            {
-                $addFields: {
-                    user: { $arrayElemAt: ["$user", 0] },
-                },
-            },
-            {
-                $lookup: {
-                    from: modelUnit.collection.name,
-                    localField: "user.unit_id",
-                    foreignField: "unit_id",
-                    as: "unit",
-                },
-            },
-            {
-                $addFields: {
-                    unit: { $arrayElemAt: ["$unit", 0] },
-                },
-            },
-            {
-                $addFields: {
-                    creator: {
-                        id: "$creator_id",
-                        name: "$user.user_name",
-                        department_name: "$unit.unit_name",
-                    },
-                },
-            },
+        // 返回查询结果
+        let aggregatePromise = modelTask.aggregate([
             {
                 $project: {
                     task_status: 1,
@@ -1209,8 +1106,42 @@ async function getItemGuides({
                     service_agent_name: 1,
                 },
             },
-        ]);
-        return new SuccessModel({ msg: "查询成功", data: result });
+            {$match: query},
+            {
+                $lookup: {
+                    from: modelUsers.collection.name,
+                    localField: 'creator_id',
+                    foreignField: '_id',
+                    as: 'user',
+                },
+            },
+            {$addFields: {user: {$arrayElemAt: ['$user', 0]},},},
+            {
+                $lookup: {
+                    from: modelUnit.collection.name,
+                    localField: 'user.unit_id',
+                    foreignField: 'unit_id',
+                    as: 'unit',
+                },
+            },
+            {$addFields: {unit: {$arrayElemAt: ['$unit', 0]},},},
+            {
+                $addFields: {
+                    creator: {
+                        id: '$creator_id',
+                        name: '$user.user_name',
+                        department_name: '$unit.unit_name',
+                    },
+                },
+            },
+        ])
+        // 分页处理
+        if (page_size !== null && page_num !== null) aggregatePromise.skip(page_size * page_num).limit(page_size)
+        return new SuccessModel({
+            msg: '查询成功', data: {
+                data: await aggregatePromise, total: await modelTask.find(query).count(), page_size, page_num
+            }
+        })
     } catch (err) {
         return new ErrorModel({ msg: "查询失败", data: err.message });
     }
