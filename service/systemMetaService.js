@@ -125,7 +125,6 @@ class systemMetaService {
         // readline是异步操作，使用for await执行
         // PV 增加的逻辑是日志中访问了 getItems 接口，并且日期是今天。注意 includes 方法中的匹配字符串，前面增加 /，后面增加空格，保证不受前后缀影响
         // 从日志中分隔日期的代码耦合度较大，无奈，注意当日志格式发生变化时需要做相应更改
-        console.log(line.includes('/getItems '))
         for await (const line of rl) {
             let now = new Date(line.split("[")[1].split(" ")[0].split(":")[0]).setHours(0,0,0,0)
             PV += line.includes("/getItems ") && now === today;
@@ -141,7 +140,7 @@ class systemMetaService {
         const shell = require('shelljs')
 
         const file_path = '/www/wwwlogs' // 前台nginx日志所在目录
-        const file_name = "/www/wwwlog/ssxzx_qt_access.log";  //前台nginx日志文件名
+        const file_name = "/www/wwwlogs/sxzx_qt_access.log";  //前台nginx日志文件名
 
         // shell.cd(file_path) //切换到前台nginx日志所在目录
         const time = shell.exec('date "+%d/%b/%Y"').stdout //获取当前系统时间

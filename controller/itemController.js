@@ -1136,11 +1136,17 @@ async function getItemGuides({
             },
         ])
         // 分页处理
-        if (page_size !== null && page_num !== null) aggregatePromise.skip(page_size * page_num).limit(page_size)
-        return new SuccessModel({
-            msg: '查询成功', data: {
-                data: await aggregatePromise, total: await modelTask.find(query).count(), page_size, page_num
+        if (page_size !== null && page_num !== null) return new SuccessModel({
+            msg: '查询成功',
+            data: {
+                data: await aggregatePromise.skip(page_size * page_num).limit(page_size),
+                total: await modelTask.find(query).count(),
+                page_size,
+                page_num
             }
+        })
+        return new SuccessModel({
+            msg: '查询成功', data: await aggregatePromise
         })
     } catch (err) {
         return new ErrorModel({ msg: "查询失败", data: err.message });
