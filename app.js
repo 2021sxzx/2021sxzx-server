@@ -1,3 +1,10 @@
+// todo 覆写 console.log 后续弃用记得删掉
+const oldLog = console.log
+console.log = (...data) => {
+    oldLog(...data)
+    oldLog(new Error().stack.split('\n')[2])
+}
+
 const createError = require('http-errors')
 const express = require('express')
 const bodyParser = require('body-parser')
