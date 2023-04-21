@@ -5,7 +5,7 @@ console.log = (...data) => {
     oldLog(new Error().stack.split('\n')[2])
 }
 // todo 定时输出内存占用 后续弃用记得删掉
-import {appendFileSync, writeFileSync} from 'fs'
+const {appendFileSync, writeFileSync} = require('fs')
 
 const start = Date.now()
 writeFileSync('memoryUsage.csv', 'Time Alive (secs),Memory Used (Byte)\n')
