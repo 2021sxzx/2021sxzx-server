@@ -190,14 +190,7 @@ async function sendvc(loginData) {
      */
     try {
         let account = loginData.account;
-        // 仅作为参考
-        var Rand = Math.random();
-        var verificationCode = Math.round(Rand * 100000000);
-
-        while (verificationCode < 10000000) {
-            console.log(verificationCode)
-            verificationCode = Math.round(Rand * 100000000);
-        }
+        let verificationCode = Math.round(Math.random() * 100000000).toString().padStart(8, '0')
 
         console.log(verificationCode)       
         
