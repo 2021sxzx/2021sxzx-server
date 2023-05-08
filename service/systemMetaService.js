@@ -113,7 +113,8 @@ class systemMetaService {
     }
 
     getDailyItemNum = async () => {
-        return 100
+        // 本地无法访问日志，随便返回一个数字，供本地测试用
+        // return 100
         const readline = require('readline')
         const fs = require('fs')
         const rl = readline.createInterface({
@@ -134,6 +135,8 @@ class systemMetaService {
     }
 
     getTotalItemNum = async () => {
+        // 本地无法访问日志，随便返回一个数字，供本地测试用
+        // return 100
         const readline = require('readline')
         const fs = require('fs')
         const rl = readline.createInterface({
