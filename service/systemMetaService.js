@@ -112,14 +112,15 @@ class systemMetaService {
         }
     }
 
-    calculatePV = async () => {
+    getDailyItemNum = async () => {
+        return 100
         const readline = require('readline')
         const fs = require('fs')
         const rl = readline.createInterface({
             input: fs.createReadStream('/www/wwwlogs/access.log'),
         })
 
-        let PV = 0 // PV初始化为0
+        let daily_item_num = 0 // PV初始化为0
         let today = new Date().setHours(0,0,0,0); // 获取今天的日期，注意格式要与日志文件对应
 
         // readline是异步操作，使用for await执行
@@ -127,35 +128,51 @@ class systemMetaService {
         // 从日志中分隔日期的代码耦合度较大，无奈，注意当日志格式发生变化时需要做相应更改
         for await (const line of rl) {
             let now = new Date(line.split("[")[1].split(" ")[0].split(":")[0]).setHours(0,0,0,0)
-            PV += line.includes("/getItems ") && now === today;
+            daily_item_num += line.includes("/getItems ") && now === today;
         }
-        // 算出来经常是0。。。
-        return PV
+        return daily_item_num
     }
 
-    calculateUV = () => {
-        // 本地访问不到服务器的nginx日志, 返回一个随机数据[100,200]
-        // return Math.floor(Math.random() * 101) + 100
+    getTotalItemNum = async () => {
+        const readline = require('readline')
+        const fs = require('fs')
+        const rl = readline.createInterface({
+            input: fs.createReadStream('/www/wwwlogs/access.log'),
+        })
 
-        const shell = require('shelljs')
+        let total_item_num = 0 // PV初始化为0
 
-        const file_path = '/www/wwwlogs' // 前台nginx日志所在目录
-        const file_name = "/www/wwwlogs/sxzx_qt_access.log";  //前台nginx日志文件名
-
-        // shell.cd(file_path) //切换到前台nginx日志所在目录
-        const time = shell.exec('date "+%d/%b/%Y"').stdout //获取当前系统时间
-        const uv = shell
-            .exec(
-                'grep' +
-                ' "' +
-                time +
-                '" ' +
-                file_name +
-                ' | awk \'{print $1}\' | sort | uniq -c| sort -nr | wc -l'
-            )
-            .stdout.trim() //获取当日uv
-        return parseInt(uv) //转换成数字
+        // readline是异步操作，使用for await执行
+        for await (const line of rl) {
+            total_item_num += line.includes("/getItems ")
+        }
+        return total_item_num
     }
+
+    // 删除用户访问量
+    // calculateUV = () => {
+    //     // 本地访问不到服务器的nginx日志, 返回一个随机数据[100,200]
+    //     return Math.floor(Math.random() * 101) + 100
+
+    //     const shell = require('shelljs')
+
+    //     const file_path = '/www/wwwlogs' // 前台nginx日志所在目录
+    //     const file_name = "/www/wwwlogs/sxzx_qt_access.log";  //前台nginx日志文件名
+
+    //     // shell.cd(file_path) //切换到前台nginx日志所在目录
+    //     const time = shell.exec('date "+%d/%b/%Y"').stdout //获取当前系统时间
+    //     const uv = shell
+    //         .exec(
+    //             'grep' +
+    //             ' "' +
+    //             time +
+    //             '" ' +
+    //             file_name +
+    //             ' | awk \'{print $1}\' | sort | uniq -c| sort -nr | wc -l'
+    //         )
+    //         .stdout.trim() //获取当日uv
+    //     return parseInt(uv) //转换成数字
+    // }
 
     async init() {
         const metas = (
@@ -213,8 +230,8 @@ class systemMetaService {
             chartData.create(
                 {
                     date: new Date().setHours(0, 0, 0, 0), //设置为0:0:0:0使echarts的x轴对齐
-                    pv: await this.calculatePV(), // 事项浏览量，即access.log中getItems api调用次数
-                    uv: this.calculateUV(), // 网站UV数，读取nginx日志计算网站当天ip访问量(同一天的重复ip只算一次)
+                    daily_item_num: await this.getDailyItemNum(), // 每日事项浏览量
+                    total_item_num: await this.getDailyItemNum(), // 累计事项浏览量
                     user_num: await users.count({}), // 已经注册用户数量
                     item_num: await item.count({}), // 当前事项数量
                 },
@@ -325,11 +342,11 @@ class systemMetaService {
             )
             let data
             switch (type) {
-                case 'pv':
-                    data = await this.calculatePV()
+                case 'daily_item_read':
+                    data = await this.getDailyItemNum()
                     break
-                case 'uv':
-                    data = this.calculateUV()
+                case 'total_item_read':
+                    data = await this.getTotalItemNum()
                     break
                 case 'user_num':
                     data = await users.count({})
@@ -347,7 +364,7 @@ class systemMetaService {
                 date: new Date().setHours(0, 0, 0, 1),
                 [type]: data,
             })
-            // console.log(ChartData)
+            console.log(ChartData)
             return new SuccessModel({
                 msg: '获取图表数据成功',
                 data: ChartData,
