@@ -373,7 +373,6 @@ class systemMetaService {
                 date: new Date().setHours(0, 0, 0, 1),
                 [type]: data,
             })
-            console.log(ChartData)
             return new SuccessModel({
                 msg: '获取图表数据成功',
                 data: ChartData,
@@ -393,7 +392,6 @@ class systemMetaService {
                 {},
                 {$inc:{daily_item_read:1,total_item_read:1}}
             )
-            console.log(result)
             return new SuccessModel({
                 msg: '增加事项浏览量成功',
             })
