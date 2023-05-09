@@ -245,6 +245,8 @@ class systemMetaService {
                     console.log('保存成功：' + docs)
                 }
             )
+            // 重置每日浏览量
+            await itemRead.updateOne({},{$set:{daily_item_read: 0}})
         })
     }
 
