@@ -77,6 +77,15 @@ class systemMetaController {
       res.json(new Error(error.message))
     }
   }
+
+  // 增加事项浏览量
+  async addItemRead(){
+    try{
+      await systemMetaService.addItemRead()
+    }catch(error){
+      console.log(error.message)
+    }
+  }
 }
 
 module.exports = new systemMetaController()

@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const itemController = require('../controller/itemController')
+const systemMetaController = require('../controller/systemMetaController')
 
 function setStatusCode(res, data) {
     if (data.code === 200) {
@@ -42,7 +43,8 @@ router.get('/v1/getRegionTree', async (req, res, next) => {
 
 router.post('/v1/getItems', async (req, res, next) => {
     let data = await itemController.getItems(req.body)
-    // console.log(data.data)
+    // 增加事项浏览量
+    await systemMetaController.addItemRead()
     setStatusCode(res, data)
     res.json(data)
 })

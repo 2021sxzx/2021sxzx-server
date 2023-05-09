@@ -3,6 +3,7 @@ const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const systemMeta = require('../model/systemMeta')
 const chartData = require('../model/chartData')
+const itemRead = require('../model/itemRead')
 const item = require('../model/item')
 const users = require('../model/users')
 const {SuccessModel, ErrorModel} = require('../utils/resultModel')
@@ -230,11 +231,12 @@ class systemMetaService {
                 console.log('删除成功', rawResponse)
             })
             // 存入当天数据
+            let item_read = await itemRead.findOne({}) // 获取事项浏览量
             chartData.create(
                 {
                     date: new Date().setHours(0, 0, 0, 0), //设置为0:0:0:0使echarts的x轴对齐
-                    daily_item_num: await this.getDailyItemNum(), // 每日事项浏览量
-                    total_item_num: await this.getDailyItemNum(), // 累计事项浏览量
+                    daily_item_read: item_read.daily_item_read, // 每日事项浏览量
+                    total_item_read: item_read.total_item_read, // 累计事项浏览量
                     user_num: await users.count({}), // 已经注册用户数量
                     item_num: await item.count({}), // 当前事项数量
                 },
@@ -343,13 +345,15 @@ class systemMetaService {
                     sort: {date: 1}, // 以防万一还是排下序
                 }
             )
+            // 获取事项浏览量
+            let item_read = await itemRead.findOne({})
             let data
             switch (type) {
                 case 'daily_item_read':
-                    data = await this.getDailyItemNum()
+                    data = item_read.daily_item_read
                     break
                 case 'total_item_read':
-                    data = await this.getTotalItemNum()
+                    data = item_read.total_item_read
                     break
                 case 'user_num':
                     data = await users.count({})
@@ -376,6 +380,24 @@ class systemMetaService {
             console.log(error)
             return new ErrorModel({
                 msg: '获取图表数据失败',
+            })
+        }
+    }
+
+    // 增加事项浏览量
+    async addItemRead(){
+        try {
+            const result = await itemRead.findOneAndUpdate(
+                {},
+                {$inc:{daily_item_read:1,total_item_read:1}}
+            )
+            console.log(result)
+            return new SuccessModel({
+                msg: '增加事项浏览量成功',
+            })
+        } catch (error) {
+            return new ErrorModel({
+                msg: '增加事项浏览量失败',
             })
         }
     }
