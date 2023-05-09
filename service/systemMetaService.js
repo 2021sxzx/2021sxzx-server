@@ -113,45 +113,45 @@ class systemMetaService {
         }
     }
 
-    getDailyItemNum = async () => {
-        // 本地无法访问日志，随便返回一个数字，供本地测试用
-        // return 100
-        const readline = require('readline')
-        const fs = require('fs')
-        const rl = readline.createInterface({
-            input: fs.createReadStream('/www/wwwlogs/access.log'),
-        })
+    // getDailyItemNum = async () => {
+    //     // 本地无法访问日志，随便返回一个数字，供本地测试用
+    //     // return 100
+    //     const readline = require('readline')
+    //     const fs = require('fs')
+    //     const rl = readline.createInterface({
+    //         input: fs.createReadStream('/www/wwwlogs/access.log'),
+    //     })
 
-        let daily_item_num = 0 // PV初始化为0
-        let today = new Date().setHours(0,0,0,0); // 获取今天的日期，注意格式要与日志文件对应
+    //     let daily_item_num = 0 // PV初始化为0
+    //     let today = new Date().setHours(0,0,0,0); // 获取今天的日期，注意格式要与日志文件对应
 
-        // readline是异步操作，使用for await执行
-        // PV 增加的逻辑是日志中访问了 getItems 接口，并且日期是今天。注意 includes 方法中的匹配字符串，前面增加 /，后面增加空格，保证不受前后缀影响
-        // 从日志中分隔日期的代码耦合度较大，无奈，注意当日志格式发生变化时需要做相应更改
-        for await (const line of rl) {
-            let now = new Date(line.split("[")[1].split(" ")[0].split(":")[0]).setHours(0,0,0,0)
-            daily_item_num += line.includes("/getItems ") && now === today;
-        }
-        return daily_item_num
-    }
+    //     // readline是异步操作，使用for await执行
+    //     // PV 增加的逻辑是日志中访问了 getItems 接口，并且日期是今天。注意 includes 方法中的匹配字符串，前面增加 /，后面增加空格，保证不受前后缀影响
+    //     // 从日志中分隔日期的代码耦合度较大，无奈，注意当日志格式发生变化时需要做相应更改
+    //     for await (const line of rl) {
+    //         let now = new Date(line.split("[")[1].split(" ")[0].split(":")[0]).setHours(0,0,0,0)
+    //         daily_item_num += line.includes("/getItems ") && now === today;
+    //     }
+    //     return daily_item_num
+    // }
 
-    getTotalItemNum = async () => {
-        // 本地无法访问日志，随便返回一个数字，供本地测试用
-        // return 100
-        const readline = require('readline')
-        const fs = require('fs')
-        const rl = readline.createInterface({
-            input: fs.createReadStream('/www/wwwlogs/access.log'),
-        })
+    // getTotalItemNum = async () => {
+    //     // 本地无法访问日志，随便返回一个数字，供本地测试用
+    //     // return 100
+    //     const readline = require('readline')
+    //     const fs = require('fs')
+    //     const rl = readline.createInterface({
+    //         input: fs.createReadStream('/www/wwwlogs/access.log'),
+    //     })
 
-        let total_item_num = 0 // PV初始化为0
+    //     let total_item_num = 0 // PV初始化为0
 
-        // readline是异步操作，使用for await执行
-        for await (const line of rl) {
-            total_item_num += line.includes("/getItems ")
-        }
-        return total_item_num
-    }
+    //     // readline是异步操作，使用for await执行
+    //     for await (const line of rl) {
+    //         total_item_num += line.includes("/getItems ")
+    //     }
+    //     return total_item_num
+    // }
 
     // 删除用户访问量
     // calculateUV = () => {
