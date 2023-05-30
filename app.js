@@ -1,3 +1,18 @@
+// todo 覆写 console.log 后续弃用记得删掉
+const oldLog = console.log
+console.log = (...data) => {
+    oldLog(...data)
+    oldLog(new Error().stack.split('\n')[2])
+}
+// todo 定时输出内存占用 后续弃用记得删掉
+const {appendFileSync, writeFileSync} = require('fs')
+
+const start = Date.now()
+writeFileSync('memoryUsage.csv', 'Time Alive (secs),Memory Used (Byte)\n')
+setInterval(() => {
+    appendFileSync('memoryUsage.csv', `${Date.now() - start},${process.memoryUsage().heapUsed}\n`)
+}, 1000)
+
 const createError = require('http-errors')
 const express = require('express')
 const bodyParser = require('body-parser')

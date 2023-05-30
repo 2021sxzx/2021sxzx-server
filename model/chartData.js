@@ -5,11 +5,11 @@ const chartDataSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  pv:{
+  daily_item_read:{
     type: Number,
     required: true,
   },
-  uv:{
+  total_item_read:{
     type: Number,
     required: true,
   },

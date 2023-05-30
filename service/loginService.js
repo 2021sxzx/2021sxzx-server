@@ -190,14 +190,7 @@ async function sendvc(loginData) {
      */
     try {
         let account = loginData.account;
-        // 仅作为参考
-        var Rand = Math.random();
-        var verificationCode = Math.round(Rand * 100000000);
-
-        while (verificationCode < 10000000) {
-            console.log(verificationCode)
-            verificationCode = Math.round(Rand * 100000000);
-        }
+        let verificationCode = Math.round(Math.random() * 100000000).toString().padStart(8, '0')
 
         console.log(verificationCode)       
         
@@ -259,7 +252,7 @@ async function authenticatebyvc(loginData) {
         let res = await User.findOne({account: account})
         // 错误检查
         console.log(res)
-        if (res === null) return {msg: '验证码错误', code: 403}
+        if (res === null) return {msg: '该号码未注册', code: 403}
         if (res.activation_status !== 1) return {message: '该号码未被激活，请重试.', code: 403}
         // 验证码检测
         selectRedisDatabase(3)
