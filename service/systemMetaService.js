@@ -179,18 +179,17 @@ class systemMetaService {
     // }
 
     async init() {
-        const metas = (
-            await systemMeta.findOne({name: 'interface-setting'}, 'data')
-        ).data
+        let metas = await systemMeta.findOne({name: 'interface-setting'}, 'data')
+        metas = metas?metas.data:null    
         this.api = {
-            SHBAPP: metas.api_SHBAPP,
-            GZSRSJGW: metas.api_GZSRSJGW,
-            GZSRSJWX: metas.api_GZSRSJWX,
-            ZNFWJQRYPT: metas.api_ZNFWJQRPT,
-            GDZWFWPT: metas.api_GDZWFWPT,
-            BDDT: metas.api_BDDT,
+            SHBAPP: metas?metas.api_SHBAPP:null,
+            GZSRSJGW: metas?metas.api_GZSRSJGW:null,
+            GZSRSJWX: metas?metas.api_GZSRSJWX:null,
+            ZNFWJQRYPT: metas?metas.api_ZNFWJQRPT:null,
+            GDZWFWPT: metas?metas.api_GDZWFWPT:null,
+            BDDT: metas?metas.api_BDDT:null,
         }
-
+        
         // 第一次的触发执行
         await this.setApiData(this.api)
         let that = this

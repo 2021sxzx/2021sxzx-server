@@ -82,7 +82,7 @@ async function authenticatebypwd(loginData) {
         const {account, password} = loginData
         let res = await User.findOne({account: account})
         // 错误检查
-        if (res === null) return { msg: "密码错误，请重试.", code: 403 };
+        if (res === null) return { msg: "该账号不存在，请注册.", code: 403 };
         if (password !== res.password) {
             await lockAccount(res.account)
             return {msg: '密码错误，请重试.', code: 403}
