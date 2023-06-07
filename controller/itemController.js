@@ -17,6 +17,7 @@ const unitService = require("../service/unitService");
 const redisClient = require("../config/redis");
 const {validateString} = require("../utils/validateString");
 const { mongo } = require("mongoose");
+const cacheService = require("../performanceDesign/cacheService")
 
 /**
  * 获取事项状态表
@@ -627,35 +628,12 @@ async function lock() {
 async function createRules({ user_id = null, rules = null }) {
     // let unlock = null
     try {
-        let t1 = new Date().getTime();
         if (user_id === null || rules === null) {
             throw new Error("请求体中需要 user_id 和 rules ");
         }
         if (rules.length <= 0) {
             throw new Error("数组长度小于等于 0");
         }
-        // 缓存查找
-        let user = tempUserCache.get(user_id);
-        if (user == null || new Date() > new Date(user.expires)) {
-            user = await modelUsers.findOne({_id: user_id}, {__v: 0});
-            if (user !== null) {
-                tempUserCache.set(
-                    user_id,
-                    {
-                        data: user,
-                        expires: new Date().getTime() + 5 * 60 * 1000,
-                    },
-                    redisClient.print
-                );
-            }
-        }
-
-        if (user === null) {
-            throw new Error("user_id 不存在: " + user_id)
-        }
-
-
-        let t2 = new Date().getTime();
 
         // 如果没有初始化就先初始化 maxRuleId
         if (maxRuleId === -1) {
@@ -699,8 +677,6 @@ async function createRules({ user_id = null, rules = null }) {
                 },
             };
         });
-
-        let t3 = new Date().getTime();
         await modelRule.create(rulesDoc);
         await modelRule.bulkWrite(bulkOps);
 
@@ -717,10 +693,7 @@ async function createRules({ user_id = null, rules = null }) {
             return rule.rule_id;
         });
 
-        let t4 = new Date().getTime();
         await itemService.addUpdateTask("createRules", data);
-        let t5 = new Date().getTime();
-        // console.log(t2 - t1, t3 - t2, t4 - t3, t5 - t4, t5 - t1)
         //返回结果
         return new SuccessModel({ msg: "创建规则成功", data: res });
     } catch (err) {
@@ -817,9 +790,10 @@ async function deleteRules({ rules = null }) {
         // var result = await modelRule.deleteMany({ rule_id: { $in: rules } })
         var result = await modelRule.bulkWrite(bulkOps);
         //更新内存中的规则树
+        cacheService.attachDbCache()
         itemService.addUpdateTask("deleteRules", rules);
-        ruleCache = new Map();
-        itemCache = new Map();
+        //ruleCache = new Map();
+        //itemCache = new Map();
         return new SuccessModel({ msg: "删除规则成功", data: result });
     } catch (err) {
         return new ErrorModel({ msg: "删除规则失败", data: err.message });
@@ -899,6 +873,7 @@ async function updateRules({ rules = null }) {
         //批量更新
         var result = await modelRule.bulkWrite(bulkOps);
         //更新内存中的规则树
+        // 不需要更新缓存，考虑删除
         itemService.addUpdateTask("updateRules", data);
         return new SuccessModel({ msg: "更新规则成功", data: result });
     } catch (err) {

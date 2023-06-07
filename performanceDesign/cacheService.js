@@ -425,10 +425,29 @@ async function attachDbCache({
 
 // init();
 
+//传入key和value，使用Redis保存
+async function setRedis({
+    key, value = null, db_id = null, cache_id = 7,db_id
+}){
+    let str = JSON.stringify({ key: key, value: value, db_id: db_id, cache_id: cache_id });
+    // 保存到Redis
+    await redisClients[cache_id].set(key, value, (err) => {if (err) console.log(err)});
+    // 绑定缓存
+    await attachDbCache({ db_id, cache_key: key, concern_col: 'cache' , cache_id});
+}
+
+// 查询Redis
+async function getRedis({key, db_id}){
+    let value = redisClients[db_id].get(key, (err, data) => {if (err) console.log(err)});   // 没有值返回null或error
+    return value;
+}
+
 module.exports = {
     init,
     getRedisCli,
     getlocalDB,
     getSxzxDB,
-    attachDbCache
+    attachDbCache,
+    setRedis,
+    getRedis
 }
