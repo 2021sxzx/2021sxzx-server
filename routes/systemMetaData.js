@@ -22,41 +22,66 @@ router.get('/v1/log-path', function (req, res) {
   })
 })
 
-// 网站设置部分
-router.post('/v1/website-settings-upload', multer({
-  storage: multer.diskStorage({
-    destination(req, res, cb) {
-      cb(null, 'public/imgs')
-    }, filename(req, {fieldname, originalname}, cb) {
-      cb(null, `${{
-        websiteLogoFile: 'ic_logo',
-        addressBarIconFile: 'icons',
-        backstageLogoFile: 'banner_pc',
-        officialQRCode: 'qrcode_web',
-        wechatQRCodeFile: 'qrcode_wechat',
-        appQRCodeFile: 'qrcode_app'
-      }[fieldname]}.${originalname.split('.').slice(-1)[0]}`)
+// 网站图片设置部分
+router.post(
+  '/v1/website-settings-upload', 
+  multer({
+    storage: multer.diskStorage({
+      destination(req, res, cb) {
+        cb(null, 'public/imgs')
+      }, 
+      filename(req, {fieldname, originalname}, cb) {
+        cb(null, `${{
+          websiteLogoFile: 'ic_logo',
+          addressBarIconFile: 'icons',
+          backstageLogoFile: 'banner_pc',
+          officialQRCode: 'qrcode_web',
+          wechatQRCodeFile: 'qrcode_wechat',
+          appQRCodeFile: 'qrcode_app'
+        }[fieldname]}.${originalname.split('.').slice(-1)[0]}`)
+      }
+    }), 
+    limits: {
+      fileSize: 10 * 1024 * 1024 //限制每个文件大小
+    },
+    fileFilter(req, file, cb) {
+      cb(null, file.mimetype === 'image/png')
     }
-  }), fileFilter(req, file, cb) {
-    cb(null, file.mimetype === 'image/png')
-  }
-}).fields([{name: 'websiteLogoFile', maxCount: 1}, {name: 'addressBarIconFile', maxCount: 1},
-  {name: 'backstageLogoFile', maxCount: 1}, {name: 'officialQRCode', maxCount: 1},
-  {name: 'wechatQRCodeFile', maxCount: 1}, {name: 'appQRCodeFile', maxCount: 1}]), (req, res) => res.sendStatus(200))
+  }).fields([
+    {name: 'websiteLogoFile', maxCount: 1}, 
+    {name: 'addressBarIconFile', maxCount: 1},
+    {name: 'backstageLogoFile', maxCount: 1}, 
+    {name: 'officialQRCode', maxCount: 1},
+    {name: 'wechatQRCodeFile', maxCount: 1}, 
+    {name: 'appQRCodeFile', maxCount: 1}
+  ]), 
+  (req, res) => res.sendStatus(200)
+)
 
 
-router.post("/v1/user-guide-upload", multer({
-  storage: multer.diskStorage({
+router.post(
+  "/v1/user-guide-upload", 
+  multer({
+    storage: multer.diskStorage({
       destination(req, res, cb) {
         cb(null, "public/xlsx");
-      }, filename(req, { fieldname, originalname }, cb) {
+      }, 
+      filename(req, { fieldname, originalname }, cb) {
         cb(null, `${{
           userManual: "用户手册",
         }[fieldname]}.${originalname.split(".").slice(-1)[0]}`)
       }
-  }), fileFilter(req, file, cb) {
+    }),
+    limits: {
+      fileSize: 20 * 1024 * 1024
+    }, 
+    fileFilter(req, file, cb) {
       cb(null, file.mimetype === "application/pdf");
-  },
-}).fields([{ name: "userManual", maxCount: 1 }]), (req, res) => res.sendStatus(200));
+    },
+  }).fields([
+    {name: "userManual", maxCount: 1}
+  ]), 
+  (req, res) => res.sendStatus(200)
+);
 
 module.exports = router

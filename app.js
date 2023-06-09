@@ -180,7 +180,23 @@ app.use(function (req, res, next) {
 app.use((err, req, res, next) => {
     console.error(`Error handler in app.js caught error:`)
     console.error(err)
-    res.sendStatus(err.status || 500)
+    if(err instanceof MulterError){
+        switch (err.code){
+            case 'LIMIT_FILE_SIZE':
+                res.status(400).send(`${err.field}文件大小超过了${err.limit/1024/1024}MB`)
+                break;
+            case 'LIMIT_FILE_COUNT':
+                res.status(400).send(`${err.field}文件数量超过了设置的限制`)
+                break;
+            case 'LIMIT_UNEXPECTED_FILE':
+                res.status(400).send(`请求中存在未预期的文件${err.field}`)
+                break;
+            default:
+                res.sendStatus(err.status || 500)
+        }
+    }
+    else
+        res.sendStatus(err.status || 500)
 })
 
 module.exports = app
