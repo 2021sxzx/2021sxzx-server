@@ -918,7 +918,7 @@ async function getRulePaths({ rule_id = null }) {
 }
 
 /**
- * 获取事项指南，返回Object或者null
+ * 获取单个事项指南详细内容，返回Object或者null
  * @param {String} task_code 事项指南编码
  * @returns
  */
@@ -979,8 +979,11 @@ async function getItemGuide({ task_code = null }) {
 }
 
 /**
- * 获取事项指南，只返回task_code、task_name和task_status
+ * 获取事项指南
+ * 只返回task_code、task_name和task_status
+ * 或者返回详细内容（目前全部返回）
  * @param user_id
+ * @param {Boolean} isDetail 是否返回详细内容（用作全量导出）
  * @param {Number} task_status 事项指南状态（0或者1）
  * @param {String} task_code 事项指南编码
  * @param {String} task_name 事项指南名称（用于模糊匹配）
@@ -1005,6 +1008,7 @@ async function getItemGuides({
     end_time = null,
     page_size = null,
     page_num = null,
+    isDetail = false,
 }) {
     try {
         var query = {};
@@ -1069,19 +1073,33 @@ async function getItemGuides({
         ) {
             throw new Error("page_size和page_num需要一起传");
         }
+
+        // 根据isDetail决定返回的内容详细情况
+        let queryproject = 
+            isDetail?
+            { //TODO 根据需求设置返回字段
+                __v: 0, 
+                user: 0, 
+                unit: 0, 
+                creator_id: 0 
+            }
+            :{
+                task_status: 1,
+                task_code: 1,
+                task_name: 1,
+                create_time: 1,
+                creator: 1,
+                service_agent_name: 1,
+            }
         // 返回查询结果
         let aggregatePromise = modelTask.aggregate([
+
             {
-                $project: {
-                    task_status: 1,
-                    task_code: 1,
-                    task_name: 1,
-                    create_time: 1,
-                    creator: 1,
-                    service_agent_name: 1,
-                },
+                $project: queryproject
             },
+            
             {$match: query},
+
             {
                 $lookup: {
                     from: modelUsers.collection.name,
@@ -1090,7 +1108,9 @@ async function getItemGuides({
                     as: 'user',
                 },
             },
+
             {$addFields: {user: {$arrayElemAt: ['$user', 0]},},},
+
             {
                 $lookup: {
                     from: modelUnit.collection.name,
@@ -1099,6 +1119,7 @@ async function getItemGuides({
                     as: 'unit',
                 },
             },
+
             {$addFields: {unit: {$arrayElemAt: ['$unit', 0]},},},
             {
                 $addFields: {
