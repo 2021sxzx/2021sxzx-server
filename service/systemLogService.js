@@ -111,7 +111,7 @@ async function searchByCondition({myselfID, today, thisWeek}) {
             const month = d.getMonth() + 1
             const year = d.getFullYear()
             newSystemLogData = systemLogData.filter((currentItem) => {
-                return currentItem.create_time.substring(0, 10) === `${year}/${month}/${day}`
+                return currentItem.create_time.split(' ')[0] === `${year}/${month}/${day}`
             })
         }
         if (thisWeek === true) {
@@ -120,23 +120,34 @@ async function searchByCondition({myselfID, today, thisWeek}) {
             let delta1 = 1 - w //算算差几天到周一
             date1.setDate(date1.getDate() + delta1)
             date1 = date1.toJSON()
-            date1 = date1.substring(0, 10)
+            date1 = date1.split('T')[0]
+            console.log(date1)
             let date7 = new Date()
             let delta7 = 7 - w //算算差几天到周日
             date7.setDate(date7.getDate() + delta7)
             date7 = date7.toJSON()
-            date7 = date7.substring(0, 10)
+            date7 = date7.split('T')[0]
+            console.log(date7)
             let date1number = parseInt(date1.replace(/[-\/]/g, ''))
             let date7number = parseInt(date7.replace(/[-\/]/g, ''))
 
             newSystemLogData = systemLogData.filter((currentItem) => {
+                let itemDate=currentItem.create_time.split(' ')[0]
+                let itemMonth=currentItem.create_time.split('/')[1]
+                let itemDay=currentItem.create_time.split('/')[2]
+                if(itemMonth.length<2){
+                    itemDate=itemDate.replace(itemMonth,'0'+itemMonth)
+                }
+                if(itemDay.length<2){
+                    itemDate=itemDate.replace(itemDay,'0'+itemDay)
+                }
                 return (
                     date1number <=
                     parseInt(
-                        currentItem.create_time.substring(0, 10).replace(/[-\/]/g, '')
+                        itemDate.replace(/[-\/]/g, '')
                     ) &&
                     parseInt(
-                        currentItem.create_time.substring(0, 10).replace(/[-\/]/g, '')
+                        itemDate.replace(/[-\/]/g, '')
                     ) <= date7number
                 )
             })
