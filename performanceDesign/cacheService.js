@@ -1,9 +1,9 @@
 var mongoose = require('mongoose');
 const redis = require("redis");
-const schedule = 100; 
+const schedule = 100;
 // oplog.rs表的定义
 const oplogSchema = new mongoose.Schema({
-    ts: {      
+    ts: {
         type: String,
         required: true
     },
@@ -18,10 +18,10 @@ const oplogSchema = new mongoose.Schema({
     o: {
         type: mongoose.Schema.Types.Mixed
     },
-    o2: {  
+    o2: {
         type: mongoose.Schema.Types.Mixed
     },
-    wall: {  
+    wall: {
         type: Date
     }
 })
@@ -331,7 +331,7 @@ async function getOplogs(startTime,endTime) {
     return logs
 }
 
-async function run() {  
+async function run() {
     //获取时间戳
     let oplogEndTime = await redisClients[5].get('oplogEndTime');
     let startTime = new Date().getTime()-1000*60*60*24;
@@ -420,14 +420,14 @@ async function attachDbCache({
 }) {
     //绑定缓存
     let str = JSON.stringify({ cache_key: cache_key, concern_col: concern_col, cache_id: cache_id });
-    redisClients[5].rPush(db_id, str);  
+    redisClients[5].rPush(db_id, str);
 }
 
 // init();
 
 //传入key和value，使用Redis保存
 async function setRedis({
-    key, value = null, db_id = null, cache_id = 7,db_id
+    key, value = null, db_id = null, cache_id = 7
 }){
     let str = JSON.stringify({ key: key, value: value, db_id: db_id, cache_id: cache_id });
     // 保存到Redis
