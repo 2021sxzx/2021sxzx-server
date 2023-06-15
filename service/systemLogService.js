@@ -135,12 +135,10 @@ async function searchByCondition({myselfID, today, thisWeek}) {
                 let itemDate=currentItem.create_time.split(' ')[0]
                 let itemMonth=currentItem.create_time.split('/')[1]
                 let itemDay=currentItem.create_time.split('/')[2]
-                if(itemMonth.length<2){
-                    itemDate=itemDate.replace(itemMonth,'0'+itemMonth)
-                }
-                if(itemDay.length<2){
-                    itemDate=itemDate.replace(itemDay,'0'+itemDay)
-                }
+                //对于月份和日期不满2为的，补零
+                itemMonth=itemMonth.length<2?'0'+itemMonth:itemMonth;
+                itemDay=itemDay.length<2?'0'+itemDay:itemDay;
+                itemDate=itemDate.split('/')[0]+'/'+itemMonth+'/'+itemDay
                 return (
                     date1number <=
                     parseInt(
@@ -194,14 +192,20 @@ async function searchByAdvancedCondition(searchData) {
         const allLog = await showSystemLog()
 
         return allLog.filter(item => {
-            const itemTime = parseInt(item.create_time.split(/[T ]/)[0].replace(/[-\/]/g, ''))
+            let itemDate=item.create_time.split(/[T ]/)[0]
+            let itemMonth=itemDate.split('/')[1]
+            let itemDay=itemDate.split('/')[2]
+            // 对于月份和日期不满2位的，要补零
+            itemMonth=itemMonth.length<2?'0'+itemMonth:itemMonth;
+            itemDay=itemDay.length<2?'0'+itemDay:itemDay;
+            itemDate=(itemDate.split('/')[0]+'/'+itemMonth+'/'+itemDay).replace(/[-\/]/g, '')
             return (
                 (searchType === ID && reg.test(item.idc)) ||
                 (searchType === NAME && reg.test(item.user_name)) ||
                 (searchType === DESCRIPTION && reg.test(item.content))
             ) && (
-                numStartTime <= itemTime &&
-                numEndTime >= itemTime
+                numStartTime <= itemDate &&
+                numEndTime >= itemDate
             )
         })
     } catch (e) {
