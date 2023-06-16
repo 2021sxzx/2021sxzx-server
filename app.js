@@ -18,6 +18,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const fs = require('fs')
 const path = require('path')
+const multer = require('multer')
 const cookieParser = require('cookie-parser')
 
 const jwt = require('jsonwebtoken')
@@ -182,7 +183,7 @@ app.use(function (req, res, next) {
 app.use((err, req, res, next) => {
     console.error(`Error handler in app.js caught error:`)
     console.error(err)
-    if(err instanceof MulterError){
+    if(err instanceof multer.MulterError){
         switch (err.code){
             case 'LIMIT_FILE_SIZE':
                 res.status(400).send(`${err.field}文件大小超过了${err.limit/1024/1024}MB`)
