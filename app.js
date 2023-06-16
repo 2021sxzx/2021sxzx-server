@@ -19,7 +19,7 @@ const bodyParser = require('body-parser')
 const fs = require('fs')
 const path = require('path')
 const cookieParser = require('cookie-parser')
-const logger = require('morgan')
+
 const jwt = require('jsonwebtoken')
 const {statusSet} = require('./utils/statusmsg')
 const {jwt_secret} = require('./utils/validateJwt')
@@ -80,7 +80,9 @@ mongoose.connection.on('disconnected', function () {
 
 // 创建 express 对象
 const app = express()
+app.enable("trust proxy")
 
+const logger = require('morgan')
 // 动态网页的模板设置
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'jade')
