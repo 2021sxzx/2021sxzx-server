@@ -1,7 +1,10 @@
 const express = require('express')
+const fs = require('fs')
+const path = require('path')
 const router = express.Router()
 const itemController = require('../controller/itemController')
 const systemMetaController = require('../controller/systemMetaController')
+const { ErrorModel } = require("../utils/resultModel");
 
 function setStatusCode(res, data) {
     if (data.code === 200) {
@@ -157,6 +160,27 @@ router.post('/v1/getItemGuides', async (req, res, next) => {
     let data = await itemController.getItemGuides(req.body)
     setStatusCode(res, data)
     res.json(data)
+})
+
+router.post('/v1/getExportGides', async (req, res, next) => {
+    const result = await itemController.exportExcelGuides()
+    if(result.msg === 0) {
+        let error = new ErrorModel({ msg: "导出失败", data: result.data })
+        setStatusCode(res, error)
+        res.json(error)
+        return
+    }
+    const filePath = path.resolve(__dirname, '../全量导出.csv')
+    res.setHeader('Content-Type', 'text/csv;charset:UTF-8')
+    //TODO: 需要等待写入流结束writeStream.end()才能查询到文件, 所以使用了宏任务并等待1s, 可以做一下优化
+    setTimeout(function() {
+        res.sendFile(filePath, (err) => {
+            if(err) {
+                res.status(500).send(`文件发送失败: ${err.message}`)
+                console.log(err)
+            }
+        })
+    },1000)
 })
 
 router.post('/v1/createItemGuide', async (req, res, next) => {
