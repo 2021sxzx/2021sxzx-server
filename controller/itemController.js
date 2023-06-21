@@ -1016,19 +1016,31 @@ async function getItemGuides({
         if (service_agent_name !== null)
             query.service_agent_name = { $regex: service_agent_name };
         query["$and"] = [];
+
+        // 此接口既然做了权限控制，且只在后台使用，应该禁止user_id为null的请求
+        if(user_id === null) {
+            return new ErrorModel({msg: '参数非法，此接口仅对后台开放', data: []})
+        }
         //----------------------------------------------------
         //只显示用户所属部门及其下属部门的事项
         if (user_id !== null) {
             let user = await modelUsers.findOne({ _id: user_id });
+            // console.log('user',user) //留着方便查看role_id
             if (user === null) {
                 throw new Error("user_id不合法");
             }
-            let units = await unitService._allChildUnitArr(user.unit_id);
-            var unit_name_list = units.map((item) => {
-                return item.unit_name;
-            });
+            // 对系统管理员，操作员开放所有事项查询权限
+            if(user.role_id===15815115111 || user.role_id===15815115114) {
+                console.log('对系统管理员，操作员开放所有事项查询权限')
+            }
+            else {
+                let units = await unitService._allChildUnitArr(user.unit_id);
+                var unit_name_list = units.map((item) => {
+                    return item.unit_name;
+                });
 
-            query["$and"].push({ service_agent_name: { $in: unit_name_list } });
+                query["$and"].push({ service_agent_name: { $in: unit_name_list } });
+            }
         }
         //------------------------------------------------------
         if (creator_name !== null) {
