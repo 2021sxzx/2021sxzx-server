@@ -44,7 +44,7 @@ async function showSystemLog() {
         const dataLength = data.length
         for (let i = 0; i < dataLength; i++) {
             // 系统id我们弄为000
-            user = await getUserById(data[i].slice(0, data[i].indexOf(':') - 1))
+            user = await getUserById(data[i].slice(0, data[i].indexOf(' ')))
             // 进行过滤，只留系统管理员
             if (!user && user.role_name !== '系统管理员')
                 continue
