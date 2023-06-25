@@ -287,9 +287,9 @@ async function getItems({
                 return item.unit_id;
             });
             if (unit_id_list.indexOf("1653018366962") != -1)
-                unit_id_list.push("696927671"); 
+                unit_id_list.push("696927671");
             if (unit_id_list.indexOf("78605187X") != -1)
-                unit_id_list.push("78605187X "); 
+                unit_id_list.push("78605187X ");
 
             query["$and"].push({
                 service_agent_code: { $in: unit_id_list },
@@ -1010,7 +1010,7 @@ async function getItemGuides({
 }) {
     try {
         var query = {};
-        if (task_status !== null) query.task_status = task_status;
+        if (task_status !== null) query.task_status = { $in:task_status };
         if (task_code !== null) query.task_code = task_code;
         if (task_name !== null) query.task_name = { $regex: task_name };
         if (service_agent_name !== null)
@@ -1084,7 +1084,7 @@ async function getItemGuides({
             throw new Error("page_size和page_num需要一起传");
         }
 
-        
+
         // 返回查询结果
         let aggregatePromise = modelTask.aggregate([
 
@@ -1098,7 +1098,7 @@ async function getItemGuides({
                     service_agent_name: 1,
                 }
             },
-            
+
             {$match: query},
 
             {
@@ -1159,14 +1159,14 @@ async function exportExcelGuides() {
         let aggregatePromise = modelTask.aggregate([
 
             {
-                $project: { 
-                    __v: 0, 
-                    user: 0, 
-                    unit: 0, 
-                    creator_id: 0 
+                $project: {
+                    __v: 0,
+                    user: 0,
+                    unit: 0,
+                    creator_id: 0
                 }
             },
-            
+
             {   $match: {}  },
 
             {
@@ -1207,7 +1207,7 @@ async function exportExcelGuides() {
     } catch (err) {
         return { msg: 0, data: err.message }
     }
-    
+
 }
 
 
@@ -2329,7 +2329,7 @@ async function doesChildRegionItemExist(ruleId, regionIds, serviceObject) {
 function serviceObjectTypeMapping(serviceObject) {
     // if (serviceObject == null)
     //     return /./
-    
+
     // let _ = []
     // let charNumber = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     // for (let i = 0, len = charNumber.length; i < len; i++) {
@@ -2339,13 +2339,13 @@ function serviceObjectTypeMapping(serviceObject) {
     // }
 
     // res = "["
-    // for(let i = 0, len = _.length; i < len; i++) 
+    // for(let i = 0, len = _.length; i < len; i++)
     //     res = res + _[i]
     // res = res + "]"
 
     // console.log(res)
     // return res
-    
+
     switch (serviceObject) {
             case "[1]":
                 return /1/;
@@ -2440,13 +2440,13 @@ async function getRules({
         //分页返回查询结果
         if (page_size !== null && page_num !== null) {
             let t1 = new Date().getTime();
-            
+
             let _query = {};
             Object.assign(_query, query)
             _query["page_name"] = page_num;
             _query["page_size"] = page_size;
-            
-            
+
+
             _query = JSON.stringify(_query)
             var res = ruleCache.get(_query);
             if (res == null || new Date() > new Date(res.expires)) {
@@ -2534,7 +2534,7 @@ async function getRules({
 
             var data = res[0].data;
             var count = res[0].count;
-            
+
             let t3 = new Date().getTime();
             for (let i = 0; i < data.length; i++) {
                 let rulePath = "";
@@ -2558,7 +2558,7 @@ async function getRules({
 
                 _query = {};
                 _query.rule_id = data[i].rule_id;
-                
+
                 // 缓存设计
                 let _res = itemCache.get(data[i].rule_id);
                 if (_res == null || new Date() > new Date(_res.expires)) {
@@ -2641,7 +2641,7 @@ async function getRules({
         if (ruleDic === null) {
             return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
         }
-        
+
         // 晒徐个人业务or法人业务or事业单位业务
         // console.log(service_object == null)
 	res = await fliterByServiceObject(res, service_object, ruleDic)
@@ -2679,7 +2679,7 @@ async function fliterByServiceObject(res, service_object, ruleDic) {
     // console.log(service_object == null)
     if(service_object == null)
         return res
-    
+
 
     let filter_res = []
     // console.log("res", res)
@@ -2696,7 +2696,7 @@ async function fliterByServiceObject(res, service_object, ruleDic) {
 async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
     // console.log(service_object == null)
     if (service_object == null) return true;
-  
+
     // console.log(rule.rule_id)
     //console.log(service_object);
     // return true
@@ -2724,11 +2724,11 @@ async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
 	}
 	return false
     }
-    
+
     for (let i = 0; i < children.length; i++) {
         if (await dfsFliterByServiceObject(ruleDic.get(children[i]), service_object, ruleDic)) {
-            
-            return true	
+
+            return true
 	}
     }
 
@@ -2749,7 +2749,7 @@ async function getRecommend({ parentId = null, task_name = null }) {
         var target_item = await modelItem.findOne({
             "item_name": task_name
         })
-        
+
         if(target_item === null) {
             console.log("未匹配到相关item");
             return { msg: "查询成功", data: [], code: 200 };
@@ -2760,7 +2760,7 @@ async function getRecommend({ parentId = null, task_name = null }) {
         target_rule_id = target_item["rule_id"];
 
 
-        // 以下是为了找出rule_id属于parentId下的哪个目录 
+        // 以下是为了找出rule_id属于parentId下的哪个目录
         var rule_list = await modelRule.aggregate([
             {
                 $match: {},
