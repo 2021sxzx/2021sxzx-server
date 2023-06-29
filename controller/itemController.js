@@ -791,7 +791,6 @@ async function deleteRules({ rules = null }) {
         // var result = await modelRule.deleteMany({ rule_id: { $in: rules } })
         var result = await modelRule.bulkWrite(bulkOps);
         //更新内存中的规则树
-        cacheService.attachDbCache()
         itemService.addUpdateTask("deleteRules", rules);
         //ruleCache = new Map();
         //itemCache = new Map();
@@ -2535,7 +2534,7 @@ async function getRules({
             var data = res[0].data;
             var count = res[0].count;
 
-            let t3 = new Date().getTime();
+            //let t3 = new Date().getTime();
             for (let i = 0; i < data.length; i++) {
                 let rulePath = "";
                 // console.log(data[i], ruleDic.get(data[i].rule_id));
@@ -2581,7 +2580,7 @@ async function getRules({
                 data[i].hasBindItem = _res != null;
                 data[i].rule_path = rulePath;
             }
-            let t4 = new Date().getTime();
+            //let t4 = new Date().getTime();
             var dict = {};
             dict.data = data;
             dict.total = count.length ? count[0].total : 0;
@@ -2593,49 +2592,69 @@ async function getRules({
         }
 
         // 直接返回全部的结果
-        var res = await modelRule.aggregate([
-            {
-                $match: query,
-            },
-            {
-                $lookup: {
-                    from: modelUsers.collection.name,
-                    localField: "creator_id",
-                    foreignField: "_id",
-                    as: "user",
+        // 查缓存
+        _query = JSON.stringify(query)
+        var res = await cacheService.getRedis({
+            key: _query,
+            cache_id: 2
+        });
+        if(res == null) {
+            res = await modelRule.aggregate([
+                {
+                    $match: query,
                 },
-            },
-            {
-                $addFields: {
-                    user: {$arrayElemAt: ["$user", 0]},
-                },
-            },
-            {
-                $lookup: {
-                    from: modelUnit.collection.name,
-                    localField: "user.unit_id",
-                    foreignField: "unit_id",
-                    as: "unit",
-                },
-            },
-            {
-                $addFields: {
-                    unit: {$arrayElemAt: ["$unit", 0]},
-                },
-            },
-            {
-                $addFields: {
-                    creator: {
-                        id: "$creator_id",
-                        name: "$user.user_name",
-                        department_name: "$unit.unit_name",
+                {
+                    $lookup: {
+                        from: modelUsers.collection.name,
+                        localField: "creator_id",
+                        foreignField: "_id",
+                        as: "user",
                     },
                 },
-            },
-            {
-                $project: {__v: 0, user: 0, unit: 0, creator_id: 0},
-            },
-        ]);
+                {
+                    $addFields: {
+                        user: {$arrayElemAt: ["$user", 0]},
+                    },
+                },
+                {
+                    $lookup: {
+                        from: modelUnit.collection.name,
+                        localField: "user.unit_id",
+                        foreignField: "unit_id",
+                        as: "unit",
+                    },
+                },
+                {
+                    $addFields: {
+                        unit: {$arrayElemAt: ["$unit", 0]},
+                    },
+                },
+                {
+                    $addFields: {
+                        creator: {
+                            id: "$creator_id",
+                            name: "$user.user_name",
+                            department_name: "$unit.unit_name",
+                        },
+                    },
+                },
+                {
+                    $project: {__v: 0, user: 0, unit: 0, creator_id: 0},
+                },
+            ]);
+            // console.log('_que',_query)
+            // 存缓存 新缓存设计（cachService）
+            cacheService.setRedis({
+                key: _query,
+                value: JSON.stringify(res),
+                cache_id: 2 // 需要指定redis的id，默认为0
+            });
+        }
+        else {
+            res = JSON.parse(res)
+        }
+            
+
         //计算规则路径
         ruleDic = itemService.getRuleDic();
         if (ruleDic === null) {
@@ -2644,7 +2663,7 @@ async function getRules({
 
         // 晒徐个人业务or法人业务or事业单位业务
         // console.log(service_object == null)
-	res = await fliterByServiceObject(res, service_object, ruleDic)
+	    res = await fliterByServiceObject(res, service_object, ruleDic)
         for (let i = 0; i < res.length; i++) {
             let rulePath = "";
             let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null;
@@ -2658,11 +2677,29 @@ async function getRules({
 
             _query = {};
             _query.rule_id = res[i].rule_id;
-            _res = await modelItem.aggregate([
-                {
-                    $match: {rule_id: res[i].rule_id},
-                },
-            ]);
+            let key = JSON.toString(_query)
+            _res = await cacheService.getRedis({ 
+                key,
+                cache_id: 2
+            })
+            if(_res == null) {
+                _res = await modelItem.aggregate([
+                    {
+                        $match: {rule_id: res[i].rule_id},
+                    },
+                ]);
+
+                // 存缓存 新缓存设计（cachService）
+                cacheService.setRedis({
+                    key,
+                    value: JSON.stringify(_res),
+                    cache_id: 2 // 需要指定redis的id，默认为0
+                });
+            }
+            else {
+                _res = JSON.parse(_res)
+            }
+           
 
             res[i].isLeaf = res[i].children == 0;
             res[i].hasBindItem = _res.length > 0;

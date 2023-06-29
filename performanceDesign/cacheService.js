@@ -1,9 +1,9 @@
 var mongoose = require('mongoose');
 const redis = require("redis");
-const schedule = 100;
+const schedule = 100; 
 // oplog.rs表的定义
 const oplogSchema = new mongoose.Schema({
-    ts: {
+    ts: {      
         type: String,
         required: true
     },
@@ -18,10 +18,10 @@ const oplogSchema = new mongoose.Schema({
     o: {
         type: mongoose.Schema.Types.Mixed
     },
-    o2: {
+    o2: {  
         type: mongoose.Schema.Types.Mixed
     },
-    wall: {
+    wall: {  
         type: Date
     }
 })
@@ -235,6 +235,36 @@ MONGO_CONFIG = {
     sxzx_url: 'mongodb://8.134.73.52:27017/sxzx',
 }
 
+let localDBssl = {
+    ssl: true,
+    sslValidate: false,
+    sslCA: '../config/mongodbSSL/ca.pem',
+    sslKey: '../config/mongodbSSL/client.key',
+    sslCert: '../config/mongodbSSL/client.crt',
+}
+
+let sxzxDBssl = {
+    ssl: true,
+    sslValidate: false,
+    sslCA: '../config/mongodbSSL/ca.pem',
+    sslKey: '../config/mongodbSSL/client.key',
+    sslCert: '../config/mongodbSSL/client.crt',
+}
+
+// 开发环境配置
+if(process.env.NODE_ENV === 'local') {
+    REDIS_CONFIG.host = '127.0.0.1'
+    REDIS_CONFIG.port = '6379',
+    REDIS_CONFIG.password = ''
+
+    MONGO_CONFIG.local_url = 'mongodb://127.0.0.1:27017/local'
+    MONGO_CONFIG.sxzx_url = 'mongodb://127.0.0.1:27017/sxzx'
+
+    localDBssl = {}
+    sxzxDBssl = {}
+}
+
+
 const maxRedisClient = 10;
 const redisClients = [];
 var localDB,sxzxDB;
@@ -271,14 +301,8 @@ async function init() {
         redisClients[i].select(i);
     }
     console.log('redis连接成功')
-
-    localDB = await mongoose.createConnection(MONGO_CONFIG.local_url, {
-        ssl: true,
-        sslValidate: false,
-        sslCA: '../config/mongodbSSL/ca.pem',
-        sslKey: '../config/mongodbSSL/client.key',
-        sslCert: '../config/mongodbSSL/client.crt',
-    },err => {
+    // redisClients[7].set('{"rule_name":{"$ne":"null"},"parentId":{"$in":["36"]},"create_time":{"$gte":0,"$lte":9999999999999}}','22',(err)=>{console.log(err)})
+    localDB = await mongoose.createConnection(MONGO_CONFIG.local_url, localDBssl, err => {
         if (!err) {
             console.log('localDB连接成功')
         } else {
@@ -288,13 +312,7 @@ async function init() {
     });
     await localDB.model('oplog.rs', oplogSchema)
 
-    sxzxDB = await mongoose.createConnection(MONGO_CONFIG.sxzx_url, {
-        ssl: true,
-        sslValidate: false,
-        sslCA: '../config/mongodbSSL/ca.pem',
-        sslKey: '../config/mongodbSSL/client.key',
-        sslCert: '../config/mongodbSSL/client.crt',
-    },err => {
+    sxzxDB = await mongoose.createConnection(MONGO_CONFIG.sxzx_url, sxzxDBssl, err => {
         if (!err) {
             console.log('sxzxDB连接成功')
         } else {
@@ -331,7 +349,7 @@ async function getOplogs(startTime,endTime) {
     return logs
 }
 
-async function run() {
+async function run() {  
     //获取时间戳
     let oplogEndTime = await redisClients[5].get('oplogEndTime');
     let startTime = new Date().getTime()-1000*60*60*24;
@@ -420,25 +438,49 @@ async function attachDbCache({
 }) {
     //绑定缓存
     let str = JSON.stringify({ cache_key: cache_key, concern_col: concern_col, cache_id: cache_id });
-    redisClients[5].rPush(db_id, str);
+    redisClients[5].rPush(db_id, str);  
 }
 
-// init();
+init();
 
 //传入key和value，使用Redis保存
+// 命名规则：查询的要素+"_"+查询的要素的id
+/**
+ * 
+ * @param {String} key redis的键
+ * @param {String} value redis的值
+ * @param {String} db_id mongodb数据编号
+ * @param {number} cache_id redis数据库编号
+ */
 async function setRedis({
-    key, value = null, db_id = null, cache_id = 7
+    key, value = null, db_id = '1', cache_id = 0
 }){
-    let str = JSON.stringify({ key: key, value: value, db_id: db_id, cache_id: cache_id });
+    // let str = JSON.stringify({ key: key, value: value, db_id: db_id, cache_id: cache_id });
     // 保存到Redis
     await redisClients[cache_id].set(key, value, (err) => {if (err) console.log(err)});
+    //console.log('@@@@')
+    //设置过期时间
+    expiration = 60*60*24
+    await redisClients[cache_id].expire(key, expiration);
     // 绑定缓存
     await attachDbCache({ db_id, cache_key: key, concern_col: 'cache' , cache_id});
 }
 
+// setRedis({
+//     key:'3456',
+//     value:'3333',
+//     db_id : '1',
+// })
+
 // 查询Redis
-async function getRedis({key, db_id}){
-    let value = redisClients[db_id].get(key, (err, data) => {if (err) console.log(err)});   // 没有值返回null或error
+async function getRedis({key, cache_id = 0}){
+    let value = null; 
+    try {
+         value = redisClients[cache_id].get(key);   // 没有值返回null
+    } catch (error) {
+        return null;
+    }
+    
     return value;
 }
 
