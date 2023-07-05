@@ -134,7 +134,7 @@ async function searchByCondition({myselfID, today, thisWeek}) {
             newSystemLogData = systemLogData.filter((currentItem) => {
                 let itemDate=currentItem.create_time.split(' ')[0]
                 let itemMonth=currentItem.create_time.split('/')[1]
-                let itemDay=currentItem.create_time.split('/')[2]
+                let itemDay=itemDate.split('/')[2]
                 //对于月份和日期不满2为的，补零
                 itemMonth=itemMonth.length<2?'0'+itemMonth:itemMonth;
                 itemDay=itemDay.length<2?'0'+itemDay:itemDay;
