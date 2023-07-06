@@ -2387,8 +2387,6 @@ async function getRules({
                             page_num = null,
                             service_object = null,
                         }) {
-    let _res;
-    let _query;
     try {
         var query = {};
         if (rule_id !== null) query.rule_id = {$in: rule_id};
@@ -2593,7 +2591,7 @@ async function getRules({
 
         // 直接返回全部的结果
         // 查缓存
-        _query = JSON.stringify(query)
+        let _query = JSON.stringify(query)
         var res = await cacheService.getRedis({
             key: _query,
             cache_id: 2
@@ -2642,6 +2640,57 @@ async function getRules({
                     $project: {__v: 0, user: 0, unit: 0, creator_id: 0},
                 },
             ]);
+
+            //计算规则路径
+            ruleDic = itemService.getRuleDic();
+            if (ruleDic === null) {
+                return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
+            }
+            
+            // 晒徐个人业务or法人业务or事业单位业务
+            // console.log(service_object == null)
+            res = await fliterByServiceObject(res, service_object, ruleDic)
+            for (let i = 0; i < res.length; i++) {
+                let rulePath = "";
+                let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null;
+
+                while (node !== null) {
+                    rulePath = node.rule_name + "/" + rulePath;
+                    node = ruleDic.get(node.parentId)
+                        ? ruleDic.get(node.parentId)
+                        : null;
+                }
+
+                let rule_query = {};
+                rule_query.rule_id = res[i].rule_id;
+                let key = JSON.toString(rule_query)
+                let _res = await cacheService.getRedis({ 
+                    key,
+                    cache_id: 2
+                })
+                if(_res == null) {
+                    _res = await modelItem.aggregate([
+                        {
+                            $match: {rule_id: res[i].rule_id},
+                        },
+                    ]);
+
+                    // 存缓存 新缓存设计（cachService）
+                    cacheService.setRedis({
+                        key,
+                        value: JSON.stringify(_res),
+                        cache_id: 2 // 需要指定redis的id，默认为0
+                    });
+                }
+                else {
+                    _res = JSON.parse(_res)
+                }
+            
+
+                res[i].isLeaf = res[i].children == 0;
+                res[i].hasBindItem = _res.length > 0;
+                res[i].rule_path = rulePath;
+            }
             // console.log('_que',_query)
             // 存缓存 新缓存设计（cachService）
             cacheService.setRedis({
@@ -2653,58 +2702,7 @@ async function getRules({
         else {
             res = JSON.parse(res)
         }
-            
-
-        //计算规则路径
-        ruleDic = itemService.getRuleDic();
-        if (ruleDic === null) {
-            return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
-        }
-
-        // 晒徐个人业务or法人业务or事业单位业务
-        // console.log(service_object == null)
-	    res = await fliterByServiceObject(res, service_object, ruleDic)
-        for (let i = 0; i < res.length; i++) {
-            let rulePath = "";
-            let node = ruleDic[res[i].rule_id] ? ruleDic[res[i].rule_id] : null;
-
-            while (node !== null) {
-                rulePath = node.rule_name + "/" + rulePath;
-                node = ruleDic.get(node.parentId)
-                    ? ruleDic.get(node.parentId)
-                    : null;
-            }
-
-            _query = {};
-            _query.rule_id = res[i].rule_id;
-            let key = JSON.toString(_query)
-            _res = await cacheService.getRedis({ 
-                key,
-                cache_id: 2
-            })
-            if(_res == null) {
-                _res = await modelItem.aggregate([
-                    {
-                        $match: {rule_id: res[i].rule_id},
-                    },
-                ]);
-
-                // 存缓存 新缓存设计（cachService）
-                cacheService.setRedis({
-                    key,
-                    value: JSON.stringify(_res),
-                    cache_id: 2 // 需要指定redis的id，默认为0
-                });
-            }
-            else {
-                _res = JSON.parse(_res)
-            }
-           
-
-            res[i].isLeaf = res[i].children == 0;
-            res[i].hasBindItem = _res.length > 0;
-            res[i].rule_path = rulePath;
-        }
+      
         return new SuccessModel({msg: "查询成功", data: res});
     } catch (err) {
         console.log(err)
@@ -2721,12 +2719,13 @@ async function fliterByServiceObject(res, service_object, ruleDic) {
     let filter_res = []
     // console.log("res", res)
     // return res
+    console.log('length',res.length)
     for (let i = 0; i < res.length; i++) {
         if(await dfsFliterByServiceObject(res[i], service_object, ruleDic))
             filter_res.push(res[i])
         // console.log(filter_res)
     }
-
+    console.log('return filter_res')
     return filter_res
 }
 
@@ -2734,12 +2733,20 @@ async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
     // console.log(service_object == null)
     if (service_object == null) return true;
 
-    // console.log(rule.rule_id)
+    //console.log(rule.rule_id)
     //console.log(service_object);
-    // return true
-    //console.log(children.children)
     //return true
+    
+    //return true
+    //console.log(ruleDic.get(rule.rule_id))
     let children = ruleDic.get(rule.rule_id).children;
+    //console.log(children)
+    if(!children) {
+        console.log(rule.rule_id)
+        console.log(ruleDic.get(rule.rule_id))
+        console.log('nullchildren')
+    }
+    let t1 = new Date().getTime();
     if (children.length == 0) {
         let itemList = await modelItem.find({
             rule_id: rule.rule_id,
@@ -2747,28 +2754,34 @@ async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
         })
         // console.log(itemList)
         for (let i = 0; i < itemList.length; i++) {
-            if (
-                await modelTask.exists({
+            if (await modelTask.exists({
                     task_code: itemList[i].task_code,
                     service_object_type: {
                         $regex: serviceObjectTypeMapping(service_object.toString()),
                     },
-		})
-            ) {
-	        // console.log("H", rule)
-		return true
+		        })) {
+	            // console.log("H", rule)
+                let t3 = new Date().getTime();
+                console.log('true',rule.rule_id,t1,t3)
+                return true
+            }
 	    }
-	}
-	return false
+        let t3 = new Date().getTime();
+        console.log('false',rule.rule_id,t1,t3)
+	    return false
     }
-
+    let t2 = new Date().getTime();
     for (let i = 0; i < children.length; i++) {
         if (await dfsFliterByServiceObject(ruleDic.get(children[i]), service_object, ruleDic)) {
-
+            let t3 = new Date().getTime();
+            console.log('true',rule.rule_id,t2,t3)
             return true
-	}
+	    }
     }
-
+    
+    let t4 = new Date().getTime();
+    console.log('false',rule.rule_id,t1,t2,t4)
+    
     return false;
 }
 

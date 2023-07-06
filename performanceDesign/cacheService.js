@@ -226,14 +226,24 @@ const taskSchema = new mongoose.Schema({
 })
 
 REDIS_CONFIG = {
-    host: '8.134.73.52',
+    host: '10.196.133.5',
     port: '6379',
     password: 'hgc16711',
 }
 MONGO_CONFIG = {
-    local_url: 'mongodb://8.134.73.52:27017/local',
-    sxzx_url: 'mongodb://8.134.73.52:27017/sxzx',
+    local_url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/local',
+    sxzx_url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/sxzx',
 }
+
+// REDIS_CONFIG = {
+//     host: '8.134.73.52',
+//     port: '6379',
+//     password: 'hgc16711',
+// }
+// MONGO_CONFIG = {
+//     local_url: 'mongodb://8.134.73.52:27017/local',
+//     sxzx_url: 'mongodb://8.134.73.52:27017/sxzx',
+// }
 
 let localDBssl = {
     ssl: true,
