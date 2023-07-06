@@ -231,7 +231,7 @@ REDIS_CONFIG = {
     password: 'hgc16711',
 }
 MONGO_CONFIG = {
-    local_url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/local',
+    local_url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/local', // 生成环境下需要指定用户才能确定权限（数据库知识）
     sxzx_url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/sxzx',
 }
 
@@ -272,6 +272,17 @@ if(process.env.NODE_ENV === 'local') {
 
     localDBssl = {}
     sxzxDBssl = {}
+}
+
+// 阿里云环境配置
+if(process.env.NODE_ENV === 'development') {
+    REDIS_CONFIG.host = '127.0.0.1'
+    REDIS_CONFIG.port = '6379',
+    REDIS_CONFIG.password = 'hgc16711'
+
+    MONGO_CONFIG.local_url = 'mongodb://8.134.73.52:27017/local'
+    MONGO_CONFIG.sxzx_url = 'mongodb://8.134.73.52:27017/sxzx'
+
 }
 
 
@@ -470,7 +481,7 @@ async function setRedis({
     await redisClients[cache_id].set(key, value, (err) => {if (err) console.log(err)});
     //console.log('@@@@')
     //设置过期时间
-    expiration = 60*60*24
+    expiration = 60 * 2 //60*60*24
     await redisClients[cache_id].expire(key, expiration);
     // 绑定缓存
     await attachDbCache({ db_id, cache_key: key, concern_col: 'cache' , cache_id});
