@@ -5,9 +5,9 @@ const fs = require("fs");
 const path = require("path");
 const child = require("child_process");
 const {MONGO_CONFIG} = require("../config/config");
+const {logPath} = require('../app_config')
 
 const filePath = path.join(__dirname, "./MongoDBBak.sh");
-const logPath = path.join(__dirname, "../log/access.log");
 
 let isBackingUp = false;
 

@@ -7,6 +7,7 @@ const {
   getItemBrowseCount,
   getAdvancedSearchSystemLog
 } = require('../controller/systemLogController')
+const {logPath} = require('../app_config')
 
 function setStatusCode(res, data) {
   if (data.code === 200) {
@@ -61,7 +62,7 @@ router.get('/v1/itemBrowseCount', async (req, res, next) => {
 })
 
 router.get('/v1/deleteAllLog', async (req, res) => {
-  require('fs').writeFileSync('log/access.log', '')
+  require('fs').writeFileSync(logPath, '')
   res.sendStatus(200)
 })
 

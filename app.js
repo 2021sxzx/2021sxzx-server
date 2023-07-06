@@ -29,6 +29,7 @@ const {MONGO_CONFIG} = require('./config/config') //数据库的配置信息
 const mongoose = require('mongoose')
 const redisClient = require('./config/redis')
 const Statusset = new Set()
+const {logPath} = require('./app_config')
 
 // 异步连接 Redis
 redisClient.connect().then(() => {
@@ -126,7 +127,7 @@ app.use('*', (req, res, next) => {
     // 如果没有 token ，说明后台用户未登录或者是前台的请求， next()
     if (token === undefined) {
         // TODO
-        // console.log('I\'m in token undefined')
+        // console.log('I\'m in token undefined')  
     } else {
         // 解析用户账号信息
         const account = jwt.verify(token, jwt_secret, null, null).account
@@ -153,7 +154,7 @@ app.use('*', (req, res, next) => {
 // }
 
 // 配置日志的本地文件路径
-const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log/access.log'), {flags: 'a'})
+const accessLogStream = fs.createWriteStream(logPath, {flags: 'a'}) 
 // 往日志添加用户信息
 logger.token('id', function getId(req) {
     return req.headers.userid

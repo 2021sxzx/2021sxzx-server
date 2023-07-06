@@ -1,6 +1,7 @@
 const fs = require('fs')
 const {getUserById} = require('../service/userManagementService')
 const {getMemory} = require('./systemResourceService')
+const {logPath} = require('../app_config')
 
 /**
  * 请求操作映射表
@@ -37,7 +38,7 @@ function chargeTypeChange(value) {
  */
 async function showSystemLog() {
     try {
-        let data = fs.readFileSync('log/access.log')
+        let data = fs.readFileSync(logPath)
         data = data.toString().split('\n')
         let dataArray = []
         let user = ''
@@ -76,7 +77,7 @@ async function showSystemLog() {
  */
 async function getAllSystemLog2() {
     try {
-        let data = fs.readFileSync('log/access.log')
+        let data = fs.readFileSync(logPath)
         data = data.toString().split('\n')
         return data
     } catch (e) {
@@ -221,7 +222,7 @@ setInterval(() => getMemory().then(({usedMemPercentage}) => {
     } else if (usedMemPercentage >= 85) {
         memoryAlert = true
         // 注意，由于日志解析代码过于耦合，除非你知道如何修改，否则不要随便乱动！
-        fs.writeFileSync('log/access.log', `  [${new Date().toLocaleString()}]:"MemoryAlert HTTP\n`, {flag: 'a'})
+        fs.writeFileSync(logPath, `  [${new Date().toLocaleString()}]:"MemoryAlert HTTP\n`, {flag: 'a'})
     }
 }), 1000)
 

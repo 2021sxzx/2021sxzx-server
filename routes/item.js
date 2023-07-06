@@ -5,6 +5,7 @@ const router = express.Router()
 const itemController = require('../controller/itemController')
 const systemMetaController = require('../controller/systemMetaController')
 const { ErrorModel } = require("../utils/resultModel");
+const {exportFilePath} = require('../app_config')
 
 function setStatusCode(res, data) {
     if (data.code === 200) {
@@ -170,7 +171,7 @@ router.post('/v1/getExportGides', async (req, res, next) => {
         res.json(error)
         return
     }
-    const filePath = path.resolve(__dirname, '../全量导出.csv')
+    const filePath = exportFilePath
     res.setHeader('Content-Type', 'text/csv;charset:UTF-8')
     //TODO: 需要等待写入流结束writeStream.end()才能查询到文件, 所以使用了宏任务并等待1s, 可以做一下优化
     setTimeout(function() {

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const {exportFilePath} = require('../app_config')
 
 // TODO: 新增需要导出的数据标题, 并在standardizingItemGuideData方法中返回对于的标准数据
 const detailTitle = {
@@ -61,12 +62,13 @@ const taskStatus = {
  */
 async function jsonToExcel(titles, datas, flag = null) {
     // 创建 Excel 文件流
+    console.log(exportFilePath)
     let writeStream = null
     if(flag) {
-        writeStream = fs.createWriteStream('全量导出.csv', {flags: 'a'}); // 追加数据
+        writeStream = fs.createWriteStream(exportFilePath, {flags: 'a'}); // 追加数据
     }  
     else {
-        writeStream = fs.createWriteStream('全量导出.csv');
+        writeStream = fs.createWriteStream(exportFilePath);
     }
     writeStream.on('finish', () => {
         console.log('成功生成全量导出.csv')
