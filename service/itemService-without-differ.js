@@ -308,13 +308,15 @@ function getRuleDic(must = false) {
 //以下为检查事项指南详情的代码
 
 const getToken_Url = 'http://api2.gzonline.gov.cn:9090/oauth/token'
-const getChildRegionList_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/two/OrganizationService/getChildRegionList'
-const getOrganListByRegionCode_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/two/OrganizationService/getOrganListByRegionCode'
-const listItemBasicByOrg_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/two/power/listItemBasicByOrg'
-const getItem_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/two/power/getItem'
+const getChildRegionList_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/three/OrganizationService/getChildRegionList'
+const getOrganListByRegionCode_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/three/OrganizationService/getOrganListByRegionCode'
+const listItemBasicByOrg_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/three/power/listItemBasicByOrg'
+const getItem_Url = 'http://api2.gzonline.gov.cn:9090/api/eshore/three/power/getItem'
 const ANNOUNCED = '3'   //已公示的事项的状态码
-const client_id = 'basicUser20190821144223063'
-const client_secret = 'e9e413e43b8d43cd8e71243cdbec5cd6'
+// const client_id = "basicUser20190821144223063";这是2.0接口用的
+const client_id = "20150817140345100400";
+// const client_secret = "e9e413e43b8d43cd8e71243cdbec5cd6";
+const client_secret = "D674FADAC7424B359C0554F46B04E9A9";
 let token = ''
 const TYPE = "PARALLEL";   //SERIAL或者PARALLEL
 const GZ_REGIONCODE = '440100000000'
@@ -392,7 +394,7 @@ function postRequest(url, requestData) {
 /**
  * 根据区划编码获取下级区划信息
  * @param {String} region_code 区划编码
- * @returns
+ * @returns {Promise} 返回使用region_code请求到的结果
  */
 async function getChildRegionList(region_code) {
     try {
@@ -455,7 +457,7 @@ async function listItemBasicByOrg(org_code, page_size, page_num) {
         //console.logorg_code))
         if(org_code[0] === "007485864")
             org_code[0] = "00749949X"
-        
+
         do {
             body = await postRequest(listItemBasicByOrg_Url, {
                 org_code: org_code[0],
@@ -800,7 +802,7 @@ async function getAllItemsByOrg(org_code) {
     try {
         // 获取事项的基础信息列表
         const basicItems = await getAllItemBasicByOrg(org_code)
-        
+
         let res = []
         for (let basicItem of basicItems) {
             res.push(basicItem.carry_out_code);
@@ -878,7 +880,7 @@ async function checkOrganizationItems(org_code) {
     const differences = []        //省政务和数据都有，但是内容不一样
     try {
         // inLocalNinRemote = await modelTask.find({task_code: {$nin: remoteItemCodes}}, {task_code: 1})
-        
+
         // for (let i = 0, len = inLocalNinRemote.length; i < len; i++) {
         //     let task = inLocalNinRemote.shift()
         //     inLocalNinRemote.push(task.task_code)
@@ -887,7 +889,7 @@ async function checkOrganizationItems(org_code) {
             let task = await modelTask.findOne({task_code: remoteItemCodes[i]})
             if (task === null) {
                 inRemoteNinLocal.push(remoteItemCodes[i])
-            } 
+            }
             // else {
             //     if (compareTwoObjects(task, dict[remoteItemCodes[i]]) === false) {
             //         differences.push(remoteItemCodes[i])
@@ -1035,7 +1037,7 @@ async function checkAllRegionsItems(regions, time) {
             console.log("居委会暂不处理")
             continue
         }
-        
+
         try {
             checkResult[region.region_code] = await checkOrganizationItems(
                 region.org_code

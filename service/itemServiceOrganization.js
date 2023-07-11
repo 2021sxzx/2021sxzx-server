@@ -13,10 +13,12 @@ const { resourceLimits } = require("worker_threads");
 
 const getToken_Url = "http://api2.gzonline.gov.cn:9090/oauth/token";
 const getOrganListByRegionCode_Url =
-    "http://api2.gzonline.gov.cn:9090/api/eshore/two/OrganizationService/getOrganListByRegionCode";
+    "http://api2.gzonline.gov.cn:9090/api/eshore/three/OrganizationService/getOrganListByRegionCode";
 const ANNOUNCED = "3"; //已公示的事项的状态码
-const client_id = "basicUser20190821144223063";
-const client_secret = "e9e413e43b8d43cd8e71243cdbec5cd6";
+// const client_id = "basicUser20190821144223063";这是2.0接口用的
+const client_id = "20150817140345100400";
+// const client_secret = "e9e413e43b8d43cd8e71243cdbec5cd6";
+const client_secret = "D674FADAC7424B359C0554F46B04E9A9";
 let token = "";
 const TYPE = "PARALLEL"; //SERIAL或者PARALLEL
 const GZ_REGIONCODE = "440100000000";

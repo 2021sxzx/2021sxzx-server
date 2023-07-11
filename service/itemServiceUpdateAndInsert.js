@@ -8,16 +8,18 @@ const modelTask = require("../model/task");
 
 const getToken_Url = "http://api2.gzonline.gov.cn:9090/oauth/token";
 const getChildRegionList_Url =
-    "http://api2.gzonline.gov.cn:9090/api/eshore/two/OrganizationService/getChildRegionList";
+    "http://api2.gzonline.gov.cn:9090/api/eshore/three/OrganizationService/getChildRegionList";
 const getOrganListByRegionCode_Url =
-    "http://api2.gzonline.gov.cn:9090/api/eshore/two/OrganizationService/getOrganListByRegionCode";
+    "http://api2.gzonline.gov.cn:9090/api/eshore/three/OrganizationService/getOrganListByRegionCode";
 const listItemBasicByOrg_Url =
-    "http://api2.gzonline.gov.cn:9090/api/eshore/two/power/listItemBasicByOrg";
+    "http://api2.gzonline.gov.cn:9090/api/eshore/three/power/listItemBasicByOrg";
 const getItem_Url =
-    "http://api2.gzonline.gov.cn:9090/api/eshore/two/power/getItem";
+    "http://api2.gzonline.gov.cn:9090/api/eshore/three/power/getItem";
 const ANNOUNCED = "3"; //已公示的事项的状态码
-const client_id = "basicUser20190821144223063";
-const client_secret = "e9e413e43b8d43cd8e71243cdbec5cd6";
+// const client_id = "basicUser20190821144223063";这是2.0接口用的
+const client_id = "20150817140345100400";
+// const client_secret = "e9e413e43b8d43cd8e71243cdbec5cd6";
+const client_secret = "D674FADAC7424B359C0554F46B04E9A9";
 let token = "";
 const TYPE = "PARALLEL"; //SERIAL或者PARALLEL
 const GZ_REGIONCODE = "440100000000";
@@ -247,7 +249,7 @@ async function insertAndUpdateAllItems(regions, time) {
     } catch (err) {
         console.error(err);
     }
-    
+
     // console.log(task_code_list)
     // return 0
     for (let j = 0; j < task_code_list.length; j++) {
@@ -256,14 +258,14 @@ async function insertAndUpdateAllItems(regions, time) {
         detail = await getItem(task_code_list[j]);
         if (detail == null || detail.length == 0)
             continue;
-        
+
         let r = "";
         for (let i = 0, len = detail.length; i < len; i++) {
             detail[i].user_id = "6237ed0e0842000062005753";
             detail[i].task_code = detail[i]["carry_out_code"];
             detail[i].new_task_code = detail[i]["carry_out_code"];
             detail[i].task_name = detail[i]["name"];
-            
+
             let task = await modelTask.exists({ task_code: detail[i].task_code });
             if (task === false) {
                 r = await itemController.createItemGuide(detail[i]);
@@ -279,7 +281,7 @@ async function insertAndUpdateAllItems(regions, time) {
         // console.log("完成数据更新")
         // break
     }
-    
+
 }
 
 mongoose
@@ -296,9 +298,9 @@ mongoose
     .catch((err) => {
         console.log("MongoDB 连接失败。错误信息如下：");
         console.dir(err);
-    });    
+    });
 
-    
+
 
 
 function setCheckJobRule() {
