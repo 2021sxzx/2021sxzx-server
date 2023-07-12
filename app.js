@@ -7,12 +7,6 @@ console.log = (...data) => {
 // todo 定时输出内存占用 后续弃用记得删掉
 const {appendFileSync, writeFileSync} = require('fs')
 
-const start = Date.now()
-writeFileSync('memoryUsage.csv', 'Time Alive (secs),Memory Used (Byte)\n')
-setInterval(() => {
-    appendFileSync('memoryUsage.csv', `${Date.now() - start},${process.memoryUsage().heapUsed}\n`)
-}, 1000)
-
 const createError = require('http-errors')
 const express = require('express')
 const bodyParser = require('body-parser')
@@ -31,6 +25,13 @@ const redisClient = require('./config/redis')
 const Statusset = new Set()
 const {logPath} = require('./app_config')
 
+//避免memoryUsage的写入被防篡改阻拦
+const memoryUsagePath=logPath==='/root/sxzx/access.log'?'/root/sxzx/memoryUsage.csv':'memoryUsage.csv'
+const start = Date.now()
+writeFileSync(memoryUsagePath, 'Time Alive (secs),Memory Used (Byte)\n')
+setInterval(() => {
+    appendFileSync(memoryUsagePath, `${Date.now() - start},${process.memoryUsage().heapUsed}\n`)
+}, 1000)
 // 异步连接 Redis
 redisClient.connect().then(() => {
     console.log('Redis 连接成功')
@@ -127,7 +128,7 @@ app.use('*', (req, res, next) => {
     // 如果没有 token ，说明后台用户未登录或者是前台的请求， next()
     if (token === undefined) {
         // TODO
-        // console.log('I\'m in token undefined')  
+        // console.log('I\'m in token undefined')
     } else {
         // 解析用户账号信息
         const account = jwt.verify(token, jwt_secret, null, null).account
@@ -154,7 +155,7 @@ app.use('*', (req, res, next) => {
 // }
 
 // 配置日志的本地文件路径
-const accessLogStream = fs.createWriteStream(logPath, {flags: 'a'}) 
+const accessLogStream = fs.createWriteStream(logPath, {flags: 'a'})
 // 往日志添加用户信息
 logger.token('id', function getId(req) {
     return req.headers.userid
