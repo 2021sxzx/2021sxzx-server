@@ -1,9 +1,9 @@
 var mongoose = require('mongoose');
 const redis = require("redis");
-const schedule = 100; 
+const schedule = 100;
 // oplog.rs表的定义
 const oplogSchema = new mongoose.Schema({
-    ts: {      
+    ts: {
         type: String,
         required: true
     },
@@ -18,10 +18,10 @@ const oplogSchema = new mongoose.Schema({
     o: {
         type: mongoose.Schema.Types.Mixed
     },
-    o2: {  
+    o2: {
         type: mongoose.Schema.Types.Mixed
     },
-    wall: {  
+    wall: {
         type: Date
     }
 })
@@ -227,12 +227,17 @@ const taskSchema = new mongoose.Schema({
 
 REDIS_CONFIG = {
     host: '10.196.133.5',
+    //如果你在备份服务器上部署，请把上面的host注释掉，改成下面这个
+    // host: '10.196.134.5',
     port: '6379',
     password: 'hgc16711',
 }
 MONGO_CONFIG = {
     local_url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/local', // 生成环境下需要指定用户才能确定权限（数据库知识）
     sxzx_url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/sxzx',
+    //如果你在备份服务器上部署，请把上面的注释掉，改成下面这个
+    // local_url: 'mongodb://root2:Hgc16711@10.196.134.5:27017/local', // 生成环境下需要指定用户才能确定权限（数据库知识）
+    // sxzx_url: 'mongodb://root2:Hgc16711@10.196.134.5:27017/sxzx',
 }
 
 // REDIS_CONFIG = {
@@ -459,7 +464,7 @@ async function attachDbCache({
 }) {
     //绑定缓存
     let str = JSON.stringify({ cache_key: cache_key, concern_col: concern_col, cache_id: cache_id });
-    redisClients[5].rPush(db_id, str);  
+    redisClients[5].rPush(db_id, str);
 }
 
 init();
@@ -467,7 +472,7 @@ init();
 //传入key和value，使用Redis保存
 // 命名规则：查询的要素+"_"+查询的要素的id
 /**
- * 
+ *
  * @param {String} key redis的键
  * @param {String} value redis的值
  * @param {String} db_id mongodb数据编号
@@ -495,13 +500,13 @@ async function setRedis({
 
 // 查询Redis
 async function getRedis({key, cache_id = 0}){
-    let value = null; 
+    let value = null;
     try {
          value = redisClients[cache_id].get(key);   // 没有值返回null
     } catch (error) {
         return null;
     }
-    
+
     return value;
 }
 
