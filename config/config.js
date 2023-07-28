@@ -9,7 +9,12 @@ if (process.env.NODE_ENV === 'local') {
         port: '6379',
     }
     MONGO_CONFIG = {
-        url: 'mongodb://127.0.0.1:27017/sxzx'
+        url: 'mongodb://127.0.0.1:27017/sxzx',
+        ip:'127.0.0.1',
+        port:'27017',
+        user:'',
+        password:'',
+        dbName:'sxzx'
     }
     IMG_PATH = 'http://127.0.0.1:5001/imgs/'
 } else if (process.env.NODE_ENV === 'development') {

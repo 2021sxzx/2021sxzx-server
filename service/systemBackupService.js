@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const child = require("child_process");
 const {MONGO_CONFIG} = require("../config/config");
-const {logPath} = require('../app_config')
+const {logPath,mongodbBakPath} = require('../app_config')
 
 const filePath = path.join(__dirname, "./MongoDBBak.sh");
 
@@ -27,15 +27,16 @@ function backup(mode, user_id = null) {
         console.log("备份指令：", command);
 
 
-        fs.access("../mongodb_bak/mongodb_bak_now", fs.constants.F_OK, (err) => {
+        fs.access(mongodbBakPath+"mongodb_bak_now", fs.constants.F_OK, (err) => {
             if (err) {
-                fs.mkdir("../mongodb_bak/mongodb_bak_now", 0o777, function (err) {
+                fs.mkdir(mongodbBakPath+"mongodb_bak_now", 0o777, function (err) {
                     if (!err) {
                         console.log("创建目录成功");
                     } else {
                         console.log(
                             "../mongodb_bak/mongodb_bak_now",
-                            "目录创建失败"
+                            "目录创建失败",
+                            err
                         );
                     }
                 })
@@ -44,15 +45,16 @@ function backup(mode, user_id = null) {
             }
         });
 
-        fs.access("../mongodb_bak/mongodb_bak_list", fs.constants.F_OK, (err) => {
+        fs.access(mongodbBakPath+"mongodb_bak_list", fs.constants.F_OK, (err) => {
             if (err) {
-                fs.mkdir("../mongodb_bak/mongodb_bak_now", 0o777, function (err) {
+                fs.mkdir(mongodbBakPath+"mongodb_bak_list", 0o777, function (err) {
                     if (!err) {
                         console.log("创建目录成功");
                     } else {
                         console.log(
                             "../mongodb_bak/mongodb_bak_list",
-                            "目录创建失败"
+                            "目录创建失败",
+                            err
                             );
                     }
                 })
