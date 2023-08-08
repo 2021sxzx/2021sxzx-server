@@ -84,6 +84,7 @@ mongoose.connection.on('disconnected', function () {
 // 创建 express 对象
 const app = express()
 app.enable("trust proxy")
+app.set('trust proxy',function(){ return true; });
 
 const logger = require('morgan')
 // 动态网页的模板设置
@@ -164,6 +165,9 @@ logger.token('id', function getId(req) {
 logger.token('localDate', function getDate() {
     return new Date().toLocaleString()
 })
+logger.token('remote-addr', function (req) {
+    return req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+});
 // 日志中间件的设置使用
 app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {
     skip: function (req) {
