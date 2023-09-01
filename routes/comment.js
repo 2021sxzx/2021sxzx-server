@@ -17,6 +17,7 @@ const {
   getCommentDetail,
 } = require("../controller/commentController");
 const xss = require("xss");
+const {routerProtection}=require("../utils/validateJwt")
 
 function setStatusCode(res, data) {
   if (data.code === 200) {
@@ -44,7 +45,7 @@ router.post("/v1/comment", async (req, res, next) => {
 /**
  * 用户评论数据的获取
  */
-router.get("/v1/comment", async (req, res, next) => {
+router.get("/v1/comment",routerProtection, async (req, res, next) => {
   let commentData = req.query;
   let data = await getUserComments(commentData);
   setStatusCode(res, data);

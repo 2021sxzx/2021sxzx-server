@@ -9,6 +9,7 @@ const {
 } = require("../controller/roleController");
 const permission = require('../model/permission');
 const {validateString} = require("../utils/validateString");
+const {routerProtection}=require("../utils/validateJwt")
 
 function setStatusCode(res, data) {
     if (data.code === 200) {
@@ -17,6 +18,7 @@ function setStatusCode(res, data) {
         res.statusCode = 404
     }
 }
+
 
 /**
  * 添加角色
@@ -63,7 +65,14 @@ router.patch('/v1/role', async (req, res, next) => {
 /**
  * 获取角色列表
  */
-router.get('/v1/role', async (req, res, next) => {
+router.get('/v1/role' , routerProtection ,async (req,res,next)=>{
+    const authToken=req.cookies['auth-token'] || null;
+    if(authToken){
+        next();
+    }else {
+        res.status(403).send('您还未登录，不能获取该数据');
+    }
+},async (req, res, next) => {
     const {role_id} = req.query;
     let data = await returnRoleList(Number(role_id))
 

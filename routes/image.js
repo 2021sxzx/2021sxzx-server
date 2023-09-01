@@ -4,11 +4,12 @@ const path = require('path');
 const fs = require('fs');
 const {getAllImage} = require('../service/imageService')
 const {IMG_PATH} = require("../config/config");
+const {routerProtection}=require("../utils/validateJwt")
 
 /**
  * 获取整个图片列表
  */
-router.get('/v1/image', async (req, res, next) => {
+router.get('/v1/image',routerProtection, async (req, res, next) => {
     let data = await getAllImage();
     res.json(data)
     return 'res';

@@ -5,6 +5,7 @@ const path = require('path')
 const {showSystemFailureController, createSystemFailureController} = require('../controller/systemFailureController')
 const {deleteImage} = require('../service/imageService')
 const systemFailure = require('../model/systemFailure')
+const {routerProtection}=require("../utils/validateJwt")
 
 function setStatusCode(res, {code}) {
   if (code === 200) res.statusCode = 200
@@ -16,7 +17,7 @@ function setStatusCode(res, {code}) {
 /**
  * 故障列表的获取
  */
-router.get('/v1/failure', async (req, res) => {
+router.get('/v1/failure', routerProtection,async (req, res) => {
   let data = await showSystemFailureController()
   setStatusCode(res, data)
   res.json(data)

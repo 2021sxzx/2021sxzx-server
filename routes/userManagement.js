@@ -13,6 +13,7 @@ const {
     getActivationAndReturn
 } = require('../controller/userManagementController');
 const {validateString} = require("../utils/validateString");
+const {routerProtection}=require("../utils/validateJwt")
 
 
 function setStatusCode(res, data) {
@@ -32,7 +33,7 @@ router.all('*', function (req, res, next) {
 });
 
 // 获取用户
-router.get('/v1/user', async (req, res, next) => {
+router.get('/v1/user', routerProtection,async (req, res, next) => {
     // console.log(typeof(req.cookies.unit_id), req.cookies.unit_id)
     const my_unit_id = req.cookies.unit_id
     const unit_id = req.body

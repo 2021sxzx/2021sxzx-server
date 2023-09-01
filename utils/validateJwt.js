@@ -97,10 +97,20 @@ function generate_refresh_token(len) {
     return text;
 }
 
+async function routerProtection(req,res,next){
+    const authToken=req.cookies['auth-token'] || null;
+    if(authToken){
+        next();
+    }else {
+        res.status(403).send('您还未登录，不能获取该数据');
+    }
+}
+
 module.exports = {
     jwt_secret,
     jwt_expiration,
     jwt_refresh_expiration,
     validate_jwt,
+    routerProtection,
     generate_refresh_token
 }

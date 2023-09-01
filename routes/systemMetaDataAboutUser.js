@@ -3,6 +3,7 @@ const router = express.Router();
 const systemMetaController = require('../controller/systemMetaController');
 
 const { ErrorModel } = require('../utils/resultModel');
+const {routerProtection}=require("../utils/validateJwt")
 
 function wrap(handler) {
   return async (req, res, next) => {
@@ -18,7 +19,7 @@ function wrap(handler) {
 }
 
 router.get('/v1/interface/NetworkStatus', wrap(systemMetaController.getNetworkStatus));
-router.get('/v1/interface', wrap(systemMetaController.getInterfaceUrl));
+router.get('/v1/interface',routerProtection, wrap(systemMetaController.getInterfaceUrl));
 router.patch('/v1/interface', wrap(systemMetaController.patchNetworkStatus));
 
 module.exports = router;

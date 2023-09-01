@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const userDepartmentController = require('../controller/userDepartmentController');
 const { ErrorModel } = require('../utils/resultModel');
+const {routerProtection}=require("../utils/validateJwt")
 
 function wrap(handler) {
   return async (req, res, next) => {
@@ -29,7 +30,7 @@ router.all('*', (req, res, next) => {
 router.post('/v1/Department', wrap(userDepartmentController.addDepartmentCallback));
 router.delete('/v1/Department', wrap(userDepartmentController.deleteDepartmentCallback));
 router.patch('/v1/Department', wrap(userDepartmentController.updateDepartmentCallback));
-router.get('/v1/Department', wrap(userDepartmentController.listAllDepartmentCallback));
+router.get('/v1/Department',routerProtection, wrap(userDepartmentController.listAllDepartmentCallback));
 router.post('/v1/searchDepartment', wrap(userDepartmentController.searchDepartmentCallback));
 router.delete('/v1/PeopleDepartment', wrap(userDepartmentController.deletePeopleDepartmentCallback));
 

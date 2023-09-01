@@ -8,6 +8,7 @@ const {
   getAdvancedSearchSystemLog
 } = require('../controller/systemLogController')
 const {logPath} = require('../app_config')
+const {routerProtection}=require("../utils/validateJwt")
 
 function setStatusCode(res, data) {
   if (data.code === 200) {
@@ -22,7 +23,7 @@ function setStatusCode(res, data) {
 /**
  * show系统日志的获取
  */
-router.get('/v1/show', async (req, res, next) => {
+router.get('/v1/show', routerProtection ,async (req, res, next) => {
   let data = await showSystemLogController()
   setStatusCode(res, data)
   res.json(data)
