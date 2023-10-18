@@ -182,7 +182,7 @@ async function testMuti(id) {
 
 async function testPerformance() {  
     const promiseList = [];
-    for (i = 10000; i < 10500; i++){
+    for (let i = 10000; i < 10500; i++){
         id = i.toString();
         promiseList.push(testOne(id));
     }
@@ -199,9 +199,9 @@ async function testPerformance() {
 }
 
 async function test() {
-    await cacheService.init();
+        await cacheService.init();
     delays = await testPerformance();
     console.log(delays);
-}
+    }
 
-test()
+//test()

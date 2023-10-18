@@ -2434,7 +2434,7 @@ async function getRules({
         ) {
             throw new Error("page_size和page_num需要一起传");
         }
-        //分页返回查询结果
+        //分页返回查询结果（sxzx-ht才会用到）
         if (page_size !== null && page_num !== null) {
             let t1 = new Date().getTime();
 
@@ -2445,7 +2445,7 @@ async function getRules({
 
 
             _query = JSON.stringify(_query)
-            var res = ruleCache.get(_query);
+            let res = ruleCache.get(_query);
             if (res == null || new Date() > new Date(res.expires)) {
                 res = await modelRule.aggregate([
                     {
@@ -2588,67 +2588,89 @@ async function getRules({
             // console.log(t2 - t1, t3 - t2, t4 - t3)
             return new SuccessModel({ msg: "查询成功", data: dict });
         }
-
-        // 直接返回全部的结果
+        
+        // 直接返回全部的结果（sxzx-qt才会用到）, 性能优化重点
         // 查缓存
-        let _query = JSON.stringify(query)
-        var res = await cacheService.getRedis({
-            key: _query,
+        let JsonQueryOfResult = JSON.stringify(query) + JSON.stringify(service_object)
+        // 结果的缓存由query和service_object唯一标识
+        let res = await cacheService.getRedis({
+            key: JsonQueryOfResult,
             cache_id: 2
         });
         if(res == null) {
-            res = await modelRule.aggregate([
-                {
-                    $match: query,
-                },
-                {
-                    $lookup: {
-                        from: modelUsers.collection.name,
-                        localField: "creator_id",
-                        foreignField: "_id",
-                        as: "user",
+            // 中间过渡数据也可以缓存
+            let JsonQueryForAllRules = JSON.stringify(query)
+            // 中间过渡数据的缓存由query唯一标识
+            let rulesRes = await cacheService.getRedis({
+                key: JsonQueryForAllRules,
+                cache_id: 2
+            });
+
+            if(rulesRes){
+                res = JSON.parse(rulesRes)
+            } 
+            else {
+                res = await modelRule.aggregate([
+                    {
+                        $match: query,
                     },
-                },
-                {
-                    $addFields: {
-                        user: {$arrayElemAt: ["$user", 0]},
-                    },
-                },
-                {
-                    $lookup: {
-                        from: modelUnit.collection.name,
-                        localField: "user.unit_id",
-                        foreignField: "unit_id",
-                        as: "unit",
-                    },
-                },
-                {
-                    $addFields: {
-                        unit: {$arrayElemAt: ["$unit", 0]},
-                    },
-                },
-                {
-                    $addFields: {
-                        creator: {
-                            id: "$creator_id",
-                            name: "$user.user_name",
-                            department_name: "$unit.unit_name",
+                    {
+                        $lookup: {
+                            from: modelUsers.collection.name,
+                            localField: "creator_id",
+                            foreignField: "_id",
+                            as: "user",
                         },
                     },
-                },
-                {
-                    $project: {__v: 0, user: 0, unit: 0, creator_id: 0},
-                },
-            ]);
+                    {
+                        $addFields: {
+                            user: {$arrayElemAt: ["$user", 0]},
+                        },
+                    },
+                    {
+                        $lookup: {
+                            from: modelUnit.collection.name,
+                            localField: "user.unit_id",
+                            foreignField: "unit_id",
+                            as: "unit",
+                        },
+                    },
+                    {
+                        $addFields: {
+                            unit: {$arrayElemAt: ["$unit", 0]},
+                        },
+                    },
+                    {
+                        $addFields: {
+                            creator: {
+                                id: "$creator_id",
+                                name: "$user.user_name",
+                                department_name: "$unit.unit_name",
+                            },
+                        },
+                    },
+                    {
+                        $project: {__v: 0, user: 0, unit: 0, creator_id: 0},
+                    },
+                ])  
+                // 缓存一下查询的rule
+                cacheService.setRedis({
+                    key: JsonQueryForAllRules,
+                    value: JSON.stringify(res),
+                    db_id_Array: ['Rule'], // 依赖于Rule数据库表
+                    cache_id: 2 // 需要指定redis的id，默认为0
+                });
+            }
 
             //计算规则路径
+            // TODO 这个直接缓存在了内存中，有时间可以重构一下itemService这座屎山
             ruleDic = itemService.getRuleDic();
             if (ruleDic === null) {
                 return new ErrorModel({msg: "请刷新重试", data: "请刷新重试"});
             }
             
             // 晒徐个人业务or法人业务or事业单位业务
-            // console.log(service_object == null)
+            // TODO 性能优化（通过数据库设计）
             res = await fliterByServiceObject(res, service_object, ruleDic)
             for (let i = 0; i < res.length; i++) {
                 let rulePath = "";
@@ -2661,15 +2683,13 @@ async function getRules({
                         : null;
                 }
 
-                let rule_query = {};
-                rule_query.rule_id = res[i].rule_id;
-                let key = JSON.toString(rule_query)
-                let _res = await cacheService.getRedis({ 
+                let key = JSON.toString({rule_id: res[i].rule_id})
+                let itemRes = await cacheService.getRedis({ 
                     key,
                     cache_id: 2
                 })
-                if(_res == null) {
-                    _res = await modelItem.aggregate([
+                if(itemRes == null) {
+                    itemRes = await modelItem.aggregate([
                         {
                             $match: {rule_id: res[i].rule_id},
                         },
@@ -2678,28 +2698,32 @@ async function getRules({
                     // 存缓存 新缓存设计（cachService）
                     cacheService.setRedis({
                         key,
-                        value: JSON.stringify(_res),
+                        value: JSON.stringify(itemRes),
+                        db_id_Array: ['Item'],
                         cache_id: 2 // 需要指定redis的id，默认为0
                     });
                 }
                 else {
-                    _res = JSON.parse(_res)
+                    itemRes = JSON.parse(itemRes)
                 }
             
 
                 res[i].isLeaf = res[i].children == 0;
-                res[i].hasBindItem = _res.length > 0;
+                res[i].hasBindItem = itemRes.length > 0;
                 res[i].rule_path = rulePath;
             }
-            // console.log('_que',_query)
+
             // 存缓存 新缓存设计（cachService）
+            // 缓存一下最终结果
             cacheService.setRedis({
-                key: _query,
+                key: JsonQueryOfResult,
                 value: JSON.stringify(res),
+                db_id_Array: ['Rule', 'Task', 'Item'], // 依赖于Rule等数据库表
                 cache_id: 2 // 需要指定redis的id，默认为0
             });
         }
         else {
+            // 命中缓存
             res = JSON.parse(res)
         }
       
@@ -2711,48 +2735,35 @@ async function getRules({
 }
 
 async function fliterByServiceObject(res, service_object, ruleDic) {
-    // console.log(service_object == null)
-    if(service_object == null)
-        return res
-
+    if(service_object == null) return res
 
     let filter_res = []
-    // console.log("res", res)
-    // return res
+    
     console.log('length',res.length)
+    let dfsT1 = Date.now()
     for (let i = 0; i < res.length; i++) {
         if(await dfsFliterByServiceObject(res[i], service_object, ruleDic))
             filter_res.push(res[i])
-        // console.log(filter_res)
     }
+    let dfsT2 = Date.now()
+    console.log('dfsTime', dfsT2 - dfsT1)
     console.log('return filter_res')
     return filter_res
 }
 
 async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
-    // console.log(service_object == null)
     if (service_object == null) return true;
 
-    //console.log(rule.rule_id)
-    //console.log(service_object);
-    //return true
-    
-    //return true
-    //console.log(ruleDic.get(rule.rule_id))
     let children = ruleDic.get(rule.rule_id).children;
-    //console.log(children)
-    if(!children) {
-        console.log(rule.rule_id)
-        console.log(ruleDic.get(rule.rule_id))
-        console.log('nullchildren')
-    }
-    let t1 = new Date().getTime();
+
+    if(!children) return false
+
     if (children.length == 0) {
         let itemList = await modelItem.find({
             rule_id: rule.rule_id,
             item_status: 3,
         })
-        // console.log(itemList)
+        
         for (let i = 0; i < itemList.length; i++) {
             if (await modelTask.exists({
                     task_code: itemList[i].task_code,
@@ -2760,27 +2771,17 @@ async function dfsFliterByServiceObject(rule, service_object, ruleDic) {
                         $regex: serviceObjectTypeMapping(service_object.toString()),
                     },
 		        })) {
-	            // console.log("H", rule)
-                let t3 = new Date().getTime();
-                console.log('true',rule.rule_id,t1,t3)
                 return true
             }
 	    }
-        let t3 = new Date().getTime();
-        console.log('false',rule.rule_id,t1,t3)
 	    return false
     }
-    let t2 = new Date().getTime();
+    
     for (let i = 0; i < children.length; i++) {
         if (await dfsFliterByServiceObject(ruleDic.get(children[i]), service_object, ruleDic)) {
-            let t3 = new Date().getTime();
-            console.log('true',rule.rule_id,t2,t3)
             return true
 	    }
     }
-    
-    let t4 = new Date().getTime();
-    console.log('false',rule.rule_id,t1,t2,t4)
     
     return false;
 }

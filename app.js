@@ -24,6 +24,12 @@ const mongoose = require('mongoose')
 const redisClient = require('./config/redis')
 const Statusset = new Set()
 const {logPath} = require('./app_config')
+const { deleteCacheByTableName } = require('./performanceDesign/cacheService')
+const TABLENAME = {
+    item: 'Item',
+    rule: 'Rule',
+    task: 'Task'
+}
 
 //避免memoryUsage的写入被防篡改阻拦
 const memoryUsagePath=logPath==='/root/sxzx/access.log'?'/root/sxzx/memoryUsage.csv':'memoryUsage.csv'
@@ -40,23 +46,26 @@ redisClient.connect().then(() => {
     console.dir(err)
 })
 
+let mongodbSSLConfig = {
+    ssl: true,
+    sslValidate: false,
+    // sslCA: MONGO_CONFIG.sslCA,
+    // sslKey: MONGO_CONFIG.sslKey,
+    // sslCert: MONGO_CONFIG.sslCert,
+    sslCA: './config/mongodbSSL/ca.pem',
+    sslKey: './config/mongodbSSL/client.key',
+    sslCert: './config/mongodbSSL/client.crt',
+    // username: MONGO_CONFIG.user,
+    // password: MONGO_CONFIG.password,
+    // ssl: true,
+    // sslValidate: true,
+    // sslCA: './config/mongodbSSL/ca.pem'
+}
+if (process.env.NODE_ENV === 'local') {
+    mongodbSSLConfig = {}
+}
 // 异步连接 MongoDB
-mongoose.connect(MONGO_CONFIG.url,
-    {
-        ssl: true,
-        sslValidate: false,
-        // sslCA: MONGO_CONFIG.sslCA,
-        // sslKey: MONGO_CONFIG.sslKey,
-        // sslCert: MONGO_CONFIG.sslCert,
-        sslCA: './config/mongodbSSL/ca.pem',
-        sslKey: './config/mongodbSSL/client.key',
-        sslCert: './config/mongodbSSL/client.crt',
-        // username: MONGO_CONFIG.user,
-        // password: MONGO_CONFIG.password,
-        // ssl: true,
-        // sslValidate: true,
-        // sslCA: './config/mongodbSSL/ca.pem'
-    },
+mongoose.connect(MONGO_CONFIG.url, mongodbSSLConfig,
     err => {
         if (!err) {
             console.log('MongoDB 连接成功')
@@ -175,6 +184,21 @@ app.use(logger(':id :remote-addr - :remote-user [:localDate] ":method :url HTTP/
     },
     stream: accessLogStream,
 }))
+
+// 删除缓存
+app.use('*', async(req, _res, next) => {
+    let reqUrl = req.baseUrl;
+    if(/create|delete|update/i.test(reqUrl)) {
+        for(key in TABLENAME) {
+            let regExp = new RegExp(key, "i")
+            if(regExp.test(reqUrl)) {
+                console.log(`删除${key}缓存`)
+                deleteCacheByTableName(TABLENAME[key])
+            }
+        }
+    }
+    next()
+})
 
 // 处理路由
 loadRoutes(routesStore, '/api', app)

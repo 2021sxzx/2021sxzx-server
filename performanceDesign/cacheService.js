@@ -232,6 +232,7 @@ REDIS_CONFIG = {
     port: '6379',
     password: 'hgc16711',
 }
+
 MONGO_CONFIG = {
     local_url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/local', // 生成环境下需要指定用户才能确定权限（数据库知识）
     sxzx_url: 'mongodb://root2:Hgc16711@10.196.133.5:27017/sxzx',
@@ -239,6 +240,7 @@ MONGO_CONFIG = {
     // local_url: 'mongodb://root2:Hgc16711@10.196.134.5:27017/local', // 生成环境下需要指定用户才能确定权限（数据库知识）
     // sxzx_url: 'mongodb://root2:Hgc16711@10.196.134.5:27017/sxzx',
 }
+
 
 // REDIS_CONFIG = {
 //     host: '8.134.73.52',
@@ -307,7 +309,7 @@ function getSxzxDB() {
 
 async function init() {
     promiseList = [];
-    for (i = 0; i < maxRedisClient; i++){
+    for (let i = 0; i < maxRedisClient; i++){
         cli = redis.createClient({
             socket: {
                 port: REDIS_CONFIG.port,
@@ -327,7 +329,6 @@ async function init() {
         redisClients[i].select(i);
     }
     console.log('redis连接成功')
-    // redisClients[7].set('{"rule_name":{"$ne":"null"},"parentId":{"$in":["36"]},"create_time":{"$gte":0,"$lte":9999999999999}}','22',(err)=>{console.log(err)})
     localDB = await mongoose.createConnection(MONGO_CONFIG.local_url, localDBssl, err => {
         if (!err) {
             console.log('localDB连接成功')
@@ -350,7 +351,8 @@ async function init() {
     await sxzxDB.model('tasks', taskSchema)
     await sxzxDB.model('remotetasks', taskSchema)
 
-    run();
+    // 打印oplog失败，暂时关闭，启动其它设计方案
+    //run();
 }
 
 async function getOplogs(startTime,endTime) {
@@ -359,7 +361,7 @@ async function getOplogs(startTime,endTime) {
             {
                 $or: [
                     { ns: { $regex: 'sxzx' } },
-                    { ns: { $regex: 'SearchSystem' } }
+                    
                 ]
             },
             {
@@ -381,41 +383,41 @@ async function run() {
     let startTime = new Date().getTime()-1000*60*60*24;
     // console.log(oplogEndTime);
     if (oplogEndTime != null) {
-        startTime = new Date(oplogEndTime).getTime();
+    startTime = new Date(oplogEndTime).getTime();
     }
     let endTime = new Date().getTime();
     if (startTime < endTime) {
-        let ids = [];
-        //解析oplog
-        let logs = await getOplogs(startTime, endTime);
-        for (i = 0; i < logs.length; i++){
-            if (logs[i].op == 'd' || logs[i].op == 'i') {
-                ids.push(logs[i].o._id.toString())
-            }
+    let ids = [];
+    //解析oplog
+    let logs = await getOplogs(startTime, endTime);
+    for (i = 0; i < logs.length; i++){
+    if (logs[i].op == 'd' || logs[i].op == 'i') {
+    ids.push(logs[i].o._id.toString())
+    }
             else if (logs[i].op == 'u') {
-                ids.push(logs[i].o2._id.toString())
-            }
+    ids.push(logs[i].o2._id.toString())
+    }
         }
         //查询DbCacheMap
         caches = await getDbCacheMap(ids);
-        promiseList = [];
-        //删除缓存
-        for (let i = 0; i < caches.length; i++) {
-            promiseList.push(deleteCacheFromRedis(caches[i].cache_id, caches[i].cache_key));
-        };
-        await Promise.all(promiseList);
-        promiseList = [];
-        //删除映射
-        for (let i = 0; i < ids.length; i++) {
-            promiseList.push(deleteDbCache(5,ids[i]));
-        };
-        await Promise.all(promiseList);
-        //延迟双删
-        setTimeout(async () => {
-            for (let i = 0; i < caches.length; i++) {
-                deleteCacheFromRedis(caches[i].cache_id, caches[i].cache_key);
-            };
-        }, 2000);
+    promiseList = [];
+    //删除缓存
+    for (let i = 0; i < caches.length; i++) {
+    promiseList.push(deleteCacheFromRedis(caches[i].cache_id, caches[i].cache_key));
+    };
+    await Promise.all(promiseList);
+    promiseList = [];
+    //删除映射
+    for (let i = 0; i < ids.length; i++) {
+    promiseList.push(deleteDbCache(5,ids[i]));
+    };
+    await Promise.all(promiseList);
+    //延迟双删
+    setTimeout(async () => {
+    for (let i = 0; i < caches.length; i++) {
+    deleteCacheFromRedis(caches[i].cache_id, caches[i].cache_key);
+    };
+    }, 2000);
 
         //更新时间戳
         if (logs.length > 0) {
@@ -464,7 +466,12 @@ async function attachDbCache({
 }) {
     //绑定缓存
     let str = JSON.stringify({ cache_key: cache_key, concern_col: concern_col, cache_id: cache_id });
-    redisClients[5].rPush(db_id, str);
+    //redisClients[5].rPush(db_id, str);
+
+    let cacheKeyArray = await redisClients[5].get(db_id)
+    cacheKeyArray? cacheKeyArray = JSON.parse(cacheKeyArray): cacheKeyArray = []
+    cacheKeyArray.push(str)
+    redisClients[5].set(db_id, JSON.stringify(cacheKeyArray))
 }
 
 init();
@@ -475,28 +482,22 @@ init();
  *
  * @param {String} key redis的键
  * @param {String} value redis的值
- * @param {String} db_id mongodb数据编号
+ * @param {String[]} db_id_Array redis缓存依赖的 mongodb数据编号/数据库名
  * @param {number} cache_id redis数据库编号
  */
 async function setRedis({
-    key, value = null, db_id = '1', cache_id = 0
+    key, value = '', db_id_Array = [], cache_id = 0
 }){
-    // let str = JSON.stringify({ key: key, value: value, db_id: db_id, cache_id: cache_id });
     // 保存到Redis
     await redisClients[cache_id].set(key, value, (err) => {if (err) console.log(err)});
-    //console.log('@@@@')
     //设置过期时间
-    expiration = 60 * 2 //60*60*24
+    expiration = 60*60*24
     await redisClients[cache_id].expire(key, expiration);
     // 绑定缓存
-    await attachDbCache({ db_id, cache_key: key, concern_col: 'cache' , cache_id});
+    db_id_Array.forEach(async (db_id) => {
+        await attachDbCache({ db_id, cache_key: key, concern_col: 'cache' , cache_id});
+    })
 }
-
-// setRedis({
-//     key:'3456',
-//     value:'3333',
-//     db_id : '1',
-// })
 
 // 查询Redis
 async function getRedis({key, cache_id = 0}){
@@ -510,6 +511,24 @@ async function getRedis({key, cache_id = 0}){
     return value;
 }
 
+// 删除缓存
+async function deleteCacheByTableName(tableName) {
+    let cacheArrayJson = await redisClients[5].get(tableName)
+    if(cacheArrayJson) {
+        let cacheArray = JSON.parse(cacheArrayJson)
+        cacheArray.forEach((str) => {
+            let redisCacheObj = JSON.parse(str)
+            redisClients[redisCacheObj.cache_id]?.del(redisCacheObj.cache_key)
+
+            // 延迟双删
+            setTimeout(() => {
+                redisClients[redisCacheObj.cache_id]?.del(redisCacheObj.cache_key)
+            }, 2000);
+        })
+        redisClients[5].set(tableName, '[]')
+    }
+}
+
 module.exports = {
     init,
     getRedisCli,
@@ -517,5 +536,7 @@ module.exports = {
     getSxzxDB,
     attachDbCache,
     setRedis,
-    getRedis
+    getRedis,
+    deleteCacheByTableName,
+    getOplogs
 }
