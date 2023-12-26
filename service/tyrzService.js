@@ -36,7 +36,7 @@ async function getInfo({cookies: {tyrz_identifier}}) {
         // 若条目存在
         if (data)
             // 返回脱敏姓名
-            return {code: 0, name: `**${data.cn.slice(-1)}`}
+            return {code: 0, name: `**${data.cn.slice(-1)}`,level: data.creditable_level_of_account}
     }
     // 条目或 cookie 不存在
     return {code: 1}
