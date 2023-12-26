@@ -198,7 +198,7 @@ async function sendvc(loginData) {
             userid: "ZNZXPT", //字符串
             pwd: "ZNZXPT@#2022",
             mobile: account, //字符串
-            content: "验证码：" + verificationCode + ",请妥善保管。拒收请回复R",
+            content: "验证码：" + verificationCode + ",请妥善保管。",
         }
         
         options = {
